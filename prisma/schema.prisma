@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MODERATOR
+  AMBASSADOR
+  TEACHER
+  STUDENT_FREE
+  STUDENT_PAID
+}
+
+enum Region {
+  WEST
+  EAST
+  CENTER
+  SOUTH
+}
+
+enum InstitutionType {
+  UNIVERSITY
+  HIGH_SCHOOL
+}
+
+enum TrackType {
+  BAC
+  UNIVERSITY_LMD
+  MEDICAL
+}
+
+enum ExamType {
+  MIDTERM_EMD
+  FINAL_SEMESTRIAL
+  RATTRAPAGE
+}
+
+enum PostType {
+  EVENT
+  STUDY_TIP
+  SESSION_SCHEDULE
+  ANNOUNCEMENT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model User {
+  id              String             @id @default(cuid())
+  email           String             @unique
+  name            String
+  avatar          String?
+  role            Role               @default(STUDENT_FREE)
+  phone           String?
+  wilayaCode      Int?
+  institutionId   String?
+  track           TrackType?
+  specialty       String?
+  academicYear    String?
+  studentCardId   String?            @unique
+  isVerified      Boolean            @default(false)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  ambassadorProfile AmbassadorProfile?
+  ratingsGiven      Rating[]           @relation("StudentRatings")
+  posts             Post[]
+  examsUploaded     Exam[]
+  subscriptions     Subscription[]
+}
+
+model Wilaya {
+  code      Int           @id
+  nameAr    String
+  nameFr    String
+  nameEn    String
+  region    Region
+  institutions Institution[]
+}
+
+model Institution {
+  id         String          @id @default(cuid())
+  nameAr     String
+  nameFr     String
+  type       InstitutionType
+  wilayaCode Int
+  logoUrl    String?
+  wilaya     Wilaya          @relation(fields: [wilayaCode], references: [code])
+  faculties  Faculty[]
+}
+
+model Faculty {
+  id            String       @id @default(cuid())
+  nameAr        String
+  nameFr        String
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id])
+  specialties   Specialty[]
+}
+
+model Specialty {
+  id            String         @id @default(cuid())
+  nameAr        String
+  nameFr        String
+  trackType     TrackType
+  facultyId     String
+  faculty       Faculty        @relation(fields: [facultyId], references: [id])
+  academicYears AcademicYear[]
+}
+
+model AcademicYear {
+  id          String    @id @default(cuid())
+  nameAr      String
+  nameFr      String
+  semester    String?   // e.g. "S1", "S2", "Annual"
+  specialtyId String
+  specialty   Specialty @relation(fields: [specialtyId], references: [id])
+  modules     Module[]
+}
+
+model Module {
+  id             String       @id @default(cuid())
+  nameAr         String
+  nameFr         String
+  code           String
+  coefficient    Int          @default(1)
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  exams          Exam[]
+}
+
+model Exam {
+  id             String    @id @default(cuid())
+  title          String
+  year           Int       // e.g. 2024
+  termType       ExamType
+  fileUrl        String
+  solutionUrl    String?
+  isFreeSample   Boolean   @default(false)
+  downloadsCount Int       @default(0)
+  moduleId       String
+  module         Module    @relation(fields: [moduleId], references: [id])
+  authorId       String?
+  author         User?     @relation(fields: [authorId], references: [id])
+  createdAt      DateTime  @default(now())
+}
+
+model AmbassadorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  wilayaCode    Int
+  institutionId String
+  bioAr         String?
+  bioFr         String?
+  ratingAverage Float    @default(5.0)
+  ratingsCount  Int      @default(0)
+  ratings       Rating[]
+  createdAt     DateTime @default(now())
+}
+
+model Rating {
+  id           String            @id @default(cuid())
+  score        Int               // 1 to 5
+  comment      String?
+  ambassadorId String
+  ambassador   AmbassadorProfile @relation(fields: [ambassadorId], references: [id])
+  studentId    String
+  student      User              @relation("StudentRatings", fields: [studentId], references: [id])
+  createdAt    DateTime          @default(now())
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  type          PostType  @default(ANNOUNCEMENT)
+  wilayaCode    Int?
+  institutionId String?
+  eventDate     DateTime?
+  isOnline      Boolean   @default(false)
+  meetUrl       String?
+  location      String?
+  isApproved    Boolean   @default(true)
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  createdAt     DateTime  @default(now())
+}
+
+model Subscription {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id])
+  cardId      String             @unique
+  planName    String             @default("GOLDEN_MEMBERSHIP")
+  status      SubscriptionStatus @default(ACTIVE)
+  startDate   DateTime           @default(now())
+  endDate     DateTime
+  createdAt   DateTime           @default(now())
+}
