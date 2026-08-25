@@ -146,6 +146,110 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
     return ex.termType === examFilter;
   });
 
+  const handleApplyPreset = (preset: {
+    track: TrackType;
+    instId: string;
+    instName: string;
+    wilayaCode: number;
+    wilayaName: string;
+    facId: string;
+    facName: string;
+    specId: string;
+    specName: string;
+    yearId: string;
+    yearName: string;
+    modId: string;
+    modName: string;
+  }) => {
+    setSelection({
+      track: preset.track,
+      institutionId: preset.instId,
+      institutionName: preset.instName,
+      wilayaCode: preset.wilayaCode,
+      wilayaName: preset.wilayaName,
+      facultyId: preset.facId,
+      facultyName: preset.facName,
+      specialtyId: preset.specId,
+      specialtyName: preset.specName,
+      academicYearId: preset.yearId,
+      academicYearName: preset.yearName,
+      moduleId: preset.modId,
+      moduleName: preset.modName,
+    });
+    setCurrentStep('EXAMS');
+  };
+
+  const quickPresets = [
+    {
+      nameAr: '⚡ تحليل 1 (USTHB L1 MI)',
+      nameFr: '⚡ Analyse 1 (USTHB)',
+      track: 'UNIVERSITY_LMD' as TrackType,
+      instId: 'inst-usthb',
+      instName: 'Université USTHB',
+      wilayaCode: 16,
+      wilayaName: 'Alger',
+      facId: 'fac-usthb-info',
+      facName: 'Faculté d\'Informatique',
+      specId: 'spec-mi-tc',
+      specName: 'Tronc Commun MI',
+      yearId: 'year-mi-s1',
+      yearName: 'L1 S1',
+      modId: 'mod-analyse1',
+      modName: 'Analyse 1',
+    },
+    {
+      nameAr: '⚡ خوارزميات ALSD 1 (USTHB)',
+      nameFr: '⚡ Algo 1 (ALSD USTHB)',
+      track: 'UNIVERSITY_LMD' as TrackType,
+      instId: 'inst-usthb',
+      instName: 'Université USTHB',
+      wilayaCode: 16,
+      wilayaName: 'Alger',
+      facId: 'fac-usthb-info',
+      facName: 'Faculté d\'Informatique',
+      specId: 'spec-mi-tc',
+      specName: 'Tronc Commun MI',
+      yearId: 'year-mi-s1',
+      yearName: 'L1 S1',
+      modId: 'mod-algo1',
+      modName: 'Algorithmique 1',
+    },
+    {
+      nameAr: '⚡ بكالوريا رياضيات (3AS BAC)',
+      nameFr: '⚡ Maths BAC (3AS)',
+      track: 'BAC' as TrackType,
+      instId: 'inst-bac-national',
+      instName: 'BAC National',
+      wilayaCode: 16,
+      wilayaName: 'Alger',
+      facId: 'fac-bac-branches',
+      facName: 'Filières BAC',
+      specId: 'spec-bac-scientifique',
+      specName: 'Sciences Expérimentales',
+      yearId: 'year-bac-sci-full',
+      yearName: '3AS BAC',
+      modId: 'mod-bac-math',
+      modName: 'Mathématiques BAC',
+    },
+    {
+      nameAr: '⚡ تشريح طب 1 (Médecine Alger)',
+      nameFr: '⚡ Anatomie 1 (Médecine Alger)',
+      track: 'MEDICAL' as TrackType,
+      instId: 'inst-alger1',
+      instName: 'Université d\'Alger 1',
+      wilayaCode: 16,
+      wilayaName: 'Alger',
+      facId: 'fac-med-alger',
+      facName: 'Faculté de Médecine',
+      specId: 'spec-medecine',
+      specName: 'Médecine',
+      yearId: 'year-med-1',
+      yearName: '1ère Année Médecine',
+      modId: 'mod-med-anat',
+      modName: 'Anatomie',
+    },
+  ];
+
   return (
     <div
       className={`w-full ${
@@ -200,6 +304,24 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
           </div>
         </div>
       )}
+
+      {/* 1-Click Fast Presets Bar */}
+      <div className="relative z-10 my-3 p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <span className="text-[11px] font-bold text-slate-500 dark:text-gray-400 shrink-0">
+          🚀 {locale === 'ar' ? 'اختصارات سريعة بنقرة واحدة:' : 'Raccourcis 1-Clic:'}
+        </span>
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {quickPresets.map((preset, pIdx) => (
+            <button
+              key={pIdx}
+              onClick={() => handleApplyPreset(preset)}
+              className="px-2.5 py-1 rounded-xl bg-white dark:bg-navy-800 hover:bg-gold-500/20 border border-slate-200 dark:border-gray-700 text-[11px] font-bold text-slate-800 dark:text-gold-300 whitespace-nowrap transition-all active:scale-95"
+            >
+              {locale === 'ar' ? preset.nameAr : preset.nameFr}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Interactive Step Breadcrumbs with Horizontal Mobile Scrolling */}
       <div className="relative z-10 my-3 sm:my-4 flex items-center gap-1.5 text-xs font-arabic overflow-x-auto no-scrollbar py-1 touch-pan-x whitespace-nowrap">

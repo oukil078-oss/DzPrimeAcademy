@@ -18,6 +18,9 @@ import {
   Bell,
   CheckCircle2,
   GraduationCap,
+  Zap,
+  ChevronRight,
+  Users,
 } from 'lucide-react';
 import { LanguageSwitcher } from '../shared/LanguageSwitcher';
 import { RoleSwitcher } from '../shared/RoleSwitcher';
@@ -94,8 +97,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             </div>
           </div>
 
-          {/* Center: Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-md mx-2">
+          {/* Center: Search Bar with Live Quick-Results Popup */}
+          <div className="hidden md:flex flex-1 max-w-md mx-2 relative">
             <div className="relative w-full">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -103,9 +106,63 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('dashboard.searchPlaceholder')}
-                className="w-full pl-10 pr-4 py-2 rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 dark:focus:border-gold-400 transition-all font-arabic"
+                className="w-full pl-10 pr-8 py-2 rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 dark:focus:border-gold-400 transition-all font-arabic"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
+
+            {/* Live Search Quick Results Dropdown */}
+            {searchQuery.trim().length > 1 && (
+              <div className="absolute top-full left-0 right-0 mt-2 p-3 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-gold-500/40 shadow-2xl z-50 text-left font-arabic space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                  <span>{locale === 'ar' ? 'نتائج سريعة مقترحة' : 'Résultats instantanés'}</span>
+                  <Link
+                    href={`/${locale}`}
+                    onClick={() => setSearchQuery('')}
+                    className="text-gold-600 dark:text-gold-400 hover:underline"
+                  >
+                    {locale === 'ar' ? 'عرض الكل في بنك الامتحانات ←' : 'Tout afficher ←'}
+                  </Link>
+                </div>
+
+                <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                  <Link
+                    href={`/${locale}`}
+                    onClick={() => setSearchQuery('')}
+                    className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-3.5 h-3.5 text-gold-500" />
+                      <span className="font-bold text-slate-900 dark:text-white truncate">
+                        {locale === 'ar' ? `البحث في بنك الامتحانات عن "${searchQuery}"` : `Rechercher "${searchQuery}" dans les examens`}
+                      </span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  </Link>
+
+                  <Link
+                    href={`/${locale}/ambassadors`}
+                    onClick={() => setSearchQuery('')}
+                    className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="font-bold text-slate-900 dark:text-white truncate">
+                        {locale === 'ar' ? `البحث في شبكة السفراء عن "${searchQuery}"` : `Rechercher "${searchQuery}" parmi les ambassadeurs`}
+                      </span>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: Actions & User Avatar */}

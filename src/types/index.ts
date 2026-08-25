@@ -103,6 +103,21 @@ export interface ExamItem {
   moduleId: string;
   moduleName?: string;
   authorName?: string;
+  trackType?: TrackType;
+  academicYearName?: string;
+  institutionName?: string;
+  previewQuestionSnippet?: string;
+  solutionSummary?: string;
+  createdAt: string;
+}
+
+export interface StudentReview {
+  id: string;
+  score: number; // 1-5
+  comment: string;
+  studentName: string;
+  studentRole?: Role;
+  institution?: string;
   createdAt: string;
 }
 
@@ -112,8 +127,14 @@ export interface AmbassadorProfile {
   user: User;
   wilayaCode: number;
   wilayaNameAr: string;
+  wilayaNameFr?: string;
+  region?: Region;
   institutionId: string;
   institutionNameAr: string;
+  institutionNameFr?: string;
+  specialtyName?: string;
+  telegramHandle?: string;
+  phone?: string;
   bioAr?: string;
   bioFr?: string;
   ratingAverage: number;
@@ -121,6 +142,10 @@ export interface AmbassadorProfile {
   isVerified: boolean;
   upcomingSessionsCount: number;
   totalTipsShared: number;
+  materialsCuratedCount?: number;
+  studentsMentoredCount?: number;
+  badges?: string[];
+  reviews?: StudentReview[];
 }
 
 export interface Rating {

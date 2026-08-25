@@ -45,17 +45,19 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   const isBot = pathname.includes('/bot');
   const isCard = pathname.includes('/card');
   const isStudent = pathname.includes('/student');
-  const isAmbassador = pathname.includes('/ambassador');
+  const isAmbassadorDashboard = pathname === `/${locale}/ambassador` || pathname.startsWith(`/${locale}/ambassador/`);
+  const isAmbassadorDirectory = pathname === `/${locale}/ambassadors` || pathname.startsWith(`/${locale}/ambassadors/`);
   const isAdmin = pathname.includes('/admin');
 
   const navItems = [
     {
       id: 'dashboard',
-      label: t('nav.dashboard'),
+      label: locale === 'ar' ? 'بنك الامتحانات والمقررات' : locale === 'fr' ? 'Banque d\'Examens' : 'Exam Papers Hub',
       href: `/${locale}`,
       icon: LayoutDashboard,
-      isActive: isHome && !isBot && !isCard && !isStudent && !isAmbassador && !isAdmin,
-      badge: null,
+      isActive: isHome && !isBot && !isCard && !isStudent && !isAmbassadorDashboard && !isAmbassadorDirectory && !isAdmin,
+      badge: '1-Click',
+      badgeColor: 'bg-gold-500 text-navy-950',
     },
     {
       id: 'bot',
@@ -63,43 +65,41 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       href: `/${locale}/bot`,
       icon: Bot,
       isActive: isBot,
-      badge: 'AI',
+      badge: '7-Steps',
+      badgeColor: 'bg-lime-400 text-navy-950',
     },
     {
       id: 'modules',
       label: currentUser?.role === 'TEACHER'
         ? (locale === 'ar' ? 'فضاء الأستاذ' : locale === 'fr' ? 'Espace Enseignant' : 'Teacher Hub')
-        : (locale === 'ar' ? 'المقاييس والمقررات' : locale === 'fr' ? 'Mes Modules' : 'My Modules'),
+        : (locale === 'ar' ? 'مساحتي الدراسية' : locale === 'fr' ? 'Mon Espace' : 'Student Hub'),
       href: `/${locale}/student`,
       icon: BookOpen,
       isActive: isStudent,
       badge: null,
     },
     {
-      id: 'annales',
-      label: locale === 'ar' ? 'بنك الامتحانات' : locale === 'fr' ? 'Annales & Sujets' : 'Exam Papers',
-      href: `/${locale}/bot`,
-      icon: FileText,
-      isActive: false,
-      badge: '+12k',
-    },
-    {
-      id: 'calendar',
-      label: locale === 'ar' ? 'الرزنامة والورشات' : locale === 'fr' ? 'Calendrier & Séances' : 'Schedule',
-      href: `/${locale}#schedule`,
-      icon: Calendar,
-      isActive: false,
-      badge: '2',
-      badgeColor: 'bg-amber-500 text-navy-950',
-    },
-    {
-      id: 'ambassadors',
-      label: t('nav.ambassadors'),
-      href: `/${locale}/ambassador`,
+      id: 'ambassadors_directory',
+      label: locale === 'ar' ? 'شبكة السفراء (58 ولاية)' : locale === 'fr' ? 'Réseau Ambassadeurs' : 'Ambassador Network',
+      href: `/${locale}/ambassadors`,
       icon: Users,
-      isActive: isAmbassador,
-      badge: null,
+      isActive: isAmbassadorDirectory,
+      badge: '58',
+      badgeColor: 'bg-emerald-500 text-white',
     },
+    ...(currentUser?.role === 'AMBASSADOR' || currentUser?.role === 'ADMIN' || currentUser?.role === 'OWNER'
+      ? [
+          {
+            id: 'ambassador_dash',
+            label: locale === 'ar' ? 'لوحة تحكم السفير' : locale === 'fr' ? 'Espace Ambassadeur' : 'Ambassador Portal',
+            href: `/${locale}/ambassador`,
+            icon: Award,
+            isActive: isAmbassadorDashboard,
+            badge: 'Lead',
+            badgeColor: 'bg-amber-500 text-navy-950',
+          },
+        ]
+      : []),
     {
       id: 'hierarchy',
       label: t('nav.hierarchy'),
