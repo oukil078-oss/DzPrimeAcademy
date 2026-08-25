@@ -42,3 +42,35 @@ export function canModerate(role?: Role): boolean {
   if (!role) return false;
   return ['OWNER', 'ADMIN', 'MODERATOR'].includes(role);
 }
+
+export function canEditUserRoles(role?: Role): boolean {
+  if (!role) return false;
+  return role === 'OWNER' || role === 'ADMIN';
+}
+
+export function getHubTitle(role?: Role, name?: string, locale: string = 'ar'): string {
+  const cleanName = name || (locale === 'ar' ? 'طالب جزائري' : 'Étudiant');
+  
+  if (role === 'TEACHER') {
+    if (locale === 'ar') return `منصة الأستاذ الأكاديمية - ${cleanName}`;
+    if (locale === 'fr') return `Espace Enseignant Universitaire - ${cleanName}`;
+    return `Teacher Academic Hub - ${cleanName}`;
+  }
+
+  if (role === 'AMBASSADOR') {
+    if (locale === 'ar') return `لوحة السفير المعتمد - ${cleanName}`;
+    if (locale === 'fr') return `Espace Ambassadeur Officiel - ${cleanName}`;
+    return `Ambassador Academic Hub - ${cleanName}`;
+  }
+
+  if (role === 'OWNER' || role === 'ADMIN') {
+    if (locale === 'ar') return `لوحة الإدارة والحوكمة - ${cleanName}`;
+    if (locale === 'fr') return `Panneau d'Administration SaaS - ${cleanName}`;
+    return `Governance & Admin Hub - ${cleanName}`;
+  }
+
+  if (locale === 'ar') return `فضاء الطالب الأكاديمي - ${cleanName}`;
+  if (locale === 'fr') return `Espace Étudiant Universitaire - ${cleanName}`;
+  return `Student Academic Hub - ${cleanName}`;
+}
+

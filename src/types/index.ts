@@ -132,6 +132,16 @@ export interface Rating {
   createdAt: string;
 }
 
+export interface PostComment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorRole: Role;
+  content: string;
+  isVerifiedTeacher?: boolean;
+  createdAt: string;
+}
+
 export interface Post {
   id: string;
   title: string;
@@ -149,6 +159,9 @@ export interface Post {
   authorId: string;
   authorName: string;
   authorRole: Role;
+  assignedTeacherId?: string;
+  assignedTeacherName?: string;
+  comments?: PostComment[];
   createdAt: string;
 }
 

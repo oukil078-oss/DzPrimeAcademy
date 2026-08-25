@@ -17,7 +17,7 @@ import { MetricsGrid, MetricCardItem } from '@/components/dashboard/MetricsGrid'
 import { HierarchyChart } from '@/components/dashboard/HierarchyChart';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
-import { isStaff } from '@/lib/rbac';
+import { isStaff, canEditUserRoles } from '@/lib/rbac';
 import { DEMO_USERS, WILAYAS } from '@/lib/initial-data';
 import { Role, User } from '@/types';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -92,19 +92,19 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Notice if not signed in as Staff/Admin */}
       {!isUserStaff && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-gold-500/20 to-transparent border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left font-arabic">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-700 dark:text-purple-300 shrink-0 font-bold">
-              <ShieldCheck className="w-5 h-5" />
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-gold-500/20 to-transparent border border-purple-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left font-arabic">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-700 dark:text-purple-300 shrink-0 font-bold">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-purple-200">
+              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-purple-200">
                 {locale === 'ar' ? 'معاينة لوحة الإدارة التجريبية' : 'Aperçu du Panneau d\'Administration SaaS'}
               </h4>
-              <p className="text-xs text-slate-600 dark:text-gray-300">
+              <p className="text-[11px] sm:text-xs text-slate-600 dark:text-gray-300">
                 {locale === 'ar'
                   ? 'يمكنك التبديل إلى دور المدير (Admin) أو المؤسس (Owner) بنقرة واحدة لتجربة لوحة التحكم.'
                   : 'Passez au profil Administrateur ou Fondateur pour tester les fonctionnalités de gestion.'}
@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={() => switchRole('OWNER')}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-black text-xs shadow-gold-glow flex items-center gap-1.5 shrink-0 active:scale-95 transition-all"
+            className="px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-black text-xs shadow-gold-glow flex items-center justify-center gap-1.5 shrink-0 active:scale-95 transition-all touch-target w-full sm:w-auto"
           >
             <Sparkles className="w-4 h-4" />
             <span>{locale === 'ar' ? 'الدخول كمدير المنصة (Admin)' : 'Démonstration Admin'}</span>
@@ -123,13 +123,13 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Dashboard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-gold-500/25 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 dark:border-gold-500/25 pb-4 sm:pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-gold-500/15 border border-gold-500/30 text-gold-700 dark:text-gold-400">
-              <ShieldCheck className="w-5 h-5" />
+            <span className="p-1.5 sm:p-2 rounded-xl bg-gold-500/15 border border-gold-500/30 text-gold-700 dark:text-gold-400">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
             </span>
-            <h1 className="text-2xl sm:text-3xl font-black font-arabic text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-3xl font-black font-arabic text-slate-900 dark:text-white">
               {t('dashboards.admin.title')}
             </h1>
           </div>
@@ -138,7 +138,7 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-amber-500/10 dark:bg-gold-500/15 border border-gold-500/30 text-gold-800 dark:text-gold-300 font-arabic text-xs font-bold shadow-sm">
+        <div className="flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-2xl bg-amber-500/10 dark:bg-gold-500/15 border border-gold-500/30 text-gold-800 dark:text-gold-300 font-arabic text-xs font-bold shadow-sm self-start sm:self-auto">
           <span>{t('dashboards.admin.badge')}</span>
         </div>
       </div>
@@ -147,25 +147,25 @@ export default function AdminDashboardPage() {
       <MetricsGrid metrics={adminMetrics} />
 
       {/* User & Role Management Table */}
-      <div className="p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left transition-colors">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-gold-600 dark:text-gold-400" />
-            <h2 className="text-base sm:text-lg font-bold font-arabic text-slate-900 dark:text-white">
+            <h2 className="text-sm sm:text-lg font-bold font-arabic text-slate-900 dark:text-white">
               {t('dashboards.admin.usersTableTitle')}
             </h2>
           </div>
 
           {/* Search & Filter */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="relative">
+          <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-2.5">
+            <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder={t('dashboards.admin.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 font-arabic"
+                className="w-full pl-9 pr-4 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 font-arabic"
               />
             </div>
 
@@ -185,9 +185,9 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Responsive Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left font-arabic text-xs">
+        {/* Responsive Table with horizontal scroll support */}
+        <div className="overflow-x-auto no-scrollbar touch-pan-x -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="w-full min-w-[640px] text-left font-arabic text-xs">
             <thead>
               <tr className="border-b border-slate-200 dark:border-gray-800 text-slate-500 dark:text-gold-300 text-[11px] uppercase">
                 <th className="pb-3 px-3">{t('dashboards.admin.colName')}</th>
@@ -216,19 +216,25 @@ export default function AdminDashboardPage() {
                   </td>
 
                   <td className="py-3 px-3">
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 border border-slate-300 dark:border-gold-500/30 text-slate-900 dark:text-gold-300 text-[11px] font-bold font-arabic focus:outline-none"
-                    >
-                      <option value="OWNER">{t('roles.OWNER')}</option>
-                      <option value="ADMIN">{t('roles.ADMIN')}</option>
-                      <option value="MODERATOR">{t('roles.MODERATOR')}</option>
-                      <option value="AMBASSADOR">{t('roles.AMBASSADOR')}</option>
-                      <option value="TEACHER">{t('roles.TEACHER')}</option>
-                      <option value="STUDENT_PAID">{t('roles.STUDENT_PAID')}</option>
-                      <option value="STUDENT_FREE">{t('roles.STUDENT_FREE')}</option>
-                    </select>
+                    {canEditUserRoles(currentUser?.role) ? (
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30 text-slate-900 dark:text-gold-300 text-[11px] font-bold font-arabic focus:outline-none"
+                      >
+                        <option value="OWNER">{t('roles.OWNER')}</option>
+                        <option value="ADMIN">{t('roles.ADMIN')}</option>
+                        <option value="MODERATOR">{t('roles.MODERATOR')}</option>
+                        <option value="AMBASSADOR">{t('roles.AMBASSADOR')}</option>
+                        <option value="TEACHER">{t('roles.TEACHER')}</option>
+                        <option value="STUDENT_PAID">{t('roles.STUDENT_PAID')}</option>
+                        <option value="STUDENT_FREE">{t('roles.STUDENT_FREE')}</option>
+                      </select>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-gray-200 text-[11px] font-bold font-arabic inline-block border border-slate-200 dark:border-gray-700">
+                        {t(`roles.${user.role}`)}
+                      </span>
+                    )}
                   </td>
 
                   <td className="py-3 px-3 text-slate-600 dark:text-gray-300">
@@ -237,7 +243,8 @@ export default function AdminDashboardPage() {
 
                   <td className="py-3 px-3">
                     <button
-                      onClick={() => handleToggleVerify(user.id)}
+                      onClick={() => canEditUserRoles(currentUser?.role) && handleToggleVerify(user.id)}
+                      disabled={!canEditUserRoles(currentUser?.role)}
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
                         user.isVerified
                           ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-400/40'
@@ -249,12 +256,18 @@ export default function AdminDashboardPage() {
                   </td>
 
                   <td className="py-3 px-3 text-center">
-                    <button
-                      onClick={() => handleToggleVerify(user.id)}
-                      className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-200 text-[11px] transition-all"
-                    >
-                      {t('dashboards.admin.toggleVerify')}
-                    </button>
+                    {canEditUserRoles(currentUser?.role) ? (
+                      <button
+                        onClick={() => handleToggleVerify(user.id)}
+                        className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-200 text-[11px] transition-all"
+                      >
+                        {t('dashboards.admin.toggleVerify')}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {locale === 'ar' ? 'للمسؤول فقط' : 'Admin Only'}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

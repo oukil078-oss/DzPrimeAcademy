@@ -57,44 +57,47 @@ export const RoleSwitcher: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-300 dark:border-gold-500/30 text-xs shadow-inner">
-      <div className="px-2 py-0.5 flex items-center gap-1 text-[11px] font-bold text-gold-700 dark:text-gold-400 font-arabic shrink-0">
-        <Shield className="w-3.5 h-3.5" />
-        <span className="hidden md:inline">
+    <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-300 dark:border-gold-500/30 text-xs shadow-inner max-w-[210px] xs:max-w-[270px] sm:max-w-none overflow-hidden">
+      <div className="px-1.5 sm:px-2 py-0.5 flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-gold-700 dark:text-gold-400 font-arabic shrink-0">
+        <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+        <span className="hidden lg:inline">
           {locale === 'ar' ? 'معاينة كـ:' : locale === 'fr' ? 'Profil:' : 'Role:'}
         </span>
       </div>
 
-      <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 touch-pan-x">
         {/* Guest Option */}
         <button
           onClick={handleSignOutClick}
           type="button"
-          className={`px-2 py-1 rounded-xl text-[11px] font-arabic font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+          title={locale === 'ar' ? 'زائر (بدون حساب)' : locale === 'fr' ? 'Visiteur (sans compte)' : 'Guest (No account)'}
+          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-[11px] font-arabic font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
             !currentUser
               ? 'bg-slate-300 dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
               : 'text-slate-500 dark:text-gray-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-navy-800'
           }`}
         >
           <span>👤</span>
-          <span>{locale === 'ar' ? 'زائر (بدون حساب)' : locale === 'fr' ? 'Visiteur' : 'Guest'}</span>
+          <span className="hidden sm:inline">{locale === 'ar' ? 'زائر' : locale === 'fr' ? 'Visiteur' : 'Guest'}</span>
         </button>
 
         {roles.map((r) => {
           const isActive = currentUser?.role === r.role;
+          const label = getLabel(r);
           return (
             <button
               key={r.role}
               onClick={() => handleRoleClick(r.role)}
               type="button"
-              className={`px-2 py-1 rounded-xl text-[11px] font-arabic font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+              title={label}
+              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl text-[10px] sm:text-[11px] font-arabic font-bold transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
                 isActive
                   ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 shadow-gold-glow'
                   : 'text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-navy-800'
               }`}
             >
               <span>{r.icon}</span>
-              <span className="hidden sm:inline">{getLabel(r)}</span>
+              <span className="hidden md:inline">{label}</span>
             </button>
           );
         })}

@@ -24,8 +24,8 @@ export const FloatingBotWidget: React.FC = () => {
 
   return (
     <div
-      className={`fixed bottom-6 ${
-        isRtl ? 'left-6' : 'right-6'
+      className={`fixed bottom-4 sm:bottom-6 ${
+        isRtl ? 'left-3 sm:left-6' : 'right-3 sm:right-6'
       } z-50 select-none print:hidden`}
     >
       {/* ================= FLOATING LAUNCHER BUTTON ================= */}
@@ -36,24 +36,24 @@ export const FloatingBotWidget: React.FC = () => {
           whileHover={{ scale: 1.06 }}
           whileTap={{ scale: 0.94 }}
           onClick={() => setIsOpen(true)}
-          className="relative group flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 dark:from-gold-600 dark:via-gold-500 dark:to-gold-400 text-navy-950 font-black shadow-gold-glow-lg border-2 border-white/60 dark:border-gold-300 transition-all duration-300"
+          className="relative group flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-full bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 dark:from-gold-600 dark:via-gold-500 dark:to-gold-400 text-navy-950 font-black shadow-gold-glow-lg border-2 border-white/60 dark:border-gold-300 transition-all duration-300 touch-target"
         >
           {/* Animated Glow Rings */}
           <span className="absolute -inset-1 rounded-full bg-gold-400/40 blur-md animate-pulse pointer-events-none" />
 
           {/* Pulse Online Indicator */}
-          <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-950 animate-ping" />
-          <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-950" />
+          <span className="absolute top-1 right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-950 animate-ping" />
+          <span className="absolute top-1 right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-navy-950" />
 
-          <div className="w-7 h-7 rounded-full bg-navy-950 text-gold-400 flex items-center justify-center shrink-0 shadow-inner">
-            <Bot className="w-4 h-4" />
+          <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-navy-950 text-gold-400 flex items-center justify-center shrink-0 shadow-inner">
+            <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
 
           <div className="flex flex-col text-left font-sans">
-            <span className="text-xs font-black tracking-wide leading-tight">
+            <span className="text-[11px] sm:text-xs font-black tracking-wide leading-tight">
               {t('floatingBot.launcherTitle')}
             </span>
-            <span className="text-[10px] font-semibold opacity-90 leading-tight">
+            <span className="text-[9px] sm:text-[10px] font-semibold opacity-90 leading-tight">
               {t('floatingBot.badge')} ⚡
             </span>
           </div>
@@ -64,16 +64,16 @@ export const FloatingBotWidget: React.FC = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            exit={{ opacity: 0, y: 30, scale: 0.96 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className={`w-[95vw] sm:w-[560px] md:w-[620px] max-w-[95vw] ${
-              isMinimized ? 'h-[70px]' : 'h-[85vh] sm:h-[680px] max-h-[90vh]'
+            className={`w-[calc(100vw-24px)] xs:w-[calc(100vw-32px)] sm:w-[560px] md:w-[620px] max-w-[95vw] ${
+              isMinimized ? 'h-[64px]' : 'h-[85vh] sm:h-[680px] max-h-[92vh]'
             } rounded-3xl border-2 border-gold-500/40 bg-white/95 dark:bg-[#070D1F]/95 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300`}
           >
             {/* Widget Header Bar */}
-            <div className="px-5 py-3.5 bg-gradient-to-r from-slate-100 via-amber-50 to-slate-100 dark:from-navy-900 dark:via-navy-850 dark:to-navy-900 border-b border-slate-200 dark:border-gold-500/30 flex items-center justify-between shrink-0">
+            <div className="px-4 sm:px-5 py-3 sm:py-3.5 bg-gradient-to-r from-slate-100 via-amber-50 to-slate-100 dark:from-navy-900 dark:via-navy-850 dark:to-navy-900 border-b border-slate-200 dark:border-gold-500/30 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-gold-500 to-amber-300 text-navy-950 flex items-center justify-center shadow-gold-glow">
                   <Bot className="w-5 h-5" />

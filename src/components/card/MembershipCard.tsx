@@ -167,10 +167,10 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto select-none">
+    <div className="flex flex-col items-center gap-5 w-full max-w-md mx-auto select-none px-1">
       {/* 3D Perspective Card Container */}
       <div
-        className="w-full h-[280px] sm:h-[300px] cursor-pointer group [perspective:1200px]"
+        className="w-full h-[240px] xs:h-[270px] sm:h-[290px] cursor-pointer group [perspective:1200px]"
         onClick={() => setIsFlipped(!isFlipped)}
       >
         <motion.div
@@ -181,7 +181,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           {/* ================= FRONT SIDE ================= */}
           <div
             ref={frontCardRef}
-            className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden [backface-visibility:hidden] border-2 border-gold-500/60 bg-gradient-to-br from-[#0B1224] via-[#060A14] to-[#04070F] shadow-gold-glow flex flex-col justify-between p-5 text-white"
+            className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden [backface-visibility:hidden] border-2 border-gold-500/60 bg-gradient-to-br from-[#0B1224] via-[#060A14] to-[#04070F] shadow-gold-glow flex flex-col justify-between p-3.5 sm:p-5 text-white"
           >
             {/* Background Texture & Light sheen */}
             <div className="absolute inset-0 bg-radial-glow opacity-60 pointer-events-none" />
@@ -190,56 +190,56 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
 
             {/* Top Bar: Brand & Verification Pill */}
             <div className="relative z-10 flex items-center justify-between w-full">
-              <DzPrimeLogo size={36} showText={true} />
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-xs font-semibold backdrop-blur-md">
-                <ShieldCheck className="w-3.5 h-3.5 text-gold-400" />
+              <DzPrimeLogo size={30} showText={true} />
+              <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-[10px] sm:text-xs font-semibold backdrop-blur-md">
+                <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gold-400" />
                 <span>{card.isVerified ? t('card.verifiedBadge') : t('card.notVerified')}</span>
               </div>
             </div>
 
             {/* Center: Crest, Member Name, & Role */}
-            <div className="relative z-10 flex flex-col items-center text-center my-auto">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-white font-arabic tracking-wide drop-shadow-md">
+            <div className="relative z-10 flex flex-col items-center text-center my-auto px-1">
+              <h2 className="text-base xs:text-lg sm:text-2xl font-extrabold text-white font-arabic tracking-wide drop-shadow-md truncate max-w-full">
                 {card.holderName}
               </h2>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="px-3 py-0.5 rounded-md bg-gradient-to-r from-gold-600/30 via-gold-500/40 to-gold-600/30 border border-gold-400/60 text-gold-200 text-xs font-bold font-arabic shadow-sm">
+              <div className="mt-1 flex items-center gap-1.5 flex-wrap justify-center">
+                <span className="px-2.5 py-0.5 rounded-md bg-gradient-to-r from-gold-600/30 via-gold-500/40 to-gold-600/30 border border-gold-400/60 text-gold-200 text-[10px] sm:text-xs font-bold font-arabic shadow-sm">
                   {card.roleTitleAr}
                 </span>
-                <span className="text-[11px] text-gray-400 font-mono">
+                <span className="text-[10px] sm:text-[11px] text-gray-400 font-mono">
                   W.{card.wilayaCode} ({card.wilayaName})
                 </span>
               </div>
-              <p className="text-[11px] text-gray-300 mt-1 max-w-[280px] truncate">
+              <p className="text-[10px] sm:text-[11px] text-gray-300 mt-1 max-w-[260px] sm:max-w-[280px] truncate">
                 {card.institutionName}
               </p>
             </div>
 
             {/* Bottom Metallic Curved Waves & Details */}
-            <div className="relative z-10 flex items-end justify-between pt-2 border-t border-gold-500/30">
+            <div className="relative z-10 flex items-end justify-between pt-1.5 sm:pt-2 border-t border-gold-500/30 text-[10px]">
               <div className="flex flex-col">
-                <span className="text-[9px] text-gold-400/80 uppercase font-semibold tracking-wider">
+                <span className="text-[8px] sm:text-[9px] text-gold-400/80 uppercase font-semibold tracking-wider">
                   {t('card.cardId')}
                 </span>
-                <span className="font-mono text-xs font-bold text-gold-200 tracking-wider">
+                <span className="font-mono text-[10px] sm:text-xs font-bold text-gold-200 tracking-wider">
                   {card.cardId}
                 </span>
               </div>
 
               <div className="flex flex-col items-center">
-                <span className="text-[10px] text-gold-400 uppercase tracking-widest font-bold">
-                  MEMBERSHIP CARD
+                <span className="text-[8px] sm:text-[10px] text-gold-400 uppercase tracking-widest font-bold">
+                  MEMBERSHIP
                 </span>
-                <span className="text-[11px] text-gold-300 font-arabic font-bold">
+                <span className="text-[9px] sm:text-[11px] text-gold-300 font-arabic font-bold">
                   عضوية
                 </span>
               </div>
 
               <div className="flex flex-col text-right">
-                <span className="text-[9px] text-gold-400/80 uppercase font-semibold tracking-wider">
+                <span className="text-[8px] sm:text-[9px] text-gold-400/80 uppercase font-semibold tracking-wider">
                   {t('card.validUntil')}
                 </span>
-                <span className="text-xs font-semibold text-gray-200">
+                <span className="text-[10px] sm:text-xs font-semibold text-gray-200">
                   {card.expiryDate}
                 </span>
               </div>
@@ -251,60 +251,60 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
             ref={backCardRef}
             className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] border-2 border-gold-500/60 bg-gradient-to-r from-gold-500 via-gold-400 to-navy-950 shadow-gold-glow flex text-navy-950 p-0"
           >
-            {/* Left 60%: Gold Metallic Half */}
-            <div className="w-[60%] h-full p-4 flex flex-col justify-between bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-navy-950">
+            {/* Left Half: Gold Metallic */}
+            <div className="w-[58%] sm:w-[60%] h-full p-2.5 sm:p-4 flex flex-col justify-between bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-navy-950">
               <div>
-                <h3 className="text-sm font-extrabold font-arabic text-navy-950">
+                <h3 className="text-xs sm:text-sm font-extrabold font-arabic text-navy-950 truncate">
                   {card.holderName}
                 </h3>
-                <p className="text-xs font-bold text-navy-900/90 font-arabic flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-navy-950" />
-                  {card.roleTitleAr}
+                <p className="text-[10px] sm:text-xs font-bold text-navy-900/90 font-arabic flex items-center gap-1 mt-0.5 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-navy-950 shrink-0" />
+                  <span>{card.roleTitleAr}</span>
                 </p>
               </div>
 
               {/* Official Algerian Channels */}
-              <div className="space-y-1.5 text-[10px] font-medium text-navy-900">
-                <div className="flex items-center gap-1.5">
-                  <Phone className="w-3 h-3 text-navy-950 shrink-0" />
-                  <span dir="ltr" className="font-mono font-semibold">{card.phone}</span>
+              <div className="space-y-1 sm:space-y-1.5 text-[9px] sm:text-[10px] font-medium text-navy-900">
+                <div className="flex items-center gap-1">
+                  <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-navy-950 shrink-0" />
+                  <span dir="ltr" className="font-mono font-semibold truncate">{card.phone}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Mail className="w-3 h-3 text-navy-950 shrink-0" />
+                <div className="flex items-center gap-1">
+                  <Mail className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-navy-950 shrink-0" />
                   <span className="truncate">{card.email}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Globe className="w-3 h-3 text-navy-950 shrink-0" />
-                  <span>www.dzprime.academy</span>
+                <div className="flex items-center gap-1">
+                  <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-navy-950 shrink-0" />
+                  <span className="truncate">dzprime.academy</span>
                 </div>
               </div>
 
-              <div className="text-[9px] font-bold text-navy-900 border-t border-navy-900/20 pt-1">
+              <div className="text-[8px] sm:text-[9px] font-bold text-navy-900 border-t border-navy-900/20 pt-0.5">
                 منصة تعليمية جزائرية متكاملة
               </div>
             </div>
 
-            {/* Right 40%: Obsidian Half with QR Code */}
-            <div className="w-[40%] h-full bg-[#070B16] p-3 flex flex-col items-center justify-between text-center relative border-l border-gold-400/40">
-              <DzPrimeLogo size={24} showText={false} withGlow={false} />
+            {/* Right Half: Obsidian Half with QR Code */}
+            <div className="w-[42%] sm:w-[40%] h-full bg-[#070B16] p-2 sm:p-3 flex flex-col items-center justify-between text-center relative border-l border-gold-400/40">
+              <DzPrimeLogo size={20} showText={false} withGlow={false} />
 
-              <div className="p-1.5 rounded-xl bg-gold-400 shadow-inner flex items-center justify-center">
+              <div className="p-1 rounded-xl bg-gold-400 shadow-inner flex items-center justify-center">
                 {qrCodeDataUrl ? (
                   <img
                     src={qrCodeDataUrl}
                     alt="Card QR"
-                    className="w-20 h-20 rounded-lg object-contain"
+                    className="w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-lg object-contain"
                   />
                 ) : (
-                  <div className="w-20 h-20 bg-gold-500 animate-pulse rounded-lg" />
+                  <div className="w-16 h-16 bg-gold-500 animate-pulse rounded-lg" />
                 )}
               </div>
 
               <div className="flex flex-col items-center">
-                <span className="text-[8px] text-gold-300 font-mono tracking-wider font-bold">
+                <span className="text-[7px] sm:text-[8px] text-gold-300 font-mono tracking-wider font-bold truncate max-w-full">
                   {card.cardId}
                 </span>
-                <span className="text-[7px] text-gray-400 mt-0.5">
+                <span className="text-[6px] sm:text-[7px] text-gray-400 mt-0.5">
                   SCAN TO VERIFY
                 </span>
               </div>
@@ -314,10 +314,10 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
       </div>
 
       {/* Control Buttons */}
-      <div className="flex flex-wrap items-center justify-center gap-3 w-full">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 w-full">
         <button
           onClick={() => setIsFlipped(!isFlipped)}
-          className="px-4 py-2 rounded-xl bg-navy-850 hover:bg-navy-800 border border-gold-500/30 text-gold-300 hover:text-gold-200 text-xs font-semibold flex items-center gap-2 transition-all shadow-md active:scale-95"
+          className="px-3.5 sm:px-4 py-2 rounded-xl bg-navy-850 hover:bg-navy-800 border border-gold-500/30 text-gold-300 hover:text-gold-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95 touch-target justify-center"
         >
           <RotateCw className={`w-3.5 h-3.5 ${isFlipped ? 'rotate-180' : ''} transition-transform duration-500`} />
           <span>{isFlipped ? t('card.front') : t('card.back')}</span>
@@ -327,7 +327,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           <button
             onClick={exportCardAsPng}
             disabled={isExporting}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 text-xs font-bold flex items-center gap-2 transition-all shadow-gold-glow hover:shadow-gold-glow-lg active:scale-95 disabled:opacity-50"
+            className="px-4 sm:px-5 py-2 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-gold-glow hover:shadow-gold-glow-lg active:scale-95 disabled:opacity-50 touch-target justify-center"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{isExporting ? t('card.generatingPng') : t('card.downloadPng')}</span>
@@ -338,14 +338,14 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           href={`/${locale}/verify/${card.cardId}`}
           target="_blank"
           rel="noreferrer"
-          className="px-4 py-2 rounded-xl bg-dzBlue-dark hover:bg-dzBlue border border-dzBlue-neon/40 text-dzBlue-neon text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+          className="px-3.5 sm:px-4 py-2 rounded-xl bg-dzBlue-dark hover:bg-dzBlue border border-dzBlue-neon/40 text-dzBlue-neon text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm touch-target justify-center"
         >
           <ExternalLink className="w-3.5 h-3.5" />
           <span>{t('card.verifyCard')}</span>
         </a>
       </div>
 
-      <p className="text-[11px] text-gray-400 text-center font-arabic">
+      <p className="text-[10px] sm:text-[11px] text-gray-400 text-center font-arabic">
         💡 {t('card.flipInstruction')}
       </p>
     </div>

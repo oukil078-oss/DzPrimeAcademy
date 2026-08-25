@@ -1,7 +1,5 @@
-import type { Metadata } from 'next';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { FloatingBotWidget } from '@/components/bot/FloatingBotWidget';
+import type { Metadata, Viewport } from 'next';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
@@ -10,6 +8,13 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 };
 
 export default async function LocalizedLayout({
@@ -46,11 +51,8 @@ export default async function LocalizedLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#040711] text-slate-900 dark:text-white selection:bg-gold-500 selection:text-navy-950 transition-colors duration-300">
-        <Navbar />
-        <main className="flex-1 w-full">{children}</main>
-        <Footer />
-        <FloatingBotWidget />
+      <body className="min-h-screen bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white selection:bg-gold-500 selection:text-navy-950 transition-colors duration-300">
+        <DashboardShell>{children}</DashboardShell>
       </body>
     </html>
   );

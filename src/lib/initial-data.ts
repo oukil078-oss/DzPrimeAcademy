@@ -512,6 +512,13 @@ export const AMBASSADORS: AmbassadorProfile[] = [
   }
 ];
 
+export const CERTIFIED_TEACHERS = [
+  { id: 'user-teacher', name: 'Pr. Abdelrahim Kadri', specialty: 'Mathématiques & Analyse', institution: 'Université Ferhat Abbas Sétif 1' },
+  { id: 'tch-benali', name: 'Dr. Amina Benali', specialty: 'Algorithmique & Data Structures', institution: 'USTHB Bab Ezzouar' },
+  { id: 'tch-bouzid', name: 'Dr. Youcef Bouzid', specialty: 'Physique & Mécanique', institution: 'USTO-MB Oran' },
+  { id: 'tch-mansouri', name: 'Pr. Karim Mansouri', specialty: 'Sciences BAC & Biologie', institution: 'Université Constantine 1' },
+];
+
 export const RECENT_POSTS: Post[] = [
   {
     id: 'post-1',
@@ -529,6 +536,19 @@ export const RECENT_POSTS: Post[] = [
     authorId: 'user-ambassador',
     authorName: 'Alaa Eddine (Ambassadeur USTHB)',
     authorRole: 'AMBASSADOR',
+    assignedTeacherId: 'user-teacher',
+    assignedTeacherName: 'Pr. Abdelrahim Kadri',
+    comments: [
+      {
+        id: 'comm-1',
+        authorId: 'user-teacher',
+        authorName: 'Pr. Abdelrahim Kadri',
+        authorRole: 'TEACHER',
+        content: 'ملاحظة وتوجيه بيداغوجي: تم إعداد سلسلة تمارين خاصة بـ Théorème des Accroissements Finis وسنناقشها خلال الحصة الحضورية. يرجى من الطلبة محاولة حل التمرين 2 مسبقاً.',
+        isVerifiedTeacher: true,
+        createdAt: '2026-08-15',
+      },
+    ],
     createdAt: '2026-08-14',
   },
   {
@@ -543,6 +563,19 @@ export const RECENT_POSTS: Post[] = [
     authorId: 'user-admin',
     authorName: 'Conseil National DZ Prime',
     authorRole: 'OWNER',
+    assignedTeacherId: 'tch-mansouri',
+    assignedTeacherName: 'Pr. Karim Mansouri',
+    comments: [
+      {
+        id: 'comm-2',
+        authorId: 'tch-mansouri',
+        authorName: 'Pr. Karim Mansouri',
+        authorRole: 'TEACHER',
+        content: 'توجيه ممتاز ومطابق لبرنامج التدرجات السنوية لوزارة التربية الوطنية.',
+        isVerifiedTeacher: true,
+        createdAt: '2026-08-14',
+      },
+    ],
     createdAt: '2026-08-13',
   },
   {
@@ -559,6 +592,9 @@ export const RECENT_POSTS: Post[] = [
     authorId: 'user-teacher',
     authorName: 'Pr. Abdelrahim Kadri',
     authorRole: 'TEACHER',
+    assignedTeacherId: 'user-teacher',
+    assignedTeacherName: 'Pr. Abdelrahim Kadri',
+    comments: [],
     createdAt: '2026-08-12',
   },
 ];

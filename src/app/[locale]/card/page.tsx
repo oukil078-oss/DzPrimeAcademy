@@ -49,22 +49,22 @@ export default function CardStudioPage() {
   };
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8">
+    <div className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-6 sm:space-y-8">
       <div className="text-center max-w-3xl mx-auto">
-        <span className="px-4 py-1 rounded-full bg-gold-500/15 border border-gold-500/30 text-gold-700 dark:text-gold-300 text-xs font-bold uppercase tracking-wider font-arabic">
+        <span className="px-3.5 sm:px-4 py-1 rounded-full bg-gold-500/15 border border-gold-500/30 text-gold-700 dark:text-gold-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider font-arabic">
           DIGITAL CARD STUDIO & EXPORT
         </span>
-        <h1 className="text-2xl sm:text-4xl font-black font-arabic text-slate-900 dark:text-white mt-3">
+        <h1 className="text-xl xs:text-2xl sm:text-4xl font-black font-arabic text-slate-900 dark:text-white mt-2 sm:mt-3">
           {t('card.title')}
         </h1>
-        <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 font-arabic mt-2">
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 font-arabic mt-1.5 sm:mt-2">
           {t('card.subtitle')}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
         {/* Left Form: Customizer */}
-        <div className="lg:col-span-5 p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left transition-colors">
+        <div className="lg:col-span-5 p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left transition-colors">
           <div className="flex items-center gap-2 mb-4 text-gold-700 dark:text-gold-300 font-bold font-arabic">
             <Sparkles className="w-5 h-5 text-gold-600 dark:text-gold-400" />
             <h3>{t('card.customizerTitle')}</h3>

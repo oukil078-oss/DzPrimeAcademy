@@ -149,7 +149,7 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
   return (
     <div
       className={`w-full ${
-        isFloating ? 'max-w-full p-2 sm:p-4' : 'max-w-5xl mx-auto p-4 sm:p-8 rounded-3xl'
+        isFloating ? 'max-w-full p-2.5 sm:p-4' : 'max-w-5xl mx-auto p-3.5 sm:p-6 md:p-8 rounded-3xl'
       } border border-slate-200 dark:border-gold-500/30 bg-white/95 dark:bg-gradient-to-b dark:from-navy-900/95 dark:via-navy-950 dark:to-[#050811] shadow-xl text-slate-900 dark:text-white transition-colors duration-300 relative overflow-hidden`}
     >
       {/* Background highlight */}
@@ -157,26 +157,26 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
 
       {/* Header with Title & Reset Button */}
       {!isFloating && (
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-gold-500/20">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-6 border-b border-slate-200 dark:border-gold-500/20">
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-gold-500/15 border border-gold-500/40 text-gold-600 dark:text-gold-400">
-                <Sparkles className="w-5 h-5" />
+              <span className="p-1.5 sm:p-2 rounded-xl bg-gold-500/15 border border-gold-500/40 text-gold-600 dark:text-gold-400">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
               </span>
-              <h2 className="text-xl sm:text-2xl font-extrabold font-arabic text-slate-900 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-gold-200 dark:to-gold-400 dark:bg-clip-text">
+              <h2 className="text-lg sm:text-2xl font-extrabold font-arabic text-slate-900 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-gold-200 dark:to-gold-400 dark:bg-clip-text">
                 {t('bot.title')}
               </h2>
             </div>
-            <p className="text-xs text-slate-600 dark:text-gray-300 mt-1 font-arabic">
+            <p className="text-[11px] sm:text-xs text-slate-600 dark:text-gray-300 mt-1 font-arabic">
               {t('bot.subtitle')}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
             {currentStep !== 'TRACK' && (
               <button
                 onClick={handleReset}
-                className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gold-500/30 text-slate-700 dark:text-gold-300 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gold-500/30 text-slate-700 dark:text-gold-300 text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 touch-target"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>{t('bot.resetFlow')}</span>
@@ -184,14 +184,14 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
             )}
 
             {isUserGold ? (
-              <div className="px-3.5 py-1.5 rounded-xl bg-gold-500/20 border border-gold-500/40 text-gold-700 dark:text-gold-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <div className="px-3 py-1.5 rounded-xl bg-gold-500/20 border border-gold-500/40 text-gold-700 dark:text-gold-300 text-xs font-bold flex items-center gap-1.5 shadow-sm">
                 <Award className="w-4 h-4 text-gold-600 dark:text-gold-400" />
                 <span>VIP GOLD</span>
               </div>
             ) : (
               <button
                 onClick={() => setIsUpgradeModalOpen(true)}
-                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 text-xs font-extrabold flex items-center gap-1.5 shadow-gold-glow transition-all active:scale-95"
+                className="px-3.5 sm:px-4 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 text-xs font-extrabold flex items-center gap-1.5 shadow-gold-glow transition-all active:scale-95 touch-target"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{t('nav.upgrade')}</span>
@@ -201,11 +201,11 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
         </div>
       )}
 
-      {/* Interactive Step Breadcrumbs */}
-      <div className="relative z-10 my-4 flex flex-wrap items-center gap-1.5 text-xs font-arabic">
+      {/* Interactive Step Breadcrumbs with Horizontal Mobile Scrolling */}
+      <div className="relative z-10 my-3 sm:my-4 flex items-center gap-1.5 text-xs font-arabic overflow-x-auto no-scrollbar py-1 touch-pan-x whitespace-nowrap">
         <button
           onClick={() => handleJumpToStep('TRACK')}
-          className={`px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 ${
+          className={`px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 shrink-0 ${
             currentStep === 'TRACK'
               ? 'bg-gold-500/20 border-gold-500 text-gold-700 dark:text-gold-300 font-bold shadow-sm'
               : selection.track
@@ -213,8 +213,8 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
               : 'bg-slate-50 dark:bg-navy-950/40 border-transparent text-slate-400 dark:text-gray-500 cursor-not-allowed'
           }`}
         >
-          <GraduationCap className="w-3.5 h-3.5" />
-          <span>
+          <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+          <span className="text-[11px] sm:text-xs">
             {selection.track
               ? selection.track === 'BAC'
                 ? t('bot.track_bac')
@@ -225,10 +225,10 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
 
         {selection.track && (
           <>
-            <span className="text-slate-400 dark:text-gray-600">/</span>
+            <span className="text-slate-400 dark:text-gray-600 shrink-0">/</span>
             <button
               onClick={() => handleJumpToStep('WILAYA_OR_UNIV')}
-              className={`px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1 shrink-0 ${
                 currentStep === 'WILAYA_OR_UNIV'
                   ? 'bg-gold-500/20 border-gold-500 text-gold-700 dark:text-gold-300 font-bold shadow-sm'
                   : selection.institutionName
@@ -236,8 +236,8 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                   : 'bg-slate-50 dark:bg-navy-950/40 border-transparent text-slate-400 dark:text-gray-500'
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" />
-              <span className="max-w-[130px] truncate">
+              <Building2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="max-w-[120px] sm:max-w-[160px] truncate text-[11px] sm:text-xs">
                 {selection.institutionName || t('bot.step2_title')}
               </span>
             </button>
@@ -639,16 +639,24 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                   </div>
                   <div>
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-gold-200 font-arabic">
-                      {t('bot.freeTierNotice')}
+                      {locale === 'ar'
+                        ? 'الحساب المجاني: متاح لك أول موضوعين كعينة مجانية'
+                        : locale === 'fr'
+                        ? 'Compte Gratuit : Accès aux 2 premiers sujets d\'annales'
+                        : 'Free Account: Access to 2 sample exam papers'}
                     </h4>
                     <p className="text-[11px] text-slate-600 dark:text-gray-300 font-arabic">
-                      {t('bot.upgradePrompt')}
+                      {locale === 'ar'
+                        ? 'فعّل العضوية الذهبية VIP للوصول غير المحدود لكافة المواضيع والحلول النموذجية.'
+                        : locale === 'fr'
+                        ? 'Passez en VIP Gold pour débloquer l\'intégralité des 12 000+ sujets et corrigés.'
+                        : 'Upgrade to VIP Gold for unlimited access to all 12,000+ exam papers & solutions.'}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 text-xs font-extrabold font-arabic shadow-gold-glow shrink-0 active:scale-95 transition-all"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 text-xs font-extrabold font-arabic shadow-gold-glow shrink-0 active:scale-95 transition-all touch-target"
                 >
                   {t('bot.upgradeBtn')}
                 </button>
@@ -666,14 +674,14 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                     : 'No exam papers available for this category.'}
                 </div>
               ) : (
-                availableExams.map((exam) => {
-                  const isLocked = !isUserGold && !exam.isFreeSample;
+                availableExams.map((exam, index) => {
+                  const isLocked = !isUserGold && index >= 2;
                   return (
                     <div
                       key={exam.id}
                       className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                         isLocked
-                          ? 'border-slate-200 dark:border-gold-500/20 bg-slate-50 dark:bg-navy-950/60 opacity-85'
+                          ? 'border-slate-200 dark:border-gold-500/20 bg-slate-50 dark:bg-navy-950/60 opacity-90'
                           : 'border-slate-200 dark:border-gold-500/40 bg-white dark:bg-navy-850/90 shadow-sm hover:shadow-md'
                       }`}
                     >
@@ -681,12 +689,12 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
                             isLocked
-                              ? 'bg-slate-100 dark:bg-navy-900 border-slate-300 dark:border-gray-700 text-slate-500 dark:text-gold-400'
+                              ? 'bg-amber-500/10 dark:bg-navy-900 border-amber-400/40 text-amber-600 dark:text-gold-400'
                               : 'bg-gold-500/15 border-gold-500/40 text-gold-600 dark:text-gold-300'
                           }`}
                         >
                           {isLocked ? (
-                            <Lock className="w-4 h-4" />
+                            <Lock className="w-4 h-4 text-amber-600 dark:text-gold-400" />
                           ) : (
                             <FileText className="w-5 h-5" />
                           )}
@@ -713,6 +721,12 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                             <span className="font-mono text-xs text-gold-700 dark:text-gold-400 font-semibold">
                               {exam.year}
                             </span>
+
+                            {isLocked && (
+                              <span className="px-2 py-0.2 rounded-md bg-gold-500/20 text-gold-700 dark:text-gold-300 font-bold font-arabic text-[9px]">
+                                VIP GOLD
+                              </span>
+                            )}
                           </div>
 
                           <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1 font-arabic">
@@ -730,16 +744,16 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                         {isLocked ? (
                           <button
                             onClick={() => setIsUpgradeModalOpen(true)}
-                            className="px-3 py-1.5 rounded-xl bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-700 dark:text-gold-300 text-xs font-bold font-arabic flex items-center gap-1.5 transition-all active:scale-95"
+                            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500/20 to-amber-500/20 hover:from-gold-500/30 hover:to-amber-500/30 border border-gold-500/40 text-gold-800 dark:text-gold-300 text-xs font-bold font-arabic flex items-center gap-1.5 transition-all active:scale-95 touch-target"
                           >
                             <Lock className="w-3.5 h-3.5" />
-                            <span>{t('bot.lockedExam')}</span>
+                            <span>{locale === 'ar' ? 'فتح الموضوع (VIP)' : 'Débloquer (VIP)'}</span>
                           </button>
                         ) : (
                           <>
                             <button
                               onClick={() => setActivePdfPreview(exam)}
-                              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gold-500/30 text-slate-800 dark:text-gold-200 text-xs font-semibold font-arabic flex items-center gap-1.5 transition-all"
+                              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gold-500/30 text-slate-800 dark:text-gold-200 text-xs font-semibold font-arabic flex items-center gap-1.5 transition-all touch-target"
                             >
                               <FileText className="w-3.5 h-3.5" />
                               <span>{t('bot.viewExam')}</span>
@@ -748,7 +762,7 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
                             <a
                               href={exam.fileUrl}
                               download
-                              className="p-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm active:scale-95"
+                              className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm active:scale-95 touch-target"
                               title={t('bot.downloadPdf')}
                             >
                               <Download className="w-4 h-4" />

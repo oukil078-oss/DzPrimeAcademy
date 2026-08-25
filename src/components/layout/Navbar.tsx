@@ -11,29 +11,39 @@ import {
   Shield,
   Bot,
   CreditCard,
-  Network,
-  LayoutDashboard,
   Crown,
   LogIn,
   LogOut,
+  Search,
+  Bell,
+  CheckCircle2,
+  GraduationCap,
 } from 'lucide-react';
-import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { LanguageSwitcher } from '../shared/LanguageSwitcher';
 import { RoleSwitcher } from '../shared/RoleSwitcher';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
-import { isStaff } from '@/lib/rbac';
+import { isStaff, isGoldenMember } from '@/lib/rbac';
 import { UpgradeModal } from '../shared/UpgradeModal';
 import { AuthModal } from '../auth/AuthModal';
 
-export const Navbar: React.FC = () => {
-  const { t, locale } = useTranslation();
+interface NavbarProps {
+  onToggleSidebar?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
+  const { t, locale, isRtl } = useTranslation();
   const { currentUser, signOut } = useAuthStore();
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const isGold = isGoldenMember(currentUser);
+  const displayName = currentUser ? currentUser.name : (locale === 'ar' ? 'طالب زائر' : 'Invité');
+  const specialty = currentUser?.specialty || (locale === 'ar' ? 'جامعة هواري بومدين • L1 MI' : 'USTHB • L1 MI');
 
   const getDashboardLink = () => {
     if (!currentUser) return `/${locale}/student`;
@@ -42,197 +52,119 @@ export const Navbar: React.FC = () => {
     return `/${locale}/student`;
   };
 
-  const navLinks = [
-    { href: `/${locale}`, label: t('nav.home'), icon: null, authRequired: false },
-    { href: `/${locale}/bot`, label: t('nav.bot'), icon: Bot, authRequired: false },
-    { href: `/${locale}/card`, label: t('nav.membershipCard'), icon: CreditCard, authRequired: false },
-    { href: `/${locale}/#ambassadors`, label: t('nav.ambassadors'), icon: Network, authRequired: false },
-    { href: `/${locale}/#hierarchy`, label: t('nav.hierarchy'), icon: Shield, authRequired: false },
-    { href: getDashboardLink(), label: t('nav.dashboard'), icon: LayoutDashboard, authRequired: true },
-  ];
-
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-gold-500/25 bg-white/90 dark:bg-navy-950/85 backdrop-blur-xl shadow-sm transition-colors duration-300">
-        {/* Top Role Switcher & Announcement Bar */}
-        <div className="bg-slate-50 dark:bg-gradient-to-r dark:from-navy-900 dark:via-navy-850 dark:to-navy-900 border-b border-slate-200 dark:border-gold-500/20 px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-[#070D1F]/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors select-none font-arabic">
+        {/* Top Role Testing Bar */}
+        <div className="bg-slate-100/90 dark:bg-[#0B1224] border-b border-slate-200 dark:border-slate-800/60 px-3 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-slate-600 dark:text-gray-300 font-arabic text-[11px] font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-bold text-slate-600 dark:text-gray-300">
               {t('hero.badge')}
             </span>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <RoleSwitcher />
             <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>
 
-        {/* Main Nav Container */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link href={`/${locale}`} className="flex items-center gap-2 group">
-            <DzPrimeLogo size={36} showText={true} />
-          </Link>
+        {/* Main Header Bar */}
+        <div className="px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-6">
+          {/* Left: Mobile Menu Trigger & Greeting */}
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={onToggleSidebar}
+              className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300 dark:border-gray-700 text-slate-800 dark:text-gray-200 touch-target"
+              aria-label="Toggle Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              const Icon = link.icon;
+            <div className="flex flex-col text-left min-w-0">
+              <h1 className="text-base sm:text-xl font-black font-arabic text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                <span>{t('dashboard.welcomeBack')}, {displayName.split(' ')[0]}</span>
+                <span className="text-base sm:text-lg">👋</span>
+              </h1>
+              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400 font-semibold truncate">
+                {specialty}
+              </p>
+            </div>
+          </div>
 
-              if (link.authRequired && !currentUser) {
-                return (
-                  <button
-                    key={link.href}
-                    onClick={() => setAuthModalOpen(true)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold font-arabic transition-all flex items-center gap-1.5 text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-850"
-                  >
-                    {Icon && <Icon className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />}
-                    <span>{link.label}</span>
-                  </button>
-                );
-              }
+          {/* Center: Search Bar */}
+          <div className="hidden md:flex flex-1 max-w-md mx-2">
+            <div className="relative w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('dashboard.searchPlaceholder')}
+                className="w-full pl-10 pr-4 py-2 rounded-2xl bg-slate-100 dark:bg-navy-900/90 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 dark:focus:border-gold-400 transition-all font-arabic"
+              />
+            </div>
+          </div>
 
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold font-arabic transition-all flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-amber-100 text-gold-800 dark:bg-gold-500/20 dark:text-gold-300 border border-gold-500/40 shadow-sm'
-                      : 'text-slate-700 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-850'
-                  }`}
-                >
-                  {Icon && <Icon className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />}
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Right: Actions & User Avatar */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* VIP Upgrade Button */}
+            {!isGold ? (
+              <button
+                onClick={() => setUpgradeModalOpen(true)}
+                className="px-3 sm:px-4 py-2 rounded-2xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs font-arabic flex items-center gap-1.5 shadow-gold-glow active:scale-95 transition-all touch-target"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">{t('nav.upgrade')}</span>
+              </button>
+            ) : (
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gold-500/20 border border-gold-500/40 text-gold-700 dark:text-gold-300 text-xs font-bold font-arabic shadow-sm">
+                <Crown className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
+                <span>VIP GOLD</span>
+              </div>
+            )}
 
-          {/* Right Action: Sign In vs Logged In Profile */}
-          <div className="hidden sm:flex items-center gap-2.5">
+            {/* Profile Avatar / Login */}
             {currentUser ? (
-              <>
-                {currentUser.role === 'STUDENT_PAID' || isStaff(currentUser.role) ? (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gold-500/15 border border-gold-500/40 text-gold-700 dark:text-gold-300 text-xs font-bold font-arabic shadow-sm">
-                    <Crown className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
-                    <span>{currentUser.name.split(' ')[0]}</span>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setUpgradeModalOpen(true)}
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-extrabold text-xs font-arabic flex items-center gap-1.5 shadow-gold-glow transition-all active:scale-95"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{t('nav.upgrade')}</span>
-                  </button>
-                )}
-
+              <div className="flex items-center gap-2">
                 <Link
                   href={getDashboardLink()}
-                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-850 dark:hover:bg-navy-800 border border-slate-300 dark:border-gold-500/30 text-slate-700 dark:text-gold-300 transition-all"
-                  title={t('nav.dashboard')}
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300 dark:border-gray-700 text-slate-800 dark:text-gray-200 transition-all group"
                 >
-                  <UserIcon className="w-4 h-4" />
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-lime-400 to-emerald-500 dark:from-gold-500 dark:to-amber-400 text-slate-950 font-bold flex items-center justify-center text-xs shadow-sm">
+                    {currentUser.name.charAt(0)}
+                  </div>
+                  <span className="hidden sm:inline text-xs font-bold font-arabic">
+                    {currentUser.name.split(' ')[0]}
+                  </span>
                 </Link>
 
                 <button
                   onClick={signOut}
-                  className="p-2 rounded-xl hover:bg-rose-100 dark:hover:bg-rose-950/40 text-slate-500 hover:text-rose-600 dark:text-gray-400 dark:hover:text-rose-400 border border-transparent hover:border-rose-400/30 transition-all"
-                  title={locale === 'ar' ? 'تسجيل الخروج' : 'Déconnexion'}
+                  title={t('nav.logout')}
+                  className="p-2 rounded-xl bg-slate-100 dark:bg-navy-850 hover:bg-red-500/20 hover:text-red-500 text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-gray-700 transition-all"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setAuthModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-xl border border-slate-300 dark:border-gold-500/30 hover:border-gold-500 text-slate-700 dark:text-gold-300 hover:bg-slate-100 dark:hover:bg-navy-800 font-bold text-xs font-arabic flex items-center gap-1.5 transition-all"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  <span>{locale === 'ar' ? 'دخول' : locale === 'fr' ? 'Connexion' : 'Sign In'}</span>
-                </button>
-
-                <button
-                  onClick={() => setAuthModalOpen(true)}
-                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs font-arabic shadow-gold-glow flex items-center gap-1.5 transition-all active:scale-95"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{locale === 'ar' ? 'انضم الآن' : locale === 'fr' ? 'S\'inscrire' : 'Join Now'}</span>
-                </button>
               </div>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-navy-950 font-black text-xs font-arabic flex items-center gap-1.5 shadow-sm active:scale-95 transition-all touch-target"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>{t('nav.login')}</span>
+              </button>
             )}
           </div>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-navy-850 text-slate-700 dark:text-gold-400 border border-slate-300 dark:border-gold-500/30"
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
-
-        {/* Mobile Dropdown Drawer */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-slate-200 dark:border-gold-500/20 bg-white dark:bg-navy-950 px-4 py-4 space-y-2 shadow-2xl">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-2.5 rounded-xl text-sm font-bold font-arabic text-slate-800 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-navy-850"
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            <div className="pt-3 border-t border-slate-200 dark:border-gray-800 flex flex-col gap-2">
-              {currentUser ? (
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 dark:text-gold-300">
-                    {currentUser.name} ({currentUser.role})
-                  </span>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="text-xs text-rose-500 font-bold"
-                  >
-                    {locale === 'ar' ? 'خروج' : 'Déconnexion'}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAuthModalOpen(true);
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-gold-500 text-navy-950 font-extrabold text-xs font-arabic text-center shadow-gold-glow"
-                >
-                  {locale === 'ar' ? 'تسجيل الدخول / تجربة الأدوار' : 'Connexion / Démo'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </header>
 
-      <UpgradeModal
-        isOpen={upgradeModalOpen}
-        onClose={() => setUpgradeModalOpen(false)}
-      />
-
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-      />
+      {/* Upgrade & Auth Modals */}
+      <UpgradeModal isOpen={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
 };
