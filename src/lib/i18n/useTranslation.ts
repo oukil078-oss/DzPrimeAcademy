@@ -162,6 +162,7 @@ export function useTranslation() {
 
   return {
     locale,
+    changeLocale,
     setLocale: changeLocale,
     t,
     dict,

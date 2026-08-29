@@ -13,13 +13,15 @@ export interface MetricCardItem {
 }
 
 interface MetricsGridProps {
-  metrics: MetricCardItem[];
+  metrics?: MetricCardItem[];
+  items?: MetricCardItem[];
 }
 
-export const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics }) => {
+export const MetricsGrid: React.FC<MetricsGridProps> = ({ metrics, items }) => {
+  const data = metrics || items || [];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-      {metrics.map((metric, idx) => {
+      {data.map((metric, idx) => {
         const Icon = metric.icon;
         return (
           <div

@@ -3,6 +3,7 @@ import { Role, User } from '@/types';
 export const ROLE_HIERARCHY: Record<Role, number> = {
   OWNER: 100,
   ADMIN: 90,
+  AGENT_TECHNIQUE: 80,
   MODERATOR: 70,
   AMBASSADOR: 50,
   TEACHER: 40,
@@ -16,7 +17,12 @@ export function hasPermission(userRole: Role, requiredRole: Role): boolean {
 
 export function isStaff(role?: Role): boolean {
   if (!role) return false;
-  return ['OWNER', 'ADMIN', 'MODERATOR'].includes(role);
+  return ['OWNER', 'ADMIN', 'AGENT_TECHNIQUE', 'MODERATOR'].includes(role);
+}
+
+export function isTechnicalAgent(role?: Role): boolean {
+  if (!role) return false;
+  return role === 'AGENT_TECHNIQUE' || role === 'OWNER' || role === 'ADMIN';
 }
 
 export function isAmbassador(role?: Role): boolean {
@@ -31,7 +37,12 @@ export function isTeacher(role?: Role): boolean {
 
 export function isGoldenMember(user?: User | null): boolean {
   if (!user) return false;
-  return user.role === 'STUDENT_PAID' || isStaff(user.role) || user.role === 'AMBASSADOR' || user.role === 'TEACHER';
+  return (
+    user.role === 'STUDENT_PAID' ||
+    isStaff(user.role) ||
+    user.role === 'AMBASSADOR' ||
+    user.role === 'TEACHER'
+  );
 }
 
 export function canAccessFullExams(user?: User | null): boolean {
@@ -40,5 +51,11 @@ export function canAccessFullExams(user?: User | null): boolean {
 
 export function canModerate(role?: Role): boolean {
   if (!role) return false;
-  return ['OWNER', 'ADMIN', 'MODERATOR'].includes(role);
+  return ['OWNER', 'ADMIN', 'AGENT_TECHNIQUE', 'MODERATOR'].includes(role);
 }
+
+export function canManagePacks(role?: Role): boolean {
+  if (!role) return false;
+  return ['OWNER', 'ADMIN', 'AGENT_TECHNIQUE'].includes(role);
+}
+

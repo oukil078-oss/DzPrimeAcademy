@@ -1,6 +1,7 @@
 export type Role =
   | 'OWNER'
   | 'ADMIN'
+  | 'AGENT_TECHNIQUE'
   | 'MODERATOR'
   | 'AMBASSADOR'
   | 'TEACHER'
@@ -204,3 +205,205 @@ export interface CardVerificationResult {
   card: MembershipCardData | null;
   message: string;
 }
+
+// ==========================================
+// DAWARAT & LIVE PREPARATION PACKS TYPES
+// ==========================================
+
+export type DawaaraCategory =
+  | 'BAC_SCIENCE'
+  | 'BAC_MATH'
+  | 'BAC_LANGUAGES'
+  | 'BAC_LITERATURE'
+  | 'UNIVERSITY_LMD'
+  | 'MEDICAL';
+
+export type PaymentMethod = 'BARIDIMOB' | 'EDAHABIA' | 'AMBASSADOR_CASH';
+
+export interface TeacherProfile {
+  id: string;
+  name: string;
+  titleAr: string;
+  titleFr: string;
+  specialty: string;
+  avatar: string;
+  experienceYears: number;
+  institution: string;
+  bioAr: string;
+  bioFr: string;
+  assignedModuleIds: string[];
+}
+
+export interface DawaaraModule {
+  id: string;
+  packId: string;
+  nameAr: string;
+  nameFr: string;
+  nameEn: string;
+  code: string;
+  coefficient: number;
+  shortDescriptionAr: string;
+  shortDescriptionFr: string;
+  shortDescriptionEn: string;
+  syllabusAr: string[];
+  syllabusFr: string[];
+  individualPrice: number;     // e.g. 3500 DZD (bought separately)
+  packDiscountPrice: number;   // e.g. 2000 DZD (value within pack bundle)
+  hoursCount: number;          // Total live session hours
+  sessionsCount: number;       // Number of live workshops
+  scheduleDaysAr: string;      // e.g. "الجمعة والسبت 18:00 - 20:00"
+  scheduleDaysFr: string;      // e.g. "Ven & Sam 18h00 - 20h00"
+  teacherId: string;           // Assigned teacher
+  teacherName: string;
+  teacherTitle: string;
+  teacherAvatar: string;
+  meetUrl?: string;            // Google Meet / Class link
+  enrolledCount: number;
+}
+
+export interface DawaaraPack {
+  id: string;
+  slug: string;
+  titleAr: string;
+  titleFr: string;
+  titleEn: string;
+  category: DawaaraCategory;
+  track: TrackType;
+  targetAudienceAr: string;
+  targetAudienceFr: string;
+  badgeAr: string;
+  badgeFr: string;
+  descriptionAr: string;
+  descriptionFr: string;
+  descriptionEn: string;
+  originalTotalPrice: number;  // Sum of individual modules (e.g. 11,500 DZD)
+  packPrice: number;           // Reduced bundle price (e.g. 6,500 DZD)
+  vipDiscountPrice: number;    // Special price for Gold Card holders (e.g. 5,000 DZD)
+  totalHours: number;
+  totalSessions: number;
+  startDate: string;
+  endDate: string;
+  isLiveNow: boolean;
+  isPopular?: boolean;
+  ambassadorId: string;        // Assigned promoting ambassador
+  ambassadorName: string;
+  ambassadorWilayaCode: number;
+  ambassadorWilayaName: string;
+  referralCode: string;        // e.g. "USTHB16" or "BAC2026"
+  modules: DawaaraModule[];
+  createdAt: string;
+}
+
+export interface PackEnrollment {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentEmail: string;
+  studentPhone: string;
+  packId?: string;
+  packTitle?: string;
+  moduleIds: string[];         // If individual modules selected
+  totalPaid: number;
+  paymentMethod: PaymentMethod;
+  referralCodeUsed?: string;
+  ambassadorDiscountApplied: number;
+  status: 'CONFIRMED' | 'PENDING_VERIFICATION';
+  receiptUrl?: string;
+  createdAt: string;
+}
+
+export interface ModuleResource {
+  id: string;
+  moduleId: string;
+  moduleName: string;
+  title: string;
+  fileType: 'PDF_SERIES' | 'SOLUTION_KEY' | 'MINDMAP' | 'RECORDING';
+  fileUrl: string;
+  fileSize: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  downloadCount: number;
+}
+
+export interface TeacherRosterStudent {
+  id: string;
+  studentName: string;
+  avatar?: string;
+  wilayaCode: number;
+  wilayaName: string;
+  institution: string;
+  moduleId: string;
+  moduleName: string;
+  enrolledAt: string;
+  attendanceRate: number; // e.g. 95
+  lastAttendedSession: string;
+  status: 'ACTIVE' | 'EXCUSED' | 'ABSENT';
+}
+
+export interface AmbassadorSaleRecord {
+  id: string;
+  studentName: string;
+  packTitle: string;
+  promoCode: string;
+  commissionAmount: number; // e.g. 590 DZD
+  date: string;
+  status: 'PAID' | 'PENDING_PAYOUT';
+}
+
+export interface SessionAmbassador {
+  id: string;
+  name: string;
+  avatar?: string;
+  wilayaCode: number;
+  wilayaName: string;
+  institution: string;
+  roleTitle?: string; // e.g. "مشرف تقني وقاعة USTHB", "منسق الأسئلة والحضور"
+  phone?: string;
+}
+
+export interface SessionAttendee {
+  id: string;
+  studentName: string;
+  avatar?: string;
+  wilayaCode: number;
+  wilayaName: string;
+  institution: string; // e.g. "ثانوية الرياضيات القبة" or "USTHB Faculté Informatique"
+  specialty: string;
+  joinedAt: string;
+  status: 'PRESENT' | 'ABSENT' | 'EXCUSED';
+  notes?: string;
+  handRaised?: boolean;
+  audioActive?: boolean;
+}
+
+export interface TeacherLiveSession {
+  id: string;
+  roomId?: string; // e.g. "room-math-kadri"
+  moduleId: string;
+  moduleName: string;
+  courseTitle: string;
+  sessionNumber: number;
+  title: string;
+  date: string;
+  timeSlot: string;
+  durationMinutes: number;
+  ambassadorId: string;
+  ambassadorName: string;
+  ambassadorWilayaCode: number;
+  ambassadorWilayaName: string;
+  ambassadorAvatar?: string;
+  ambassadors?: SessionAmbassador[]; // Support multiple co-hosting ambassadors across universities
+  attendees?: SessionAttendee[]; // Full roster of joined students
+  enrolledStudentsCount: number;
+  joinedStudentsCount: number;
+  replayViewsCount: number;
+  questionsCount: number;
+  meetUrl: string;
+  status: 'LIVE_NOW' | 'COMPLETED' | 'SCHEDULED';
+  handoutPdfUrl?: string;
+  handoutTitle?: string;
+  recordingUrl?: string;
+}
+
+
+

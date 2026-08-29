@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
+import { AppShell } from '@/components/layout/AppShell';
 import { FloatingBotWidget } from '@/components/bot/FloatingBotWidget';
 import '@/app/globals.css';
 
 export const metadata: Metadata = {
-  title: 'DZ PRIME ACADEMY | منصة تعليمية جزائرية متكاملة',
-  description: 'المنصة الأكاديمية الأولى في الجزائر - بوت الامتحانات الذكي، بطاقة العضوية الرقمية، وشبكة سفراء في 58 ولاية.',
+  title: 'DZ PRIME ACADEMY • المنصة الأكاديمية الأولى في الجزائر | BAC & Univ 2026',
+  description: 'المنصة الأكاديمية الجزائرية الأولى للتحضير للامتحانات والمسابقات - دورات التحضير المباشرة، بوت الامتحانات الذكي، بطاقة العضوية الرقمية، وشبكة سفراء 58 ولاية.',
   icons: {
     icon: '/favicon.ico',
   },
@@ -46,10 +45,13 @@ export default async function LocalizedLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#F8FAFC] dark:bg-[#040711] text-slate-900 dark:text-white selection:bg-gold-500 selection:text-navy-950 transition-colors duration-300">
-        <Navbar />
-        <main className="flex-1 w-full">{children}</main>
-        <Footer />
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-[#F8FAFC] dark:bg-[#070B16] text-slate-900 dark:text-white selection:bg-gold-500 selection:text-navy-950 transition-colors duration-300"
+      >
+        <AppShell>
+          {children}
+        </AppShell>
         <FloatingBotWidget />
       </body>
     </html>

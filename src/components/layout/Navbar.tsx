@@ -16,6 +16,7 @@ import {
   Crown,
   LogIn,
   LogOut,
+  Video,
 } from 'lucide-react';
 import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { LanguageSwitcher } from '../shared/LanguageSwitcher';
@@ -37,17 +38,19 @@ export const Navbar: React.FC = () => {
 
   const getDashboardLink = () => {
     if (!currentUser) return `/${locale}/student`;
-    if (isStaff(currentUser.role)) return `/${locale}/admin`;
+    if (currentUser.role === 'OWNER' || currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR') return `/${locale}/admin`;
+    if (currentUser.role === 'AGENT_TECHNIQUE') return `/${locale}/coordinator`;
+    if (currentUser.role === 'TEACHER') return `/${locale}/teacher`;
     if (currentUser.role === 'AMBASSADOR') return `/${locale}/ambassador`;
     return `/${locale}/student`;
   };
 
   const navLinks = [
     { href: `/${locale}`, label: t('nav.home'), icon: null, authRequired: false },
+    { href: `/${locale}/dawarat`, label: t('nav.dawarat'), icon: Video, authRequired: false, isLive: true },
     { href: `/${locale}/bot`, label: t('nav.bot'), icon: Bot, authRequired: false },
     { href: `/${locale}/card`, label: t('nav.membershipCard'), icon: CreditCard, authRequired: false },
-    { href: `/${locale}/#ambassadors`, label: t('nav.ambassadors'), icon: Network, authRequired: false },
-    { href: `/${locale}/#hierarchy`, label: t('nav.hierarchy'), icon: Shield, authRequired: false },
+    { href: `/${locale}/ambassadors`, label: t('nav.ambassadors'), icon: Network, authRequired: false },
     { href: getDashboardLink(), label: t('nav.dashboard'), icon: LayoutDashboard, authRequired: true },
   ];
 

@@ -18,6 +18,7 @@ export const RoleSwitcher: React.FC = () => {
     { role: 'STUDENT_PAID', labelAr: 'عضوية ذهبية', labelFr: 'Gold VIP', labelEn: 'VIP Gold', icon: '👑' },
     { role: 'AMBASSADOR', labelAr: 'سفير المنصة', labelFr: 'Ambassadeur', labelEn: 'Ambassador', icon: '🌟' },
     { role: 'TEACHER', labelAr: 'أستاذ معتمد', labelFr: 'Enseignant', labelEn: 'Teacher', icon: '📚' },
+    { role: 'AGENT_TECHNIQUE', labelAr: 'منسق تقني', labelFr: 'Coordinateur', labelEn: 'Coordinator', icon: '🛠️' },
     { role: 'OWNER', labelAr: 'المدير العام', labelFr: 'Admin / CEO', labelEn: 'Admin / CEO', icon: '⚡' },
   ];
 
@@ -35,11 +36,17 @@ export const RoleSwitcher: React.FC = () => {
       const isDashboardPage =
         pathname.includes('/student') ||
         pathname.includes('/ambassador') ||
+        pathname.includes('/teacher') ||
+        pathname.includes('/coordinator') ||
         pathname.includes('/admin');
 
       if (isDashboardPage) {
-        if (role === 'OWNER') {
+        if (role === 'OWNER' || role === 'ADMIN' || role === 'MODERATOR') {
           router.replace(`/${locale}/admin`, { scroll: false });
+        } else if (role === 'AGENT_TECHNIQUE') {
+          router.replace(`/${locale}/coordinator`, { scroll: false });
+        } else if (role === 'TEACHER') {
+          router.replace(`/${locale}/teacher`, { scroll: false });
         } else if (role === 'AMBASSADOR') {
           router.replace(`/${locale}/ambassador`, { scroll: false });
         } else {

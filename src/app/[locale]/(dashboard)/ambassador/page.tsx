@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Award,
   Star,
@@ -14,12 +15,19 @@ import {
   Users,
   MessageSquare,
   Sparkles,
+  Tag,
+  Copy,
+  Check,
+  DollarSign,
+  TrendingUp,
+  ExternalLink,
+  Layers,
 } from 'lucide-react';
 import { MetricsGrid, MetricCardItem } from '@/components/dashboard/MetricsGrid';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { isAmbassador } from '@/lib/rbac';
-import { RECENT_POSTS, AMBASSADORS } from '@/lib/initial-data';
+import { RECENT_POSTS, AMBASSADORS, DAWARAT_PACKS, AMBASSADOR_SALES } from '@/lib/initial-data';
 import { Post, PostType } from '@/types';
 import { AuthModal } from '@/components/auth/AuthModal';
 
@@ -35,11 +43,22 @@ export default function AmbassadorDashboardPage() {
   const [location, setLocation] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const isUserAmb = isAmbassador(currentUser?.role);
 
   const currentAmbassador =
     AMBASSADORS.find((a) => a.userId === currentUser?.id) || AMBASSADORS[0];
+
+  const promoCode = `AMB-${currentAmbassador.wilayaCode || 16}-${currentAmbassador.user.name.split(' ')[0].toUpperCase()}`;
+
+  // Filter packs promoted by this ambassador
+  const assignedPacks = DAWARAT_PACKS.filter(
+    (p) => p.ambassadorId === currentAmbassador.id || p.ambassadorWilayaCode === currentAmbassador.wilayaCode
+  );
+
+  const totalCommissionsEarned = AMBASSADOR_SALES.reduce((sum, s) => sum + s.commissionAmount, 0);
 
   const ambassadorMetrics: MetricCardItem[] = [
     {
@@ -48,31 +67,31 @@ export default function AmbassadorDashboardPage() {
       change: '+0.12',
       isPositive: true,
       icon: Star,
-      description: locale === 'ar' ? 'بناءً على تقييمات الطلبة' : locale === 'fr' ? 'Évaluations des étudiants' : 'Based on student reviews',
+      description: locale === 'ar' ? 'بناءً على تقييمات الطلبة' : 'Évaluations des étudiants',
+    },
+    {
+      title: locale === 'ar' ? 'أرباح العمولات (10%)' : 'Commissions Réseau',
+      value: `${totalCommissionsEarned.toLocaleString()} DZD`,
+      change: '+15.4%',
+      isPositive: true,
+      icon: DollarSign,
+      description: locale === 'ar' ? 'إجمالي العائدات من كود الإحالة' : 'Gains générés',
     },
     {
       title: t('dashboards.ambassador.reviewsCount'),
       value: `${currentAmbassador.ratingsCount}`,
-      change: '+18',
+      change: '+18 this month',
       isPositive: true,
       icon: MessageSquare,
-      description: locale === 'ar' ? 'رأي معتمد في تخصصك' : locale === 'fr' ? 'Avis certifiés' : 'Verified feedback',
+      description: locale === 'ar' ? 'رأي معتمد في نطاق نشاطك' : 'Avis vérifiés',
     },
     {
       title: t('dashboards.ambassador.scheduledSessions'),
-      value: `${currentAmbassador.upcomingSessionsCount}`,
+      value: `${currentAmbassador.upcomingSessionsCount} Sessions`,
       change: 'Active',
       isPositive: true,
       icon: Calendar,
-      description: locale === 'ar' ? 'حصص حضورية وافتراضية' : locale === 'fr' ? 'Séances programmées' : 'Upcoming workshops',
-    },
-    {
-      title: t('dashboards.ambassador.tipsCount'),
-      value: `${currentAmbassador.totalTipsShared}`,
-      change: '+6',
-      isPositive: true,
-      icon: Award,
-      description: locale === 'ar' ? 'مواضيع وملخصات معتمدة' : locale === 'fr' ? 'Ressources partagées' : 'Shared resources',
+      description: locale === 'ar' ? 'ورشات حضورية وافتراضية' : 'Séances programmées',
     },
   ];
 
@@ -105,11 +124,24 @@ export default function AmbassadorDashboardPage() {
     setTimeout(() => setIsSubmitted(false), 3000);
   };
 
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(promoCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2500);
+  };
+
+  const handleCopyLink = () => {
+    const affiliateUrl = `https://dzprime.academy/${locale}/dawarat?ref=${promoCode}`;
+    navigator.clipboard.writeText(affiliateUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 font-arabic">
       {/* Notice if not signed in as Ambassador */}
       {!isUserAmb && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-gold-500/20 to-transparent border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left font-arabic">
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-gold-500/20 to-transparent border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left rtl:text-right font-arabic">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0 font-bold">
               <Award className="w-5 h-5" />
@@ -120,15 +152,15 @@ export default function AmbassadorDashboardPage() {
               </h4>
               <p className="text-xs text-slate-600 dark:text-gray-300">
                 {locale === 'ar'
-                  ? 'يمكنك التبديل إلى دور السفير المعتمد لتجربة نشر الورشات والجلسات ومتابعة التقييمات.'
-                  : 'Passez au profil Ambassadeur pour planifier des sessions et gérer vos avis étudiants.'}
+                  ? 'يمكنك التبديل إلى دور السفير المعتمد لتجربة نشر الورشات والجلسات ومتابعة التقييمات وأرباح الإحالة.'
+                  : 'Passez au profil Ambassadeur pour planifier des sessions et gérer vos commissions.'}
               </p>
             </div>
           </div>
 
           <button
             onClick={() => switchRole('AMBASSADOR')}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-black text-xs shadow-gold-glow flex items-center gap-1.5 shrink-0 active:scale-95 transition-all"
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-black text-xs shadow-gold-glow flex items-center gap-1.5 shrink-0 active:scale-95 transition-all cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
             <span>{locale === 'ar' ? 'الدخول كسفير معتمد' : 'Démonstration Ambassadeur'}</span>
@@ -143,17 +175,59 @@ export default function AmbassadorDashboardPage() {
             <span className="p-2 rounded-xl bg-gold-500/15 border border-gold-500/30 text-gold-700 dark:text-gold-400">
               <Award className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl sm:text-3xl font-black font-arabic text-slate-900 dark:text-white">
-              {t('dashboards.ambassador.title')}
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+              {t('dashboards.ambassador.title')} - {currentAmbassador.user.name}
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 font-arabic mt-1">
-            {t('dashboards.ambassador.myScope')}: {currentUser?.institutionName || 'USTHB Bab Ezzouar'} (Wilaya {currentUser?.wilayaCode || 16})
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-gray-300 mt-1">
+            {t('dashboards.ambassador.myScope')}: {currentAmbassador.institutionNameAr} (Wilaya {currentAmbassador.wilayaCode})
           </p>
         </div>
 
-        <div className="flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-arabic text-xs font-bold shadow-sm">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold shadow-sm">
           <span>{t('dashboards.ambassador.badge')}</span>
+        </div>
+      </div>
+
+      {/* Referral Hub Banner */}
+      <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-900 via-navy-850 to-navy-950 border border-gold-500/30 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl">
+          <span className="px-3 py-1 rounded-full bg-gold-500/20 text-gold-300 text-xs font-bold flex items-center gap-1.5 w-fit">
+            <Tag className="w-3.5 h-3.5" />
+            <span>{locale === 'ar' ? 'كود الخصم والإحالة المعتمد الخاص بك' : 'Votre Code Promo Affilié'}</span>
+          </span>
+          <h2 className="text-xl sm:text-2xl font-black text-white">
+            {locale === 'ar' ? 'شارك كودك مع طلبة ولايتك واربح 10% عمولة على كل اشتراك' : 'Partagez votre code et gagnez 10% de commission'}
+          </h2>
+          <p className="text-xs text-gray-300 leading-relaxed">
+            {locale === 'ar'
+              ? 'يحصل الطالب على خصم 500 دج فوري عند إدخال كودك في صفحة الدفع، وتتحصل أنت تلقائياً على عمولتك المعتمدة.'
+              : 'Vos étudiants bénéficient de 500 DZD de réduction et vous recevez automatiquement vos gains.'}
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 p-2 px-3 rounded-2xl bg-navy-950/80 border border-gold-500/40">
+            <span className="text-lg font-black font-mono text-gold-400 tracking-wider">
+              {promoCode}
+            </span>
+            <button
+              type="button"
+              onClick={handleCopyCode}
+              className="p-2 rounded-xl bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 transition-all cursor-pointer"
+            >
+              {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="px-4 py-3 rounded-2xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 font-black text-xs shadow-gold-glow flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+          >
+            {copiedLink ? <Check className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
+            <span>{locale === 'ar' ? 'نسخ رابط الإحالة المباشر' : 'Copier le Lien'}</span>
+          </button>
         </div>
       </div>
 
@@ -161,14 +235,23 @@ export default function AmbassadorDashboardPage() {
       <MetricsGrid metrics={ambassadorMetrics} />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left: Create Post Form */}
-        <div className="lg:col-span-6 p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left font-arabic">
-          <div className="flex items-center gap-2 mb-4 text-gold-700 dark:text-gold-300 font-bold">
+        {/* Left 6 Cols: Create Post Form */}
+        <div className="lg:col-span-6 p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left rtl:text-right font-arabic space-y-4">
+          <div className="flex items-center gap-2 text-gold-700 dark:text-gold-300 font-bold">
             <PlusCircle className="w-5 h-5 text-gold-600 dark:text-gold-400" />
-            <h3>{t('dashboards.ambassador.createPostTitle')}</h3>
+            <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+              {t('dashboards.ambassador.createPostTitle')}
+            </h3>
           </div>
 
-          <form onSubmit={handleCreatePost} className="space-y-4 text-xs">
+          {isSubmitted && (
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{locale === 'ar' ? 'تم نشر الورشة / النصيحة بنجاح!' : 'Publication effectuée avec succès !'}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleCreatePost} className="space-y-4 text-xs font-arabic">
             <div>
               <label className="block text-slate-700 dark:text-gray-300 mb-1 font-semibold">
                 {t('dashboards.ambassador.postTitleLabel')}
@@ -193,10 +276,10 @@ export default function AmbassadorDashboardPage() {
                   onChange={(e) => setPostType(e.target.value as PostType)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30 text-slate-800 dark:text-gold-300 focus:outline-none"
                 >
-                  <option value="SESSION_SCHEDULE">{t('bot.midterm')} / Session</option>
-                  <option value="STUDY_TIP">Study Tips & Advice</option>
-                  <option value="EVENT">Interactive Live Stream</option>
-                  <option value="ANNOUNCEMENT">Official Announcement</option>
+                  <option value="SESSION_SCHEDULE">ورشة مراجعة / حصة حضورية</option>
+                  <option value="STUDY_TIP">نصيحة دراسية ومنهجية</option>
+                  <option value="EVENT">حدث وتظاهرة علمية</option>
+                  <option value="ANNOUNCEMENT">إعلان رسمي لطلبة الولاية</option>
                 </select>
               </div>
 
@@ -251,82 +334,94 @@ export default function AmbassadorDashboardPage() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={t('dashboards.ambassador.postContentPlaceholder')}
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30 text-slate-900 dark:text-white focus:outline-none focus:border-gold-500 resize-none"
+                className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30 text-slate-900 dark:text-white focus:outline-none focus:border-gold-500"
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs shadow-gold-glow flex items-center justify-center gap-2 active:scale-95 transition-all"
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs shadow-gold-glow flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
             >
-              {isSubmitted ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-navy-950" />
-                  <span>{t('dashboards.ambassador.publishedSuccess')}</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>{t('dashboards.ambassador.publishBtn')}</span>
-                </>
-              )}
+              <Send className="w-4 h-4" />
+              <span>{t('dashboards.ambassador.submitPost')}</span>
             </button>
           </form>
         </div>
 
-        {/* Right: Posts Feed & Reviews */}
-        <div className="lg:col-span-6 space-y-6">
-          <div className="p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left font-arabic">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-4">
-              {t('dashboards.ambassador.myActivities')} ({posts.length})
-            </h3>
+        {/* Right 6 Cols: Referral Commission Breakdown & Assigned Packs */}
+        <div className="lg:col-span-6 space-y-6 text-left rtl:text-right font-arabic">
+          {/* Referral Sales Table */}
+          <div className="p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span>{locale === 'ar' ? 'سجل اشتراكات الطلبة بكودك' : 'Ventes Récentes via votre Code'}</span>
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[11px] font-mono font-bold">
+                {AMBASSADOR_SALES.length} {locale === 'ar' ? 'اشتراكات' : 'ventes'}
+              </span>
+            </div>
 
             <div className="space-y-3">
-              {posts.map((p) => (
+              {AMBASSADOR_SALES.map((sale) => (
                 <div
-                  key={p.id}
-                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-gray-800 flex flex-col justify-between"
+                  key={sale.id}
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-navy-750 flex items-center justify-between gap-3"
                 >
-                  <div className="flex items-center justify-between text-[11px] mb-1">
-                    <span className="text-gold-700 dark:text-gold-400 font-bold">{p.title}</span>
-                    <span className="text-slate-400 dark:text-gray-400 font-mono">{p.createdAt}</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-slate-900 dark:text-white">
+                        {sale.studentName}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">{sale.date}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 line-clamp-1">
+                      {sale.packTitle}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-gray-300 line-clamp-2 mt-1 leading-relaxed">
-                    {p.content}
-                  </p>
-                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-gray-800/80 flex items-center justify-between text-[11px] text-slate-500 dark:text-gray-400">
-                    <span>{p.isOnline ? '🌐 Online' : `🏛️ ${p.location || 'In-Person'}`}</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{t('dashboards.ambassador.activeStatus')}</span>
+
+                  <div className="text-right rtl:text-left shrink-0">
+                    <span className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                      +{sale.commissionAmount} DZD
+                    </span>
+                    <div className="text-[9px] font-bold text-slate-400 mt-0.5">
+                      {sale.status === 'PAID' ? '✓ مدفوع' : '⏳ قيد التحويل'}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Student Reviews Box */}
-          <div className="p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md text-left font-arabic">
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-              <Star className="w-4 h-4 text-gold-500 fill-gold-500" />
-              <span>{t('dashboards.ambassador.reviewsTitle')}</span>
+          {/* Assigned Packs to Promote */}
+          <div className="p-6 rounded-3xl border border-slate-200 dark:border-gold-500/30 bg-white dark:bg-navy-900/90 shadow-md space-y-4">
+            <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="w-4 h-4 text-gold-500" />
+              <span>{locale === 'ar' ? 'الحزم والدورات المسندة إليك لترويجها' : 'Packs Assignés'}</span>
             </h3>
 
-            <div className="space-y-2.5 text-xs">
-              {[
-                { name: 'Amine B.', comment: 'Excellente séance de révision en Algorithmique 1, explications très claires !', rating: 5 },
-                { name: 'Meriem K.', comment: 'Les annales corrigées d\'Analyse 1 nous ont énormément aidés pour le partiel.', rating: 5 },
-                { name: 'Walid A.', comment: 'Organisation impeccable et grand soutien aux étudiants de la faculté.', rating: 5 },
-              ].map((rev, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-gray-800/80">
-                  <div className="flex items-center justify-between mb-1">
-                    <strong className="text-gold-800 dark:text-gold-300">{rev.name}</strong>
-                    <div className="flex items-center gap-0.5 text-gold-500">
-                      {Array.from({ length: rev.rating }).map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-gold-500" />
-                      ))}
-                    </div>
+            <div className="space-y-3">
+              {assignedPacks.map((pack) => (
+                <div
+                  key={pack.id}
+                  className="p-3.5 rounded-2xl bg-amber-500/10 dark:bg-gold-500/10 border border-gold-500/30 flex items-center justify-between gap-3"
+                >
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                      {locale === 'fr' ? pack.titleFr : pack.titleAr}
+                    </h4>
+                    <span className="text-[10px] text-slate-500 dark:text-gray-400">
+                      {pack.modules.length} {locale === 'ar' ? 'مقاييس مباشرة' : 'modules'} • {pack.packPrice.toLocaleString()} DZD
+                    </span>
                   </div>
-                  <p className="text-slate-600 dark:text-gray-300 text-[11px]">{rev.comment}</p>
+
+                  <Link
+                    href={`/${locale}/dawarat/${pack.slug}`}
+                    className="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs flex items-center gap-1 shadow-sm shrink-0"
+                  >
+                    <span>{locale === 'ar' ? 'عرض الحزمة' : 'Voir'}</span>
+                  </Link>
                 </div>
               ))}
             </div>
