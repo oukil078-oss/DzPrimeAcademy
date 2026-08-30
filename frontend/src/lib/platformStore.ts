@@ -33,6 +33,7 @@ export interface PlatformSession {
   status: 'UPCOMING' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
   category: 'BAC' | 'UNIVERSITY_LMD' | 'MEDICAL';
   createdAt: string;
+  registrationsCount?: number;
 }
 
 const CACHE_KEY = 'dz_prime_platform_cache';
@@ -81,8 +82,10 @@ function getSnapshot(): PlatformState {
   return state;
 }
 
+const SERVER_SNAPSHOT: PlatformState = { courses: [], sessions: [], loaded: false };
+
 function getServerSnapshot(): PlatformState {
-  return { courses: [], sessions: [], loaded: false };
+  return SERVER_SNAPSHOT;
 }
 
 let hasFetched = false;
@@ -167,8 +170,17 @@ export function usePlatformStore() {
             sessions: state.sessions.map((s) => (s.id === tempId ? saved : s)),
           };
           notify();
+          return { success: true };
         }
-      } catch (e) {}
+        const errData = await res.json().catch(() => ({}));
+        state = { ...state, sessions: state.sessions.filter((s) => s.id !== tempId) };
+        notify();
+        return { success: false, error: errData.error };
+      } catch (e) {
+        state = { ...state, sessions: state.sessions.filter((s) => s.id !== tempId) };
+        notify();
+        return { success: false, error: 'network_error' };
+      }
     },
     []
   );

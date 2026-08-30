@@ -170,18 +170,18 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
     <div className="flex flex-col items-center gap-5 w-full max-w-md mx-auto select-none px-1">
       {/* 3D Perspective Card Container */}
       <div
-        className="w-full h-[240px] xs:h-[270px] sm:h-[290px] cursor-pointer group [perspective:1200px]"
+        className="w-full h-[240px] xs:h-[270px] sm:h-[290px] cursor-pointer group card-flip-scene"
         onClick={() => setIsFlipped(!isFlipped)}
       >
         <motion.div
-          className="relative w-full h-full [transform-style:preserve-3d] transition-all duration-700 rounded-2xl shadow-2xl"
+          className="card-flip-inner transition-all duration-700 rounded-2xl shadow-2xl"
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.7, ease: 'easeInOut' }}
         >
           {/* ================= FRONT SIDE ================= */}
           <div
             ref={frontCardRef}
-            className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden [backface-visibility:hidden] border-2 border-gold-500/60 bg-gradient-to-br from-[#0B1224] via-[#060A14] to-[#04070F] shadow-gold-glow flex flex-col justify-between p-3.5 sm:p-5 text-white"
+            className="card-face w-full h-full rounded-2xl overflow-hidden border-2 border-gold-500/60 bg-gradient-to-br from-[#0B1224] via-[#060A14] to-[#04070F] shadow-gold-glow flex flex-col justify-between p-3.5 sm:p-5 text-white"
           >
             {/* Background Texture & Light sheen */}
             <div className="absolute inset-0 bg-radial-glow opacity-60 pointer-events-none" />
@@ -249,7 +249,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           {/* ================= BACK SIDE ================= */}
           <div
             ref={backCardRef}
-            className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden [backface-visibility:hidden] [transform:rotateY(180deg)] border-2 border-gold-500/60 bg-gradient-to-r from-gold-500 via-gold-400 to-navy-950 shadow-gold-glow flex text-navy-950 p-0"
+            className="card-face card-face-back w-full h-full rounded-2xl overflow-hidden border-2 border-gold-500/60 bg-gradient-to-r from-gold-500 via-gold-400 to-navy-950 shadow-gold-glow flex text-navy-950 p-0"
           >
             {/* Left Half: Gold Metallic */}
             <div className="w-[58%] sm:w-[60%] h-full p-2.5 sm:p-4 flex flex-col justify-between bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-navy-950">

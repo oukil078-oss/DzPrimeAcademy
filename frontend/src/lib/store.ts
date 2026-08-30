@@ -1,145 +1,152 @@
 'use client';
 
-import { useCallback, useSyncExternalStore } from 'react';
-import { User, Role } from '@/types';
-import { DEMO_USERS } from './initial-data';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { User } from '@/types';
 
-const STORAGE_KEY_USER = 'dz_prime_current_user';
+let currentUser: User | null = null;
+let authChecked = false;
+let checkPromise: Promise<void> | null = null;
+let snapshot: { currentUser: User | null; authChecked: boolean } = { currentUser, authChecked };
+const listeners = new Set<() => void>();
 
-// --- Singleton Auth / Role Store ---
-let currentUserInstance: User | null = null;
-const userListeners = new Set<() => void>();
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
 
-function getStoredUser(): User | null {
-  if (typeof window === 'undefined') return null;
+function getSnapshot() {
+  return snapshot;
+}
+
+const SERVER_SNAPSHOT = { currentUser: null, authChecked: false };
+
+function getServerSnapshot() {
+  return SERVER_SNAPSHOT;
+}
+
+function notify() {
+  snapshot = { currentUser, authChecked };
+  listeners.forEach((l) => l());
+}
+
+function setUser(user: User | null) {
+  currentUser = user;
+  authChecked = true;
+  notify();
+}
+
+async function checkAuth(): Promise<void> {
+  if (typeof window !== 'undefined' && window.location.hash.includes('session_id=')) {
+    // Defer to GoogleAuthCallback, which will populate the store itself.
+    authChecked = true;
+    notify();
+    return;
+  }
   try {
-    const saved = localStorage.getItem(STORAGE_KEY_USER);
-    if (saved) {
-      return JSON.parse(saved);
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      currentUser = data.user;
+    } else {
+      currentUser = null;
     }
   } catch (e) {
-    return null;
+    currentUser = null;
   }
-  return null;
+  authChecked = true;
+  notify();
 }
 
-// Initialize on browser load
-if (typeof window !== 'undefined') {
-  currentUserInstance = getStoredUser();
+export function refreshAuth() {
+  checkPromise = null;
+  return checkAuth();
 }
 
-function subscribeUser(callback: () => void) {
-  userListeners.add(callback);
-  return () => {
-    userListeners.delete(callback);
-  };
-}
-
-function getUserSnapshot(): User | null {
-  return currentUserInstance;
-}
-
-function getUserServerSnapshot(): User | null {
-  return null;
-}
-
-function notifyUserChange(newUser: User | null) {
-  currentUserInstance = newUser;
-  if (typeof window !== 'undefined') {
-    try {
-      if (newUser) {
-        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
-      } else {
-        localStorage.removeItem(STORAGE_KEY_USER);
-      }
-    } catch (e) {}
-  }
-  userListeners.forEach((listener) => listener());
-}
-
-const ROLE_ROUTE_PERSONA_INDEX: Record<string, number> = {
-  admin: 0,
-  teacher: 3,
-  student: 5,
-  ambassador: 2,
-};
-
-export function hydrateDefaultPersonaForPath(pathname: string) {
-  if (currentUserInstance) return;
-  const segments = pathname.split('/').filter(Boolean);
-  const routeSegment = segments.find((s) => ROLE_ROUTE_PERSONA_INDEX[s] !== undefined);
-  if (!routeSegment) return;
-
-  const idx = ROLE_ROUTE_PERSONA_INDEX[routeSegment];
-  const persona = DEMO_USERS[idx];
-  if (persona) {
-    notifyUserChange(persona);
-  }
+export function setCurrentUserDirectly(user: User | null) {
+  setUser(user);
 }
 
 export function useAuthStore() {
-  const currentUser = useSyncExternalStore(
-    subscribeUser,
-    getUserSnapshot,
-    getUserServerSnapshot
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    if (!checkPromise) {
+      checkPromise = checkAuth();
+    }
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.error || 'فشل تسجيل الدخول' };
+    }
+    setUser(data.user);
+    return { success: true, user: data.user as User };
+  }, []);
+
+  const register = useCallback(
+    async (payload: { name: string; email: string; password: string; phone?: string; wilayaCode?: number; wilayaName?: string }) => {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'فشل إنشاء الحساب' };
+      }
+      setUser(data.user);
+      return { success: true, user: data.user as User };
+    },
+    []
   );
 
-  const setUser = useCallback((user: User | null) => {
-    notifyUserChange(user);
+  const signOut = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) {}
+    setUser(null);
   }, []);
 
-  const switchRole = useCallback((role: Role) => {
-    const matched = DEMO_USERS.find((u) => u.role === role);
-    if (matched) {
-      notifyUserChange(matched);
+  const upgradeToGolden = useCallback(async () => {
+    const res = await fetch('/api/account/upgrade', { method: 'POST', credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      setUser(data.user);
     }
   }, []);
 
-  const signOut = useCallback(() => {
-    notifyUserChange(null);
-  }, []);
-
-  const upgradeToGolden = useCallback(() => {
-    if (!currentUserInstance) {
-      // If guest upgrades, create a VIP student account
-      const newVipUser: User = {
-        id: `user-${Date.now()}`,
-        email: 'vip.student@dzprime.academy',
-        name: 'VIP Student',
-        role: 'STUDENT_PAID',
-        wilayaCode: 16,
-        wilayaName: 'Alger',
-        institutionName: 'Université USTHB Bab Ezzouar',
-        specialty: 'Informatique & Ingénierie',
-        studentCardId: `DZ-GLD-16-${Math.floor(1000 + Math.random() * 9000)}`,
-        isVerified: true,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      notifyUserChange(newVipUser);
-      return;
+  const updateProfile = useCallback(async (payload: Record<string, unknown>) => {
+    const res = await fetch('/api/account', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setUser(data.user);
+      return { success: true };
     }
-
-    const updated: User = {
-      ...currentUserInstance,
-      role: 'STUDENT_PAID',
-      studentCardId:
-        currentUserInstance.studentCardId ||
-        `DZ-GLD-${currentUserInstance.wilayaCode || 16}-${Math.floor(
-          1000 + Math.random() * 9000
-        )}`,
-      isVerified: true,
-    };
-    notifyUserChange(updated);
+    return { success: false, error: data.error };
   }, []);
 
   return {
-    currentUser,
-    setCurrentUser: setUser,
-    switchRole,
+    currentUser: snapshot.currentUser,
+    isLoaded: snapshot.authChecked,
+    isAuthenticated: !!snapshot.currentUser,
+    login,
+    register,
     signOut,
     upgradeToGolden,
-    isLoaded: true,
-    isAuthenticated: !!currentUser,
+    updateProfile,
+    setCurrentUser: setUser,
   };
 }
-

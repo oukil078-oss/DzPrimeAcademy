@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   const { id } = await params;
 
   const profile = await prisma.teacherProfile.findUnique({ where: { id } });

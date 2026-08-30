@@ -21,6 +21,7 @@ import {
   Sparkles,
   Calendar,
   Layers,
+  Zap,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
@@ -77,6 +78,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   const studentItems: NavItem[] = [
     { id: 'dashboard', label: locale === 'ar' ? 'لوحة دراستي' : 'Mon Tableau de Bord', href: `/${locale}/student`, icon: GraduationCap, isActive: isOn('student') },
     { id: 'dawarat', label: locale === 'ar' ? 'دورات الامتياز (Live)' : 'Dawarat Excellence (Live)', href: `/${locale}/dawarat`, icon: Video, isActive: isOn('dawarat'), badge: 'Live' },
+    { id: 'exams', label: locale === 'ar' ? 'بنك الامتحانات السريع' : "Banque d'Examens", href: `/${locale}/exams`, icon: Zap, isActive: isOn('exams') },
     { id: 'bot', label: locale === 'ar' ? 'بوت الامتحانات الذكي' : 'Bot Examens IA', href: `/${locale}/bot`, icon: Bot, isActive: isOn('bot') },
     { id: 'card', label: locale === 'ar' ? 'بطاقتي الجامعية الرقمية' : 'Ma Carte Digitale', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
     { id: 'ambassadors', label: locale === 'ar' ? 'سفراء 58 ولاية' : 'Ambassadeurs (58 wilayas)', href: `/${locale}/ambassadors`, icon: Award, isActive: isOn('ambassadors') },
@@ -92,6 +94,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   if (isAdminRole) navItems = adminItems;
   else if (isTeacherRole) navItems = teacherItems;
   else if (isAmbassadorRole) navItems = ambassadorItems;
+  else if (!role) navItems = [];
 
   const settingsLabel = locale === 'ar' ? 'إعدادات الحساب' : 'Paramètres';
 

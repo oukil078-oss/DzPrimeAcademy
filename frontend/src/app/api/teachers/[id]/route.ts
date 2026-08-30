@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -25,7 +29,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   return NextResponse.json(profile);
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   const { id } = await params;
   const profile = await prisma.teacherProfile.findUnique({ where: { id } });
   await prisma.facultyPayout.deleteMany({ where: { teacherProfileId: id } });

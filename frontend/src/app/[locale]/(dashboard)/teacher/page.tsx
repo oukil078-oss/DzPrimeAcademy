@@ -7,6 +7,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { usePlatformStore } from '@/lib/platformStore';
 import { formatDZD } from '@/lib/format';
+import { TeacherRosterPanel } from '@/components/dashboard/TeacherRosterPanel';
 
 type TeacherTab = 'studio' | 'courses' | 'sessions' | 'roster' | 'drive';
 
@@ -17,6 +18,10 @@ export default function TeacherStudioPage() {
   const [tab, setTab] = useState<TeacherTab>('studio');
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [courseForm, setCourseForm] = useState({ titleAr: '', titleFr: '', category: 'UNIVERSITY_LMD' as const, priceDzd: 3000, lessonsCount: 10 });
+  const [showSessionForm, setShowSessionForm] = useState(false);
+  const [sessionForm, setSessionForm] = useState({ title: '', scheduledAt: '', durationMinutes: 60, platform: 'GOOGLE_MEET' as const, category: 'UNIVERSITY_LMD' as const });
+  const [sessionFormError, setSessionFormError] = useState('');
+  const minDateTime = new Date().toISOString().slice(0, 16);
 
   useEffect(() => {
     const applyHash = () => {
@@ -42,6 +47,26 @@ export default function TeacherStudioPage() {
     });
     setCourseForm({ titleAr: '', titleFr: '', category: 'UNIVERSITY_LMD', priceDzd: 3000, lessonsCount: 10 });
     setShowCourseForm(false);
+  };
+
+  const handleAddSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSessionFormError('');
+    if (!sessionForm.title || !sessionForm.scheduledAt) return;
+    const result = await addSession({
+      ...sessionForm,
+      scheduledAt: new Date(sessionForm.scheduledAt).toISOString(),
+      teacherId: currentUser?.id || null,
+      teacherName: currentUser?.name || 'Enseignant',
+      meetUrl: null,
+      wilayaCode: null,
+    });
+    if (result.success) {
+      setSessionForm({ title: '', scheduledAt: '', durationMinutes: 60, platform: 'GOOGLE_MEET', category: 'UNIVERSITY_LMD' });
+      setShowSessionForm(false);
+    } else {
+      setSessionFormError(result.error || (locale === 'ar' ? 'فشل جدولة الحصة' : 'Échec de la planification'));
+    }
   };
 
   const tabs: { id: TeacherTab; icon: any; labelAr: string; labelFr: string }[] = [
@@ -145,6 +170,44 @@ export default function TeacherStudioPage() {
 
       {tab === 'sessions' && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white">
+              {locale === 'ar' ? 'حصصي المباشرة' : 'Mes Sessions Live'}
+            </h3>
+            <button
+              data-testid="teacher-add-session-btn"
+              onClick={() => setShowSessionForm(!showSessionForm)}
+              className="px-3.5 py-2 rounded-xl bg-lime-400 text-slate-950 font-black text-xs flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{locale === 'ar' ? 'جدولة حصة جديدة' : 'Planifier une Session'}</span>
+            </button>
+          </div>
+
+          {showSessionForm && (
+            <form onSubmit={handleAddSession} data-testid="teacher-session-form" className="p-4 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {sessionFormError && (
+                <p data-testid="teacher-session-error" className="sm:col-span-3 text-[11px] font-bold text-rose-500">{sessionFormError}</p>
+              )}
+              <input required placeholder={locale === 'ar' ? 'عنوان الحصة' : 'Titre de la session'} value={sessionForm.title} onChange={(e) => setSessionForm({ ...sessionForm, title: e.target.value })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:col-span-2" />
+              <input required type="datetime-local" min={minDateTime} value={sessionForm.scheduledAt} onChange={(e) => setSessionForm({ ...sessionForm, scheduledAt: e.target.value })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
+              <select value={sessionForm.platform} onChange={(e) => setSessionForm({ ...sessionForm, platform: e.target.value as any })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
+                <option value="GOOGLE_MEET">Google Meet</option>
+                <option value="CLASSROOM">Classroom</option>
+                <option value="ONSITE">{locale === 'ar' ? 'حضوري' : 'Présentiel'}</option>
+              </select>
+              <select value={sessionForm.category} onChange={(e) => setSessionForm({ ...sessionForm, category: e.target.value as any })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
+                <option value="UNIVERSITY_LMD">University LMD</option>
+                <option value="BAC">BAC</option>
+                <option value="MEDICAL">Medical</option>
+              </select>
+              <input type="number" placeholder={locale === 'ar' ? 'المدة (دقيقة)' : 'Durée (min)'} value={sessionForm.durationMinutes} onChange={(e) => setSessionForm({ ...sessionForm, durationMinutes: Number(e.target.value) })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
+              <button type="submit" data-testid="teacher-submit-session-btn" className="py-2 rounded-xl bg-lime-400 text-slate-950 font-black text-xs">
+                {locale === 'ar' ? 'نشر الحصة' : 'Publier'}
+              </button>
+            </form>
+          )}
+
           {mySessions.map((s) => (
             <div key={s.id} data-testid={`teacher-session-${s.id}`} className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800">
               <Video className="w-4 h-4 text-lime-500 shrink-0" />
@@ -152,6 +215,9 @@ export default function TeacherStudioPage() {
                 <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{s.title}</h4>
                 <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{new Date(s.scheduledAt).toLocaleString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')}</p>
               </div>
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-lime-500/15 text-lime-700 dark:text-lime-300 text-[10px] font-bold shrink-0">
+                <Users2 className="w-3 h-3" /> {s.registrationsCount ?? 0}
+              </span>
             </div>
           ))}
           {mySessions.length === 0 && (
@@ -161,8 +227,8 @@ export default function TeacherStudioPage() {
       )}
 
       {tab === 'roster' && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-8 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400" data-testid="teacher-roster-placeholder">
-          {locale === 'ar' ? 'ستظهر قائمة الطلبة المسجلين وحضورهم هنا فور تسجيلهم في مقرراتك.' : 'La liste des étudiants inscrits et leur présence apparaîtra ici.'}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <TeacherRosterPanel locale={locale} />
         </motion.div>
       )}
 

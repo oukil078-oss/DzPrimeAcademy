@@ -23,34 +23,33 @@ import {
   Users,
 } from 'lucide-react';
 import { LanguageSwitcher } from '../shared/LanguageSwitcher';
-import { RoleSwitcher } from '../shared/RoleSwitcher';
 import { ThemeToggle } from '../shared/ThemeToggle';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { isStaff, isGoldenMember } from '@/lib/rbac';
 import { UpgradeModal } from '../shared/UpgradeModal';
-import { AuthModal } from '../auth/AuthModal';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
+  onOpenAuth?: (tab: 'login' | 'register') => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth }) => {
   const { t, locale, isRtl } = useTranslation();
   const { currentUser, signOut } = useAuthStore();
   const pathname = usePathname();
 
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const isGold = isGoldenMember(currentUser);
-  const displayName = currentUser ? currentUser.name : (locale === 'ar' ? 'طالب زائر' : 'Invité');
-  const specialty = currentUser?.specialty || (locale === 'ar' ? 'جامعة هواري بومدين • L1 MI' : 'USTHB • L1 MI');
+  const displayName = currentUser ? currentUser.name : (locale === 'ar' ? 'زائر' : 'Invité');
+  const specialty = currentUser?.specialty || currentUser?.institutionName || '';
 
   const getDashboardLink = () => {
-    if (!currentUser) return `/${locale}/student`;
+    if (!currentUser) return `/${locale}`;
     if (isStaff(currentUser.role)) return `/${locale}/admin`;
+    if (currentUser.role === 'TEACHER') return `/${locale}/teacher`;
     if (currentUser.role === 'AMBASSADOR') return `/${locale}/ambassador`;
     return `/${locale}/student`;
   };
@@ -58,17 +57,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
   return (
     <>
       <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-[#070D1F]/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800/80 shadow-sm transition-colors select-none font-arabic">
-        {/* Top Role Testing Bar */}
-        <div className="bg-slate-100/90 dark:bg-[#0B1224] border-b border-slate-200 dark:border-slate-800/60 px-3 sm:px-6 py-1.5 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-bold text-slate-600 dark:text-gray-300">
+        {/* Status & Preference Bar */}
+        <div className="bg-slate-100/90 dark:bg-[#0B1224] border-b border-slate-200 dark:border-slate-800/60 px-3 sm:px-6 py-1.5 flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 dark:text-gray-300 truncate">
               {t('hero.badge')}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <RoleSwitcher />
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <LanguageSwitcher />
             <ThemeToggle />
           </div>
@@ -78,22 +76,33 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         <div className="px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-6">
           {/* Left: Mobile Menu Trigger & Greeting */}
           <div className="flex items-center gap-3 min-w-0">
-            <button
-              onClick={onToggleSidebar}
-              className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300 dark:border-gray-700 text-slate-800 dark:text-gray-200 touch-target"
-              aria-label="Toggle Navigation"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            {currentUser && (
+              <button
+                onClick={onToggleSidebar}
+                data-testid="navbar-mobile-menu-btn"
+                className="lg:hidden p-2 rounded-xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300 dark:border-gray-700 text-slate-800 dark:text-gray-200 touch-target"
+                aria-label="Toggle Navigation"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
 
             <div className="flex flex-col text-left min-w-0">
-              <h1 className="text-base sm:text-xl font-black font-arabic text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
-                <span>{t('dashboard.welcomeBack')}, {displayName.split(' ')[0]}</span>
-                <span className="text-base sm:text-lg">👋</span>
-              </h1>
-              <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400 font-semibold truncate">
-                {specialty}
-              </p>
+              {currentUser ? (
+                <h1 className="text-sm sm:text-xl font-black font-arabic text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                  <span>{t('dashboard.welcomeBack')}, {displayName.split(' ')[0]}</span>
+                  <span className="text-base sm:text-lg">👋</span>
+                </h1>
+              ) : (
+                <h1 className="text-sm sm:text-xl font-black font-arabic text-slate-900 dark:text-white truncate">
+                  DZ Prime Academy
+                </h1>
+              )}
+              {specialty && (
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-gray-400 font-semibold truncate">
+                  {specialty}
+                </p>
+              )}
             </div>
           </div>
 
@@ -208,7 +217,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
               </div>
             ) : (
               <button
-                onClick={() => setAuthModalOpen(true)}
+                onClick={() => onOpenAuth?.('login')}
+                data-testid="navbar-login-btn"
                 className="px-3.5 sm:px-4 py-2 rounded-2xl bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-navy-950 font-black text-xs font-arabic flex items-center gap-1.5 shadow-sm active:scale-95 transition-all touch-target"
               >
                 <LogIn className="w-3.5 h-3.5" />
@@ -219,9 +229,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
         </div>
       </header>
 
-      {/* Upgrade & Auth Modals */}
+      {/* Upgrade Modal */}
       <UpgradeModal isOpen={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
-      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </>
   );
 };

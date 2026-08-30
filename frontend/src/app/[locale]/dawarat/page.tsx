@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Star, Video, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Star, Video, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { usePlatformStore } from '@/lib/platformStore';
+import { useAuthStore } from '@/lib/store';
 import { formatDZD } from '@/lib/format';
 
 const THEME_BG: Record<string, string> = {
@@ -15,10 +17,26 @@ const THEME_BG: Record<string, string> = {
   rose: 'from-rose-500/20 to-transparent text-rose-600 dark:text-rose-400',
 };
 
+type Track = 'ALL' | 'BAC' | 'UNIVERSITY_LMD' | 'MEDICAL';
+const VALID_TRACKS: Track[] = ['BAC', 'UNIVERSITY_LMD', 'MEDICAL'];
+
 export default function DawaratCatalogPage() {
   const { locale } = useTranslation();
+  const { currentUser } = useAuthStore();
   const { courses, loaded } = usePlatformStore();
-  const [filter, setFilter] = useState<'ALL' | 'BAC' | 'UNIVERSITY_LMD' | 'MEDICAL'>('ALL');
+  const searchParams = useSearchParams();
+
+  const isStudent = currentUser?.role === 'STUDENT_FREE' || currentUser?.role === 'STUDENT_PAID';
+  const lockedTrack = isStudent && currentUser?.track ? (currentUser.track as Track) : null;
+
+  const urlTrack = searchParams.get('track') as Track | null;
+  const [filter, setFilter] = useState<Track>(
+    lockedTrack || (urlTrack && VALID_TRACKS.includes(urlTrack) ? urlTrack : 'ALL')
+  );
+
+  useEffect(() => {
+    if (lockedTrack) setFilter(lockedTrack);
+  }, [lockedTrack]);
 
   const filtered = filter === 'ALL' ? courses : courses.filter((c) => c.category === filter);
 
@@ -35,20 +53,30 @@ export default function DawaratCatalogPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar" data-testid="dawarat-filters">
-          {(['ALL', 'BAC', 'UNIVERSITY_LMD', 'MEDICAL'] as const).map((f) => (
-            <button
-              key={f}
-              data-testid={`dawarat-filter-${f}`}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all ${
-                filter === f ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950' : 'text-slate-600 dark:text-gray-400'
-              }`}
-            >
-              {f === 'ALL' ? (locale === 'ar' ? 'الكل' : 'Tous') : f}
-            </button>
-          ))}
-        </div>
+        {lockedTrack ? (
+          <div
+            data-testid="dawarat-track-locked-badge"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-lime-400/10 border border-lime-400/30 text-lime-700 dark:text-lime-300 text-[11px] font-bold shrink-0"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>{locale === 'ar' ? `مقررات مسارك: ${lockedTrack}` : `Votre filière: ${lockedTrack}`}</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 overflow-x-auto no-scrollbar" data-testid="dawarat-filters">
+            {(['ALL', 'BAC', 'UNIVERSITY_LMD', 'MEDICAL'] as const).map((f) => (
+              <button
+                key={f}
+                data-testid={`dawarat-filter-${f}`}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all ${
+                  filter === f ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950' : 'text-slate-600 dark:text-gray-400'
+                }`}
+              >
+                {f === 'ALL' ? (locale === 'ar' ? 'الكل' : 'Tous') : f}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="dawarat-grid">

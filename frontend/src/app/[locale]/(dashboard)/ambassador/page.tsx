@@ -37,7 +37,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 
 export default function AmbassadorDashboardPage() {
   const { t, locale } = useTranslation();
-  const { currentUser, switchRole } = useAuthStore();
+  const { currentUser } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<'workshops' | 'reviews' | 'network'>('workshops');
   const [posts, setPosts] = useState<Post[]>(RECENT_POSTS);
@@ -188,34 +188,6 @@ export default function AmbassadorDashboardPage() {
 
   return (
     <div className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 select-none font-arabic">
-      {/* Notice if not signed in as Ambassador */}
-      {!isUserAmb && !isUserTch && (
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-gold-500/20 to-transparent border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-700 dark:text-emerald-300 shrink-0 font-bold">
-              <Award className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div>
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-emerald-200">
-                {locale === 'ar' ? 'لوحة تحكم السفير الأكاديمي المعتمد' : 'Espace Ambassadeur DZ Prime'}
-              </h4>
-              <p className="text-[11px] sm:text-xs text-slate-600 dark:text-gray-300">
-                {locale === 'ar'
-                  ? 'يمكنك التبديل إلى دور السفير لإدارة ورشات المراجعة الجامعية واستقبال تقييمات الطلبة.'
-                  : 'Passez au profil Ambassadeur pour gérer vos sessions et voir les avis des étudiants.'}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => switchRole('AMBASSADOR')}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-xs shadow-sm active:scale-95 transition-all"
-          >
-            <span>{locale === 'ar' ? 'الدخول كسفير معتمد' : 'Mode Ambassadeur'}</span>
-          </button>
-        </div>
-      )}
-
       {/* ================= AMBASSADOR PROFILE HEADER HERO ================= */}
       <div className="relative p-5 sm:p-8 rounded-3xl bg-gradient-to-br from-[#060D1F] via-[#0B1530] to-[#040813] border border-gold-500/35 text-white shadow-xl overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-gold-500/15 rounded-full blur-3xl pointer-events-none" />

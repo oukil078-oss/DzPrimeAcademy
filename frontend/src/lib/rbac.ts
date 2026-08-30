@@ -48,6 +48,13 @@ export function canEditUserRoles(role?: Role): boolean {
   return role === 'OWNER' || role === 'ADMIN';
 }
 
+export function getDashboardPath(role: Role, locale: string): string {
+  if (isStaff(role)) return `/${locale}/admin`;
+  if (role === 'TEACHER') return `/${locale}/teacher`;
+  if (role === 'AMBASSADOR') return `/${locale}/ambassador`;
+  return `/${locale}/student`;
+}
+
 export function getHubTitle(role?: Role, name?: string, locale: string = 'ar'): string {
   const cleanName = name || (locale === 'ar' ? 'طالب جزائري' : 'Étudiant');
   

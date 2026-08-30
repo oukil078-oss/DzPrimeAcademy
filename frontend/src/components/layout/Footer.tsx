@@ -84,13 +84,13 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/#ambassadors`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
+                <Link href={`/${locale}/ambassadors`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
                   <span>{t('hierarchy.ambassadorsNetwork')}</span>
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/#hierarchy`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
+                <Link href={`/${locale}/exams#hierarchy`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
                   <span>{t('hierarchy.title')}</span>
                 </Link>

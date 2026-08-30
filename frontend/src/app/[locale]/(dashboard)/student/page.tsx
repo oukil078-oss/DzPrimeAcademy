@@ -12,6 +12,7 @@ import { ActiveCoursesProgress } from '@/components/dashboard/ActiveCoursesProgr
 import { AssignmentsList } from '@/components/dashboard/AssignmentsList';
 import { NewCoursesGrid } from '@/components/dashboard/NewCoursesGrid';
 import { GoPremiumBanner } from '@/components/dashboard/GoPremiumBanner';
+import { LiveSessionsPanel } from '@/components/dashboard/LiveSessionsPanel';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { usePlatformStore } from '@/lib/platformStore';
@@ -158,8 +159,15 @@ export default function StudentDashboardPage() {
       )}
 
       {activeTab === 'workshops' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {RECENT_POSTS.map((post) => (
+        <div className="space-y-6 sm:space-y-8">
+          <LiveSessionsPanel sessions={sessions} locale={locale} />
+
+          <div>
+            <h3 className="text-sm font-black text-slate-900 dark:text-white mb-3">
+              {locale === 'ar' ? 'منشورات السفراء' : 'Publications des Ambassadeurs'}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {RECENT_POSTS.map((post) => (
             <div key={post.id} className="p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
                 <span className="px-2.5 py-0.5 rounded-lg bg-lime-500/15 text-lime-700 dark:text-lime-300 text-[10px] font-bold">{post.type}</span>
@@ -174,7 +182,9 @@ export default function StudentDashboardPage() {
                 </Link>
               </div>
             </div>
-          ))}
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

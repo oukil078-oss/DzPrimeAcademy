@@ -37,13 +37,34 @@ Full spec covered: subdomain multi-tenant middleware (admin./teacher./student./a
 - `npx tsc --noEmit` = 0 errors. `npm run build` = success, all routes compile.
 - Testing agent: 33/33 backend pytest tests pass, all frontend flows pass (real-time sync, personas, KPIs, settings modal, i18n switch, payout approval), zero console errors.
 
+## What's Been Implemented (2026-08-30, continued session — Real Auth + Live Sessions)
+- **CRITICAL FIX**: `useSyncExternalStore` `getSnapshot()` in `src/lib/store.ts` was returning a new object literal on every call, causing an infinite render loop (React error #185) that crashed the ENTIRE app with a white screen immediately after any login/register. Fixed by caching a module-level `snapshot` reference, only recomputed in `notify()`. Also hardened `getServerSnapshot()` in both `store.ts` and `platformStore.ts` to return stable const references. This was app-breaking and is now fully verified fixed (register, login, logout, re-login all tested with no crash).
+- Discovered the app runs in **production mode** (`next start` via supervisor), not dev mode — new/changed API route files require `yarn build && sudo supervisorctl restart frontend` to take effect; hot reload alone is insufficient for backend route changes.
+- Real JWT auth (`src/lib/auth.ts`, `/api/auth/*`) confirmed fully working: register (public, creates STUDENT_FREE), login, logout, `/api/auth/me`, admin-only teacher creation with generated temp password, brute-force lockout.
+- New real-time live session enrollment flow: `POST/DELETE /api/sessions/[id]/register`, `GET /api/sessions/my-registrations`, `GET /api/teacher/roster`. New `LiveSessionsPanel.tsx` (student workshops tab — register/unregister toggle) and `TeacherRosterPanel.tsx` (teacher roster tab). Teacher `/teacher#sessions` tab now has a session-scheduling form. Full loop verified: teacher creates session → student registers → teacher roster shows student.
+- `/verify/[cardId]` page rewritten to call the real `/api/card/verify/[id]` endpoint instead of an empty `DEMO_USERS` mock array (which always fell back to fake data).
+- Removed dead `switchRole` mock-persona banner from ambassador dashboard (was a TS build error after mock auth removal).
+- Digital membership card and mobile responsiveness (hamburger + drawer sidebar) verified already in good shape — no layout bugs found this session.
+
 ## Backlog / Not Yet Done (P1/P2)
-- Ambassadors CRUD: only GET+PUT(verify) implemented; POST (add new ambassador) and DELETE not yet built for admin UI.
-- Session POST has no server-side date validation.
-- Course POST doesn't persist teacherId reliably when only teacherName passed from admin form (works fine from Teacher Studio where teacherId is set).
-- GSAP ScrollTrigger entrance reveals not applied to landing page hero (only KPI counters use GSAP so far).
-- Track-specific filtering (BAC/LMD/Medical) exists at data model level (category field) but is not yet enforced as a strict per-student visibility filter on catalog pages.
-- Test data cleanup: TEST_/UITEST_ prefixed rows created during QA remain in Supabase (harmless demo noise).
+- Postgres/Supabase is the sole datastore (external, not Emergent-managed). deployment_agent flagged this as an architecture note: confirm the Supabase project stays reachable/billed independently before relying on Emergent's deploy for persistence.
+- Bundle purchase flow is a MOCKED/simulated checkout (paymentStatus='MOCK_SUCCESS', no real Stripe call yet) — user explicitly asked for this as a placeholder; real Stripe wiring is a future task.
+- Ambassador dashboard (`AMBASSADORS`, `CERTIFIED_TEACHERS`, `RECENT_POSTS`) and student "workshops" ambassador-posts list are still static mock arrays from `initial-data.ts`, not DB-backed.
+- `logout` route emits a comma-joined Set-Cookie header (works fine in browsers, cosmetic issue for non-browser HTTP clients).
+
+## What's Been Implemented (2026-08-30, session 3 — Landing Page Rebuild + Backlog + Bug Fixes)
+- New public marketing landing page at `/{locale}` (guest-only; logged-in users auto-redirect to their role dashboard via `getDashboardPath()` in `src/lib/rbac.ts`, also used by AuthModal post-login/register). Sections: hero (GSAP entrance), gold "competitive advantage" callout, 3 real DB-backed exam Bundles (BAC Sciences/BAC Languages/LMD MI-ST) with a MOCK/simulated checkout modal (`MockCheckoutModal.tsx` — clearly labeled "Demo Mode", no real payment), 3-steps section, membership card teaser, 58-wilaya ambassador network marquee, final CTA. All new landing components under `src/components/landing/`.
+- New `Bundle`/`BundlePurchase` Prisma models + `/api/bundles` (GET/POST), `/api/bundles/[id]` (PUT/DELETE), `/api/bundles/[id]/purchase` (POST, mock). New admin `BundlesTab.tsx` (CRUD) wired into `/admin#bundles`.
+- Ambassador CRUD completed: `POST /api/ambassadors` (already existed) + new `DELETE /api/ambassadors/[id]`; `AmbassadorsTab.tsx` now has an add-form + delete button + shows generated temp password.
+- Session date guardrails: `POST /api/sessions` rejects past `scheduledAt` (400 + Arabic error); admin `SessionsTab.tsx` and Teacher Studio session form both get `min` datetime + inline error display; `platformStore.addSession()` now returns `{success, error}` and rolls back the optimistic row on failure.
+- Course teacherId bug fixed: `POST /api/courses` now resolves `teacherId` by matching `teacherName` to an existing TEACHER user when not explicitly provided.
+- Track-locked catalog: students with a `track` set now get `/dawarat` and the exam bank (`QuickStudyHub`'s `initialTrack` prop, now actually wired) auto-locked to their track (manual filter hidden, badge shown instead); guests/no-track students keep the manual filter. `/dawarat` also supports `?track=` query param.
+- Live Session Reminders: new `SessionReminderBanner.tsx`, shown to logged-in students app-wide when a registered session starts within 60 min or is live, with join/dismiss actions.
+- Relocated the old root-page exam-bank+governance tabs (previously shown to everyone at `/`) to a new public `/exams` page; added a sidebar nav link for students.
+- Google login button removed from AuthModal (JWT-only, per earlier decision).
+- **Bug fixes (reported by user via phone testing, both verified by testing_agent iteration_4)**: (1) Digital membership card 3D flip showed mirrored/garbled text on iOS Safari — fixed by moving flip-card CSS to `globals.css` classes with explicit `-webkit-` prefixes (`.card-flip-scene/.card-flip-inner/.card-face/.card-face-back`). (2) Mobile hamburger menu did nothing for guests — `AppSidebar` (which owns the mobile drawer) only mounts for logged-in users, so the toggle button in `Navbar.tsx` is now conditionally rendered only when `currentUser` exists.
+- Production DB reset (`/app/frontend/scripts/reset-production-db.cjs`, one-off, not idempotent-loop-safe): wiped all demo/test student/teacher/ambassador accounts and their sessions/courses/enrollments/purchases; preserved the OWNER admin account, Wilayas/Institutions/Faculties/Modules/Exams/PlatformSettings, and the 3 seeded Bundles. Added root `.gitignore` (excludes `memory/test_credentials.md`, `node_modules/`, `.next/`).
+- `deployment_agent` scan: 0 hardcoded secrets, correct ports/supervisor config, idempotent seed logic confirmed non-destructive. One architecture note (not a code bug): app depends entirely on external Supabase Postgres, not Emergent-managed MongoDB — flagged for user awareness only.
 
 ## Test Credentials
-No login/password — persona-switching demo app. See `/app/memory/test_credentials.md`.
+Real JWT auth — see `/app/memory/test_credentials.md`. Only account remaining after the 2026-08-30 DB reset: admin@dzprime.academy / DzPrime2026Admin! (OWNER). Register new accounts via the public flow as needed.

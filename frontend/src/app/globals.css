@@ -105,3 +105,87 @@ body {
   min-height: 44px;
   min-width: 44px;
 }
+
+/* Animated gradient text (gold -> white -> lime) */
+.animated-gradient-text {
+  background: linear-gradient(90deg, #d4af37, #ffffff, #a3e635, #d4af37);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Infinite marquee ticker (58 Wilayas network) */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marqueeScroll 40s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-track-rtl {
+  animation-direction: reverse;
+}
+
+/* Spotlight cursor-follow bento cards */
+.spotlight-card {
+  position: relative;
+}
+
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(400px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(212, 175, 55, 0.18), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
+/* 3D Flip Card (iOS Safari requires explicit -webkit- prefixes or the back face bleeds through mirrored) */
+.card-flip-scene {
+  perspective: 1200px;
+  -webkit-perspective: 1200px;
+}
+
+.card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-face-back {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}

@@ -11,6 +11,7 @@ interface SessionsTabProps {
 export const SessionsTab: React.FC<SessionsTabProps> = ({ locale }) => {
   const { sessions, addSession, refresh } = usePlatformStore();
   const [showForm, setShowForm] = useState(false);
+  const [formError, setFormError] = useState('');
   const [form, setForm] = useState({
     title: '',
     teacherName: '',
@@ -20,11 +21,18 @@ export const SessionsTab: React.FC<SessionsTabProps> = ({ locale }) => {
     wilayaCode: 16,
   });
 
+  const minDateTime = new Date().toISOString().slice(0, 16);
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addSession({ ...form, durationMinutes: 60, meetUrl: null, courseId: null, teacherId: null });
-    setForm({ title: '', teacherName: '', scheduledAt: '', platform: 'GOOGLE_MEET', category: 'UNIVERSITY_LMD', wilayaCode: 16 });
-    setShowForm(false);
+    setFormError('');
+    const result = await addSession({ ...form, durationMinutes: 60, meetUrl: null, courseId: null, teacherId: null });
+    if (result.success) {
+      setForm({ title: '', teacherName: '', scheduledAt: '', platform: 'GOOGLE_MEET', category: 'UNIVERSITY_LMD', wilayaCode: 16 });
+      setShowForm(false);
+    } else {
+      setFormError(result.error || (locale === 'ar' ? 'فشل جدولة الحصة' : 'Échec de la planification'));
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -47,9 +55,12 @@ export const SessionsTab: React.FC<SessionsTabProps> = ({ locale }) => {
 
       {showForm && (
         <form onSubmit={handleAdd} data-testid="add-session-form" className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {formError && (
+            <p data-testid="add-session-error" className="sm:col-span-3 text-[11px] font-bold text-rose-400">{formError}</p>
+          )}
           <input required placeholder={locale === 'ar' ? 'عنوان الحصة' : 'Titre'} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-500" />
           <input required placeholder={locale === 'ar' ? 'الأستاذ' : 'Enseignant'} value={form.teacherName} onChange={(e) => setForm({ ...form, teacherName: e.target.value })} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-500" />
-          <input required type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white" />
+          <input required type="datetime-local" min={minDateTime} value={form.scheduledAt} onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white" />
           <select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value as any })} className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-200">
             <option value="GOOGLE_MEET">Google Meet</option>
             <option value="CLASSROOM">Classroom</option>

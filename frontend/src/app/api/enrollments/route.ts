@@ -1,32 +1,52 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
+import { requireRole } from '@/lib/auth';
 
-export async function GET(request: Request) {
+const STUDENT_ROLES = ['STUDENT_FREE', 'STUDENT_PAID'];
+
+export async function GET(request: NextRequest) {
+  const authResult = await requireRole(request, [...STUDENT_ROLES, 'OWNER', 'ADMIN', 'MODERATOR']);
+  if ('error' in authResult) return authResult.error;
+  const { user } = authResult;
+
   await ensureSeeded();
   const { searchParams } = new URL(request.url);
-  const studentId = searchParams.get('studentId');
+  const requestedId = searchParams.get('studentId');
+  const studentId = STUDENT_ROLES.includes(user.role) ? user.id : requestedId || user.id;
 
   const enrollments = await prisma.enrollment.findMany({
-    where: studentId ? { studentId } : undefined,
+    where: { studentId },
     orderBy: { createdAt: 'desc' },
   });
 
   return NextResponse.json(enrollments);
 }
 
-export async function POST(request: Request) {
-  await ensureSeeded();
+export async function POST(request: NextRequest) {
+  const authResult = await requireRole(request, STUDENT_ROLES);
+  if ('error' in authResult) return authResult.error;
+  const { user } = authResult;
+
   const body = await request.json();
+  const course = await prisma.course.findUnique({ where: { id: body.courseId } });
+  if (!course) {
+    return NextResponse.json({ error: 'المقرر غير موجود' }, { status: 404 });
+  }
+
+  const existing = await prisma.enrollment.findFirst({ where: { studentId: user.id, courseId: course.id } });
+  if (existing) {
+    return NextResponse.json(existing, { status: 200 });
+  }
 
   const enrollment = await prisma.enrollment.create({
     data: {
-      studentId: body.studentId,
-      courseId: body.courseId,
-      courseTitle: body.courseTitle,
-      teacherName: body.teacherName,
-      progressPercent: body.progressPercent ?? 0,
-      remainingHours: body.remainingHours ?? 10,
+      studentId: user.id,
+      courseId: course.id,
+      courseTitle: course.titleFr || course.titleAr,
+      teacherName: course.teacherName,
+      progressPercent: 0,
+      remainingHours: 10,
     },
   });
 

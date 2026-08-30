@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Landmark, Users, GraduationCap, Video, Award, Layers, ShieldCheck } from 'lucide-react';
+import { Landmark, Users, GraduationCap, Video, Award, Layers, ShieldCheck, Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
@@ -11,8 +11,9 @@ import { StudentsTab } from '@/components/admin/StudentsTab';
 import { SessionsTab } from '@/components/admin/SessionsTab';
 import { AmbassadorsTab } from '@/components/admin/AmbassadorsTab';
 import { CoursesTab } from '@/components/admin/CoursesTab';
+import { BundlesTab } from '@/components/admin/BundlesTab';
 
-type AdminTab = 'financial' | 'teachers' | 'students' | 'sessions' | 'ambassadors' | 'courses';
+type AdminTab = 'financial' | 'teachers' | 'students' | 'sessions' | 'ambassadors' | 'courses' | 'bundles';
 
 export default function AdminCommandCenterPage() {
   const { locale } = useTranslation();
@@ -23,7 +24,7 @@ export default function AdminCommandCenterPage() {
   useEffect(() => {
     const applyHash = () => {
       const hash = window.location.hash.replace('#', '') as AdminTab;
-      if (['financial', 'teachers', 'students', 'sessions', 'ambassadors', 'courses'].includes(hash)) {
+      if (['financial', 'teachers', 'students', 'sessions', 'ambassadors', 'courses', 'bundles'].includes(hash)) {
         setActiveTab(hash);
       }
     };
@@ -39,6 +40,7 @@ export default function AdminCommandCenterPage() {
     { id: 'sessions', icon: Video, labelAr: 'الحصص الوطنية', labelFr: 'Sessions' },
     { id: 'ambassadors', icon: Award, labelAr: 'شبكة 58 ولاية', labelFr: 'Ambassadors' },
     { id: 'courses', icon: Layers, labelAr: 'المقررات', labelFr: 'Courses' },
+    { id: 'bundles', icon: Package, labelAr: 'حزم الامتحانات', labelFr: 'Bundles' },
   ];
 
   const handleTabClick = (id: AdminTab) => {
@@ -105,6 +107,7 @@ export default function AdminCommandCenterPage() {
             {activeTab === 'sessions' && <SessionsTab locale={locale} />}
             {activeTab === 'ambassadors' && <AmbassadorsTab locale={locale} />}
             {activeTab === 'courses' && <CoursesTab locale={locale} />}
+            {activeTab === 'bundles' && <BundlesTab locale={locale} />}
           </motion.div>
         </AnimatePresence>
       </div>

@@ -8,7 +8,7 @@ import uuid
 import pytest
 import requests
 
-BASE_URL = "https://bcc84ba1-4451-4fcb-9a1e-ea90aeabba51.preview.emergentagent.com"
+BASE_URL = "https://prime-academy-dz.preview.emergentagent.com"
 TIMEOUT = 30
 
 

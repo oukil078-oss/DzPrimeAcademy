@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET() {
   await ensureSeeded();
@@ -8,7 +9,10 @@ export async function GET() {
   return NextResponse.json(modules);
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   await ensureSeeded();
   const body = await request.json();
 
@@ -27,7 +31,10 @@ export async function POST(request: Request) {
   return NextResponse.json(mod, { status: 201 });
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   const body = await request.json();
   const { id, ...data } = body;
 
@@ -45,7 +52,10 @@ export async function PUT(request: Request) {
   return NextResponse.json(mod);
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

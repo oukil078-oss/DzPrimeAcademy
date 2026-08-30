@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
+import { hashPassword, requireAdmin } from '@/lib/auth';
 
 export async function GET() {
   await ensureSeeded();
@@ -16,26 +17,37 @@ export async function GET() {
 
   const result = profiles.map((p) => ({
     ...p,
-    user: usersMap.get(p.userId) || null,
+    user: usersMap.get(p.userId) ? { ...usersMap.get(p.userId), passwordHash: undefined } : null,
   }));
 
   return NextResponse.json(result);
 }
 
-export async function POST(request: Request) {
+function generateTempPassword(): string {
+  return `Prof${Math.floor(1000 + Math.random() * 9000)}!`;
+}
+
+export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin(request);
+  if ('error' in authResult) return authResult.error;
+
   await ensureSeeded();
   const body = await request.json();
+
+  const tempPassword = generateTempPassword();
+  const passwordHash = await hashPassword(tempPassword);
 
   const user = await prisma.user.create({
     data: {
       email: body.email,
       name: body.name,
       role: 'TEACHER',
+      passwordHash,
       wilayaCode: body.wilayaCode || null,
       wilayaName: body.wilayaName || null,
       institutionName: body.university || null,
       studentCardId: `DZ-TCH-${body.wilayaCode || 16}-${Math.floor(1000 + Math.random() * 9000)}`,
-      isVerified: false,
+      isVerified: true,
     },
   });
 
@@ -50,5 +62,6 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ ...profile, user }, { status: 201 });
+  const { passwordHash: _omit, ...safeUser } = user;
+  return NextResponse.json({ ...profile, user: safeUser, tempPassword }, { status: 201 });
 }

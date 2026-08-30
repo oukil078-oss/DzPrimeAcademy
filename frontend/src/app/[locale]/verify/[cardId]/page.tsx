@@ -1,15 +1,22 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { use } from 'react';
-import {
-  CheckCircle2,
-  Award,
-} from 'lucide-react';
+import { CheckCircle2, XCircle, Award, Loader2 } from 'lucide-react';
 import { DzPrimeLogo } from '@/components/shared/DzPrimeLogo';
-import { DEMO_USERS } from '@/lib/initial-data';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+
+interface VerifiedCard {
+  cardId: string;
+  holderName: string;
+  role: string;
+  institutionName: string | null;
+  wilayaCode: number | null;
+  wilayaName: string | null;
+  isVerified: boolean;
+  expiryDate: string;
+}
 
 export default function VerifyCardPage({
   params,
@@ -20,26 +27,74 @@ export default function VerifyCardPage({
   const { locale, cardId } = resolvedParams;
   const { t } = useTranslation();
 
-  // Lookup matched card or generate certified payload
-  const matchedUser = DEMO_USERS.find(
-    (u) => u.studentCardId?.toLowerCase() === cardId?.toLowerCase()
-  ) || {
-    id: 'user-sample',
-    email: 'contact@dzprime.academy',
-    name: 'Alaa Eddine',
-    role: 'AMBASSADOR',
-    phone: '+213 661 23 45 67',
-    wilayaCode: 16,
-    wilayaName: 'Alger',
-    institutionName: 'Université USTHB Bab Ezzouar',
-    studentCardId: cardId || 'DZ-AMB-16-0789',
-    isVerified: true,
-    createdAt: '2023-09-10',
-  };
+  const [loading, setLoading] = useState(true);
+  const [isValid, setIsValid] = useState(false);
+  const [card, setCard] = useState<VerifiedCard | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/card/verify/${encodeURIComponent(cardId)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setIsValid(!!data.isValid);
+        setCard(data.card || null);
+      })
+      .catch(() => setIsValid(false))
+      .finally(() => setLoading(false));
+  }, [cardId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center" data-testid="verify-loading">
+        <Loader2 className="w-6 h-6 text-gold-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isValid || !card) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div
+          className="w-full max-w-lg rounded-3xl border border-rose-300 dark:border-rose-500/40 bg-white dark:bg-[#0B0F1C] p-6 sm:p-10 text-center shadow-xl"
+          data-testid="verify-invalid-card"
+        >
+          <XCircle className="w-12 h-12 text-rose-500 mx-auto mb-3" />
+          <h1 className="text-lg sm:text-xl font-black font-arabic text-slate-900 dark:text-white">
+            {locale === 'ar' ? 'بطاقة غير صالحة' : 'Carte invalide'}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-2 font-mono">{cardId}</p>
+          <p className="text-xs text-slate-600 dark:text-gray-300 font-arabic mt-3">
+            {locale === 'ar'
+              ? 'رقم البطاقة غير موجود في السجل الوطني للمنصة'
+              : "Ce numéro de carte n'existe pas dans notre registre national"}
+          </p>
+          <Link
+            href={`/${locale}`}
+            className="inline-flex mt-6 px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-black text-xs items-center justify-center gap-2 transition-all"
+          >
+            {t('verify.backHome')}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const roleLabel =
+    card.role === 'AMBASSADOR'
+      ? t('brand.verifiedAmbassador')
+      : card.role === 'OWNER' || card.role === 'ADMIN' || card.role === 'MODERATOR'
+      ? t('roles.OWNER')
+      : card.role === 'TEACHER'
+      ? t('roles.TEACHER')
+      : card.role === 'STUDENT_PAID'
+      ? t('roles.STUDENT_PAID')
+      : t('roles.STUDENT_FREE');
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-gold-500/50 bg-white dark:bg-gradient-to-b dark:from-[#0B132B] dark:via-[#060913] dark:to-[#03060E] p-6 sm:p-10 text-slate-900 dark:text-white shadow-xl dark:shadow-gold-glow-lg text-center relative overflow-hidden transition-colors">
+      <div
+        data-testid="verify-valid-card"
+        className="w-full max-w-lg rounded-3xl border border-slate-200 dark:border-gold-500/50 bg-white dark:bg-gradient-to-b dark:from-[#0B132B] dark:via-[#060913] dark:to-[#03060E] p-6 sm:p-10 text-slate-900 dark:text-white shadow-xl dark:shadow-gold-glow-lg text-center relative overflow-hidden transition-colors"
+      >
         {/* Background Aura */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 bg-gold-500/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -57,50 +112,44 @@ export default function VerifyCardPage({
         <h1 className="text-lg sm:text-2xl font-black font-arabic text-slate-900 dark:text-gold-200">
           {t('verify.title')}
         </h1>
-        <p className="text-xs text-slate-600 dark:text-gray-300 font-arabic mt-1">
-          {t('verify.subtitle')}
-        </p>
+        <p className="text-xs text-slate-600 dark:text-gray-300 font-arabic mt-1">{t('verify.subtitle')}</p>
 
         {/* Details Grid */}
         <div className="my-6 space-y-3 bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-gold-500/30 rounded-2xl p-5 text-left font-arabic text-xs shadow-inner">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-2">
             <span className="text-slate-500 dark:text-gray-400">{t('verify.memberName')}:</span>
-            <strong className="text-slate-900 dark:text-white text-sm font-extrabold">{matchedUser.name}</strong>
+            <strong className="text-slate-900 dark:text-white text-sm font-extrabold">{card.holderName}</strong>
           </div>
 
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-2">
             <span className="text-slate-500 dark:text-gray-400">{t('verify.role')}:</span>
             <span className="px-2.5 py-0.5 rounded-md bg-gold-500/20 text-gold-800 dark:text-gold-300 font-bold">
-              {matchedUser.role === 'AMBASSADOR'
-                ? t('brand.verifiedAmbassador')
-                : matchedUser.role === 'OWNER'
-                ? t('roles.OWNER')
-                : matchedUser.role === 'TEACHER'
-                ? t('roles.TEACHER')
-                : t('roles.STUDENT_PAID')}
+              {roleLabel}
             </span>
           </div>
 
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-2">
             <span className="text-slate-500 dark:text-gray-400">{t('verify.cardId')}:</span>
-            <strong className="font-mono text-gold-700 dark:text-gold-400 font-bold tracking-wider">{cardId}</strong>
+            <strong className="font-mono text-gold-700 dark:text-gold-400 font-bold tracking-wider">{card.cardId}</strong>
           </div>
 
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-2">
             <span className="text-slate-500 dark:text-gray-400">{t('verify.wilaya')}:</span>
             <span className="text-slate-700 dark:text-gray-200">
-              Wilaya {matchedUser.wilayaCode || 16} ({matchedUser.wilayaName || 'Alger'})
+              Wilaya {card.wilayaCode || 16} ({card.wilayaName || 'Alger'})
             </span>
           </div>
 
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-gray-800 pb-2">
             <span className="text-slate-500 dark:text-gray-400">{t('verify.institution')}:</span>
-            <span className="text-slate-700 dark:text-gray-200 max-w-[220px] truncate">{matchedUser.institutionName}</span>
+            <span className="text-slate-700 dark:text-gray-200 max-w-[220px] truncate">
+              {card.institutionName || '—'}
+            </span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-slate-500 dark:text-gray-400">{t('verify.validity')}:</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">{t('verify.validUntil')}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">{card.expiryDate}</span>
           </div>
         </div>
 

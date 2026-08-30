@@ -45,7 +45,8 @@ export const QuickStudyHub: React.FC<QuickStudyHubProps> = ({ initialTrack }) =>
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTrack, setSelectedTrack] = useState<TrackType | 'ALL'>('ALL');
+  const [selectedTrack, setSelectedTrack] = useState<TrackType | 'ALL'>(initialTrack || 'ALL');
+  const isTrackLocked = !!initialTrack;
   const [selectedModuleId, setSelectedModuleId] = useState<string | 'ALL'>('ALL');
   const [selectedTermType, setSelectedTermType] = useState<'ALL' | 'MIDTERM_EMD' | 'FINAL_SEMESTRIAL' | 'RATTRAPAGE'>('ALL');
   
@@ -222,6 +223,12 @@ export const QuickStudyHub: React.FC<QuickStudyHubProps> = ({ initialTrack }) =>
         </div>
 
         {/* 1-Click Fast Track Tabs */}
+        {isTrackLocked ? (
+          <div data-testid="study-hub-track-locked-badge" className="mt-4 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-lime-400/15 border border-lime-400/40 text-lime-300 text-xs font-bold">
+            <Lock className="w-3.5 h-3.5" />
+            <span>{locale === 'ar' ? `مقررات مسارك: ${initialTrack}` : `Votre filière: ${initialTrack}`}</span>
+          </div>
+        ) : (
         <div className="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
           {trackTabs.map((tab) => {
             const active = selectedTrack === tab.id;
@@ -246,6 +253,7 @@ export const QuickStudyHub: React.FC<QuickStudyHubProps> = ({ initialTrack }) =>
             );
           })}
         </div>
+        )}
       </div>
 
       {/* ================= 1-CLICK MODULE CHIPS ================= */}

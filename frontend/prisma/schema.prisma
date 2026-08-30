@@ -89,9 +89,46 @@ model User {
   academicYear    String?
   studentCardId   String?    @unique
   isVerified      Boolean    @default(false)
+  passwordHash    String?
   demoIndex       Int?       @unique
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model LoginAttempt {
+  id          String    @id @default(cuid())
+  identifier  String    @unique
+  attempts    Int       @default(0)
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SessionRegistration {
+  id           String   @id @default(cuid())
+  sessionId    String
+  studentId    String
+  studentName  String
+  registeredAt DateTime @default(now())
+  attended     Boolean  @default(false)
+
+  @@unique([sessionId, studentId])
 }
 
 model Wilaya {
@@ -322,6 +359,36 @@ model Enrollment {
   progressPercent Int      @default(0)
   remainingHours  Float    @default(10)
   createdAt       DateTime @default(now())
+}
+
+model Bundle {
+  id               String   @id @default(cuid())
+  titleAr          String
+  titleFr          String?
+  descriptionAr    String
+  descriptionFr    String?
+  track            TrackType @default(BAC)
+  badge            String?
+  hours            Int      @default(24)
+  lecturesCount    Int      @default(3)
+  originalPriceDzd Int
+  currentPriceDzd  Int
+  colorTheme       String   @default("gold")
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model BundlePurchase {
+  id            String   @id @default(cuid())
+  bundleId      String
+  bundleTitleAr String
+  userId        String
+  userName      String
+  amountDzd     Int
+  paymentStatus String   @default("MOCK_SUCCESS")
+  createdAt     DateTime @default(now())
 }
 
 model PlatformSettings {
