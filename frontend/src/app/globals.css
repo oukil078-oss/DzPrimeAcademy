@@ -162,10 +162,16 @@ body {
   opacity: 1;
 }
 
-/* 3D Flip Card (iOS Safari requires explicit -webkit- prefixes or the back face bleeds through mirrored) */
+/* 3D Flip Card (iOS Safari requires explicit -webkit- prefixes AND the rounded/overflow clip must live on a non-3D-transformed wrapper, or the back face bleeds through mirrored) */
 .card-flip-scene {
+  position: relative;
   perspective: 1200px;
   -webkit-perspective: 1200px;
+  border-radius: 1rem;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .card-flip-inner {
@@ -186,6 +192,6 @@ body {
 }
 
 .card-face-back {
-  transform: rotateY(180deg);
-  -webkit-transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
+  -webkit-transform: rotateY(180deg) translateZ(1px);
 }

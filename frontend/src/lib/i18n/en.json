@@ -95,6 +95,8 @@
     "flipInstruction": "Click the card to flip between Front and Back views",
     "downloadPng": "Download Card as Image (PNG)",
     "generatingPng": "Rendering Card Image...",
+    "downloadPdf": "Download Printable PDF (Plastic Card)",
+    "generatingPdf": "Preparing Print File...",
     "verifyCard": "Verify Live Authenticity",
     "front": "Front View",
     "back": "Back View",

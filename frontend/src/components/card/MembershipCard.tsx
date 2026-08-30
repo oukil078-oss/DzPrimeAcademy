@@ -3,9 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { motion } from 'framer-motion';
-import { Download, CheckCircle, RotateCw, ExternalLink, ShieldCheck, Phone, Mail, Globe } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import { Download, FileDown, CheckCircle, RotateCw, ExternalLink, ShieldCheck, Phone, Mail, Globe } from 'lucide-react';
 import { MembershipCardData, User } from '@/types';
 import { DzPrimeLogo } from '../shared/DzPrimeLogo';
+import { CardExportTemplate, CARD_EXPORT_WIDTH, CARD_EXPORT_HEIGHT } from './CardExportTemplate';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
 interface MembershipCardProps {
@@ -23,8 +26,11 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
   const [isFlipped, setIsFlipped] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const frontCardRef = useRef<HTMLDivElement>(null);
   const backCardRef = useRef<HTMLDivElement>(null);
+  const exportFrontRef = useRef<HTMLDivElement>(null);
+  const exportBackRef = useRef<HTMLDivElement>(null);
 
   // Synthesize card data from user or props
   const card: MembershipCardData = customCardData || {
@@ -80,7 +86,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
     
     QRCode.toDataURL(verifyUrl, {
       margin: 1,
-      width: 180,
+      width: 240,
       color: {
         dark: '#000000',
         light: '#F5D061',
@@ -90,79 +96,50 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
       .catch((err) => console.error('QR code generation error', err));
   }, [card.cardId]);
 
-  // Client-side HTML5 Canvas PNG Exporter
+  // Captures the actual rendered card design (front or back) as a high-res PNG
   const exportCardAsPng = async () => {
     setIsExporting(true);
     try {
-      // Create high-res canvas (1200 x 760 px)
-      const canvas = document.createElement('canvas');
-      canvas.width = 1200;
-      canvas.height = 760;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Draw background
-      ctx.fillStyle = '#070B16';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw luxury gold borders
-      ctx.lineWidth = 14;
-      const borderGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      borderGrad.addColorStop(0, '#D4AF37');
-      borderGrad.addColorStop(0.5, '#FFF2B2');
-      borderGrad.addColorStop(1, '#946608');
-      ctx.strokeStyle = borderGrad;
-      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-
-      // Gold wave curves
-      ctx.beginPath();
-      ctx.moveTo(40, 600);
-      ctx.bezierCurveTo(400, 520, 800, 720, 1160, 580);
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = '#D4AF37';
-      ctx.stroke();
-
-      // Titles
-      ctx.fillStyle = '#D4AF37';
-      ctx.font = 'bold 44px Arial, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('DZ PRIME ACADEMY', canvas.width / 2, 140);
-
-      ctx.fillStyle = '#E8CD57';
-      ctx.font = 'bold 30px Arial, sans-serif';
-      ctx.fillText('MEMBERSHIP CARD / بطاقة العضوية', canvas.width / 2, 200);
-
-      // Member Name
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 50px Cairo, Arial, sans-serif';
-      ctx.fillText(card.holderName, canvas.width / 2, 380);
-
-      // Role and Status
-      ctx.fillStyle = '#38BDF8';
-      ctx.font = 'bold 36px Cairo, Arial, sans-serif';
-      ctx.fillText(card.roleTitleAr, canvas.width / 2, 450);
-
-      // ID and Institution
-      ctx.fillStyle = '#D4AF37';
-      ctx.font = '28px Arial, sans-serif';
-      ctx.fillText(`ID: ${card.cardId}  |  Wilaya: ${card.wilayaCode} (${card.wilayaName})`, canvas.width / 2, 520);
-      ctx.fillText(card.institutionName, canvas.width / 2, 570);
-
-      // Official Stamp
-      ctx.fillStyle = '#22C55E';
-      ctx.font = 'bold 24px Arial, sans-serif';
-      ctx.fillText('✓ CERTIFIED & VERIFIED ACADEMIC CREDENTIAL', canvas.width / 2, 670);
-
-      // Convert to image download
-      const dataUrl = canvas.toDataURL('image/png');
+      const node = isFlipped ? exportBackRef.current : exportFrontRef.current;
+      if (!node) return;
+      const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true });
       const link = document.createElement('a');
-      link.download = `DZ_PRIME_CARD_${card.cardId}.png`;
+      link.download = `DZ_PRIME_CARD_${card.cardId}_${isFlipped ? 'back' : 'front'}.png`;
       link.href = dataUrl;
       link.click();
     } catch (e) {
-      console.error('Export error', e);
+      console.error('PNG export error', e);
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Generates a print-ready PDF sized to a real CR80 plastic card (85.6mm x 54mm), front + back on separate pages
+  const exportCardAsPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const frontNode = exportFrontRef.current;
+      const backNode = exportBackRef.current;
+      if (!frontNode || !backNode) return;
+
+      const [frontPng, backPng] = await Promise.all([
+        toPng(frontNode, { pixelRatio: 2, cacheBust: true }),
+        toPng(backNode, { pixelRatio: 2, cacheBust: true }),
+      ]);
+
+      const CARD_WIDTH_MM = 85.6;
+      const CARD_HEIGHT_MM = 54;
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [CARD_WIDTH_MM, CARD_HEIGHT_MM] });
+
+      pdf.addImage(frontPng, 'PNG', 0, 0, CARD_WIDTH_MM, CARD_HEIGHT_MM);
+      pdf.addPage([CARD_WIDTH_MM, CARD_HEIGHT_MM], 'landscape');
+      pdf.addImage(backPng, 'PNG', 0, 0, CARD_WIDTH_MM, CARD_HEIGHT_MM);
+
+      pdf.save(`DZ_PRIME_CARD_${card.cardId}_print.pdf`);
+    } catch (e) {
+      console.error('PDF export error', e);
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -181,7 +158,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           {/* ================= FRONT SIDE ================= */}
           <div
             ref={frontCardRef}
-            className="card-face w-full h-full rounded-2xl overflow-hidden border-2 border-gold-500/60 bg-gradient-to-br from-[#0B1224] via-[#060A14] to-[#04070F] shadow-gold-glow flex flex-col justify-between p-3.5 sm:p-5 text-white"
+            className="card-face w-full h-full border-2 border-gold-500/60 bg-gradient-to-br from-[#0B1224] via-[#060A14] to-[#04070F] shadow-gold-glow flex flex-col justify-between p-3.5 sm:p-5 text-white"
           >
             {/* Background Texture & Light sheen */}
             <div className="absolute inset-0 bg-radial-glow opacity-60 pointer-events-none" />
@@ -249,7 +226,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           {/* ================= BACK SIDE ================= */}
           <div
             ref={backCardRef}
-            className="card-face card-face-back w-full h-full rounded-2xl overflow-hidden border-2 border-gold-500/60 bg-gradient-to-r from-gold-500 via-gold-400 to-navy-950 shadow-gold-glow flex text-navy-950 p-0"
+            className="card-face card-face-back w-full h-full border-2 border-gold-500/60 bg-gradient-to-r from-gold-500 via-gold-400 to-navy-950 shadow-gold-glow flex text-navy-950 p-0"
           >
             {/* Left Half: Gold Metallic */}
             <div className="w-[58%] sm:w-[60%] h-full p-2.5 sm:p-4 flex flex-col justify-between bg-gradient-to-br from-gold-300 via-gold-400 to-gold-500 text-navy-950">
@@ -313,6 +290,28 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
         </motion.div>
       </div>
 
+      {/* Hidden high-res export templates (not part of the 3D flip stack, captured 1:1 for PNG/PDF) */}
+      <div style={{ position: 'fixed', top: 0, left: -9999, pointerEvents: 'none', opacity: 0 }} aria-hidden="true">
+        <div ref={exportFrontRef}>
+          <CardExportTemplate
+            card={card}
+            qrCodeDataUrl={qrCodeDataUrl}
+            side="front"
+            verifiedLabel={t('card.verifiedBadge')}
+            notVerifiedLabel={t('card.notVerified')}
+          />
+        </div>
+        <div ref={exportBackRef}>
+          <CardExportTemplate
+            card={card}
+            qrCodeDataUrl={qrCodeDataUrl}
+            side="back"
+            verifiedLabel={t('card.verifiedBadge')}
+            notVerifiedLabel={t('card.notVerified')}
+          />
+        </div>
+      </div>
+
       {/* Control Buttons */}
       <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 w-full">
         <button
@@ -327,10 +326,23 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           <button
             onClick={exportCardAsPng}
             disabled={isExporting}
+            data-testid="card-download-png-btn"
             className="px-4 sm:px-5 py-2 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-gold-glow hover:shadow-gold-glow-lg active:scale-95 disabled:opacity-50 touch-target justify-center"
           >
             <Download className="w-3.5 h-3.5" />
             <span>{isExporting ? t('card.generatingPng') : t('card.downloadPng')}</span>
+          </button>
+        )}
+
+        {allowExport && (
+          <button
+            onClick={exportCardAsPdf}
+            disabled={isExportingPdf}
+            data-testid="card-download-pdf-btn"
+            className="px-4 sm:px-5 py-2 rounded-xl bg-navy-850 hover:bg-navy-800 border border-sky-400/40 text-sky-300 hover:text-sky-200 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md active:scale-95 disabled:opacity-50 touch-target justify-center"
+          >
+            <FileDown className="w-3.5 h-3.5" />
+            <span>{isExportingPdf ? t('card.generatingPdf') : t('card.downloadPdf')}</span>
           </button>
         )}
 

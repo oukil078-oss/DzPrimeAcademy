@@ -66,5 +66,14 @@ Full spec covered: subdomain multi-tenant middleware (admin./teacher./student./a
 - Production DB reset (`/app/frontend/scripts/reset-production-db.cjs`, one-off, not idempotent-loop-safe): wiped all demo/test student/teacher/ambassador accounts and their sessions/courses/enrollments/purchases; preserved the OWNER admin account, Wilayas/Institutions/Faculties/Modules/Exams/PlatformSettings, and the 3 seeded Bundles. Added root `.gitignore` (excludes `memory/test_credentials.md`, `node_modules/`, `.next/`).
 - `deployment_agent` scan: 0 hardcoded secrets, correct ports/supervisor config, idempotent seed logic confirmed non-destructive. One architecture note (not a code bug): app depends entirely on external Supabase Postgres, not Emergent-managed MongoDB — flagged for user awareness only.
 
+## What's Been Implemented (2026-08-30, session 4 — Membership Card Fixes)
+- Card 3D-flip regression (real device iOS bug, worse than the earlier partial fix): root cause was WebKit not honoring `backface-visibility:hidden` when the SAME element also has `overflow:hidden`+`border-radius` inside a 3D transform. Fixed by moving `overflow-hidden`/`rounded-2xl` off `.card-face`/`.card-face-back` onto the non-3D `.card-flip-scene` wrapper (`globals.css`). Verified clean at desktop+mobile viewports, multiple flip cycles (testing_agent iteration_5, 100%).
+- PNG export rewritten: previously drew an unrelated hand-coded canvas template; now uses `html-to-image` to capture a hidden 1:1 replica (`CardExportTemplate.tsx`) of the real front/back card design.
+- New PDF export button (`card-download-pdf-btn`): generates a 2-page print-ready PDF via `jsPDF`, each page sized to exact CR80 plastic card dimensions (85.6mm x 54mm), front on page 1, back on page 2.
+- Packages added: `html-to-image`, `jspdf`.
+
 ## Test Credentials
 Real JWT auth — see `/app/memory/test_credentials.md`. Only account remaining after the 2026-08-30 DB reset: admin@dzprime.academy / DzPrime2026Admin! (OWNER). Register new accounts via the public flow as needed.
+
+## Pending (interrupted mid-implementation, not yet done)
+- User asked: teachers currently sign in with an admin-auto-generated temp password (backend already supports it, but admin UI doesn't surface it). User wants: (1) admin can optionally SET an explicit password when creating a teacher instead of only auto-generating, (2) teachers can change their own password from their profile/Settings modal. `integration_expert` was consulted; implementation not started yet - Settings modal's "Security" tab is currently a non-functional placeholder (fake 2FA text, no real change-password form), and the Profile tab's save button doesn't call any API either.

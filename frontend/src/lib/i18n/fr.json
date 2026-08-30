@@ -95,6 +95,8 @@
     "flipInstruction": "Cliquez sur la carte pour la faire pivoter (Recto / Verso)",
     "downloadPng": "Télécharger la carte en Image (PNG)",
     "generatingPng": "Génération de l'image en cours...",
+    "downloadPdf": "Télécharger le PDF Imprimable (Carte Plastique)",
+    "generatingPdf": "Préparation du fichier d'impression...",
     "verifyCard": "Vérifier la validité de la carte en direct",
     "front": "Recto",
     "back": "Verso",
