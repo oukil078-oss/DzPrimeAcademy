@@ -1,0 +1,334 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MODERATOR
+  AMBASSADOR
+  TEACHER
+  STUDENT_FREE
+  STUDENT_PAID
+}
+
+enum Region {
+  WEST
+  EAST
+  CENTER
+  SOUTH
+}
+
+enum InstitutionType {
+  UNIVERSITY
+  HIGH_SCHOOL
+}
+
+enum TrackType {
+  BAC
+  UNIVERSITY_LMD
+  MEDICAL
+}
+
+enum ExamType {
+  MIDTERM_EMD
+  FINAL_SEMESTRIAL
+  RATTRAPAGE
+}
+
+enum PostType {
+  EVENT
+  STUDY_TIP
+  SESSION_SCHEDULE
+  ANNOUNCEMENT
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  PAID
+}
+
+enum SessionStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SessionPlatform {
+  GOOGLE_MEET
+  CLASSROOM
+  ONSITE
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  name            String
+  avatar          String?
+  role            Role       @default(STUDENT_FREE)
+  phone           String?
+  wilayaCode      Int?
+  wilayaName      String?
+  institutionId   String?
+  institutionName String?
+  track           TrackType?
+  specialty       String?
+  academicYear    String?
+  studentCardId   String?    @unique
+  isVerified      Boolean    @default(false)
+  demoIndex       Int?       @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Wilaya {
+  code   Int    @id
+  nameAr String
+  nameFr String
+  nameEn String
+  region Region
+}
+
+model Institution {
+  id         String          @id @default(cuid())
+  nameAr     String
+  nameFr     String
+  type       InstitutionType
+  wilayaCode Int
+  logoUrl    String?
+}
+
+model Faculty {
+  id            String @id @default(cuid())
+  nameAr        String
+  nameFr        String
+  institutionId String
+}
+
+model Specialty {
+  id        String    @id @default(cuid())
+  nameAr    String
+  nameFr    String
+  trackType TrackType
+  facultyId String
+}
+
+model AcademicYear {
+  id          String  @id @default(cuid())
+  nameAr      String
+  nameFr      String
+  semester    String?
+  specialtyId String
+}
+
+model Module {
+  id             String    @id @default(cuid())
+  nameAr         String
+  nameFr         String
+  code           String
+  coefficient    Int       @default(1)
+  academicYearId String
+  trackType      TrackType @default(UNIVERSITY_LMD)
+  examsCount     Int       @default(0)
+  createdAt      DateTime  @default(now())
+}
+
+model Exam {
+  id                     String      @id @default(cuid())
+  title                  String
+  year                   Int
+  termType               ExamType
+  fileUrl                String
+  solutionUrl            String?
+  isFreeSample           Boolean     @default(false)
+  downloadsCount         Int         @default(0)
+  moduleId               String
+  moduleName             String?
+  authorName             String?
+  trackType              TrackType?
+  academicYearName       String?
+  institutionName        String?
+  previewQuestionSnippet String?
+  solutionSummary        String?
+  createdAt              DateTime    @default(now())
+}
+
+model AmbassadorProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  wilayaCode            Int
+  wilayaNameAr          String
+  wilayaNameFr          String?
+  region                Region?
+  institutionId         String?
+  institutionNameAr     String
+  institutionNameFr     String?
+  specialtyName         String?
+  telegramHandle        String?
+  phone                 String?
+  bioAr                 String?
+  bioFr                 String?
+  ratingAverage         Float    @default(5.0)
+  ratingsCount          Int      @default(0)
+  isVerified            Boolean  @default(false)
+  upcomingSessionsCount Int      @default(0)
+  totalTipsShared       Int      @default(0)
+  materialsCuratedCount Int      @default(0)
+  studentsMentoredCount Int      @default(0)
+  badges                String[]
+  promoCode             String?  @unique
+  referralsCount        Int      @default(0)
+  commissionDzd         Int      @default(0)
+  createdAt             DateTime @default(now())
+}
+
+model Rating {
+  id           String   @id @default(cuid())
+  score        Int
+  comment      String?
+  ambassadorId String
+  studentName  String
+  studentRole  Role?
+  institution  String?
+  createdAt    DateTime @default(now())
+}
+
+model Post {
+  id                  String    @id @default(cuid())
+  title               String
+  content             String
+  type                PostType  @default(ANNOUNCEMENT)
+  wilayaCode          Int?
+  wilayaName          String?
+  institutionId       String?
+  institutionName     String?
+  eventDate           DateTime?
+  isOnline            Boolean   @default(false)
+  meetUrl             String?
+  location            String?
+  isApproved          Boolean   @default(true)
+  authorId            String
+  authorName          String
+  authorRole          Role
+  assignedTeacherId   String?
+  assignedTeacherName String?
+  createdAt           DateTime  @default(now())
+}
+
+model PostComment {
+  id                String   @id @default(cuid())
+  postId            String
+  authorId          String
+  authorName        String
+  authorRole        Role
+  content           String
+  isVerifiedTeacher Boolean  @default(false)
+  createdAt         DateTime @default(now())
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  userId    String
+  cardId    String             @unique
+  planName  String             @default("GOLDEN_MEMBERSHIP")
+  status    SubscriptionStatus @default(ACTIVE)
+  startDate DateTime           @default(now())
+  endDate   DateTime
+  createdAt DateTime           @default(now())
+}
+
+model TeacherProfile {
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  university      String
+  specialty       String?
+  hourlyRateDzd   Int          @default(12000)
+  hoursTaught     Int          @default(0)
+  studentsCount   Int          @default(0)
+  ccpAccount      String?
+  ccpCle          String?
+  monthlyShareDzd Int          @default(0)
+  payoutStatus    PayoutStatus @default(PENDING)
+  lastPayoutAt    DateTime?
+  createdAt       DateTime     @default(now())
+
+  payouts FacultyPayout[]
+}
+
+model FacultyPayout {
+  id               String         @id @default(cuid())
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id])
+  amountDzd        Int
+  periodMonth      String
+  status           PayoutStatus   @default(PENDING)
+  approvedAt       DateTime?
+  receiptRef       String?
+  createdAt        DateTime       @default(now())
+}
+
+model Course {
+  id           String    @id @default(cuid())
+  titleAr      String
+  titleFr      String?
+  titleEn      String?
+  description  String?
+  teacherId    String?
+  teacherName  String
+  category     TrackType @default(UNIVERSITY_LMD)
+  lessonsCount Int       @default(8)
+  rating       Float     @default(5.0)
+  priceDzd     Int       @default(0)
+  isLive       Boolean   @default(false)
+  colorTheme   String    @default("lime")
+  createdAt    DateTime  @default(now())
+}
+
+model LiveSession {
+  id              String          @id @default(cuid())
+  title           String
+  courseId        String?
+  teacherId       String?
+  teacherName     String
+  scheduledAt     DateTime
+  durationMinutes Int             @default(60)
+  platform        SessionPlatform @default(GOOGLE_MEET)
+  meetUrl         String?
+  wilayaCode      Int?
+  status          SessionStatus   @default(UPCOMING)
+  category        TrackType       @default(UNIVERSITY_LMD)
+  createdAt       DateTime        @default(now())
+}
+
+model Enrollment {
+  id              String   @id @default(cuid())
+  studentId       String
+  courseId        String
+  courseTitle     String
+  teacherName     String
+  progressPercent Int      @default(0)
+  remainingHours  Float    @default(10)
+  createdAt       DateTime @default(now())
+}
+
+model PlatformSettings {
+  id                       String   @id @default("singleton")
+  academicYear             String   @default("2025/2026")
+  ambassadorCommissionRate Int      @default(10)
+  baridiMobEnabled         Boolean  @default(true)
+  edahabiaEnabled          Boolean  @default(true)
+  updatedAt                DateTime @updatedAt
+}
