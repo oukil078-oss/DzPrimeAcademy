@@ -4,3 +4,10 @@ node_modules/
 memory/test_credentials.md
 *.log
 .DS_Store
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
