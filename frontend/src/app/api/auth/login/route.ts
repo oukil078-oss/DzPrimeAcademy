@@ -10,39 +10,44 @@ import {
 } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { email, password } = body;
+  try {
+    const body = await request.json();
+    const { email, password } = body;
 
-  if (!email || !password) {
-    return NextResponse.json({ error: 'البريد الإلكتروني وكلمة المرور مطلوبان' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'البريد الإلكتروني وكلمة المرور مطلوبان' }, { status: 400 });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const { locked, retryAfterMinutes } = await checkBruteForce(normalizedEmail);
+    if (locked) {
+      return NextResponse.json(
+        { error: `تم قفل الحساب مؤقتاً بسبب محاولات خاطئة متكررة. حاول بعد ${retryAfterMinutes} دقيقة` },
+        { status: 429 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (!user || !user.passwordHash) {
+      await recordFailedAttempt(normalizedEmail);
+      return NextResponse.json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }, { status: 401 });
+    }
+
+    const valid = await verifyPassword(password, user.passwordHash);
+    if (!valid) {
+      await recordFailedAttempt(normalizedEmail);
+      return NextResponse.json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }, { status: 401 });
+    }
+
+    await clearFailedAttempts(normalizedEmail);
+
+    const { passwordHash, ...safeUser } = user;
+    const token = signToken(user.id);
+    const response = NextResponse.json({ user: safeUser });
+    setAuthCookie(response, token);
+    return response;
+  } catch (error: unknown) {
+    console.error('Login error:', error);
+    return NextResponse.json({ error: 'حدث خطأ أثناء تسجيل الدخول. يرجى التحقق من اتصال قاعدة البيانات.' }, { status: 500 });
   }
-
-  const normalizedEmail = String(email).toLowerCase().trim();
-  const { locked, retryAfterMinutes } = await checkBruteForce(normalizedEmail);
-  if (locked) {
-    return NextResponse.json(
-      { error: `تم قفل الحساب مؤقتاً بسبب محاولات خاطئة متكررة. حاول بعد ${retryAfterMinutes} دقيقة` },
-      { status: 429 }
-    );
-  }
-
-  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (!user || !user.passwordHash) {
-    await recordFailedAttempt(normalizedEmail);
-    return NextResponse.json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }, { status: 401 });
-  }
-
-  const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) {
-    await recordFailedAttempt(normalizedEmail);
-    return NextResponse.json({ error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' }, { status: 401 });
-  }
-
-  await clearFailedAttempts(normalizedEmail);
-
-  const { passwordHash, ...safeUser } = user;
-  const token = signToken(user.id);
-  const response = NextResponse.json({ user: safeUser });
-  setAuthCookie(response, token);
-  return response;
 }

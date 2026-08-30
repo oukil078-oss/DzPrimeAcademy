@@ -51,7 +51,10 @@ export default async function LocalizedLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white selection:bg-gold-500 selection:text-navy-950 transition-colors duration-300">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white selection:bg-gold-500 selection:text-navy-950 transition-colors duration-300"
+      >
         <DashboardShell>{children}</DashboardShell>
       </body>
     </html>

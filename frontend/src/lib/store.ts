@@ -76,34 +76,42 @@ export function useAuthStore() {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return { success: false, error: data.error || 'فشل تسجيل الدخول' };
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { success: false, error: data.error || 'فشل تسجيل الدخول' };
+      }
+      setUser(data.user);
+      return { success: true, user: data.user as User };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error)?.message || 'فشل الاتصال بالخادم' };
     }
-    setUser(data.user);
-    return { success: true, user: data.user as User };
   }, []);
 
   const register = useCallback(
     async (payload: { name: string; email: string; password: string; phone?: string; wilayaCode?: number; wilayaName?: string }) => {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'فشل إنشاء الحساب' };
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          return { success: false, error: data.error || 'فشل إنشاء الحساب' };
+        }
+        setUser(data.user);
+        return { success: true, user: data.user as User };
+      } catch (err: unknown) {
+        return { success: false, error: (err as Error)?.message || 'فشل الاتصال بالخادم' };
       }
-      setUser(data.user);
-      return { success: true, user: data.user as User };
     },
     []
   );
