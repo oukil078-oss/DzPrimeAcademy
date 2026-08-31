@@ -32,36 +32,60 @@ export async function POST(request: NextRequest) {
   if ('error' in authResult) return authResult.error;
 
   await ensureSeeded();
-  const body = await request.json();
+  try {
+    const body = await request.json();
+    const { name, email, password, phone, wilayaCode, wilayaName, university, specialty, hourlyRateDzd, ccpAccount, ccpCle } = body;
 
-  const tempPassword = generateTempPassword();
-  const passwordHash = await hashPassword(tempPassword);
+    if (!name || !email) {
+      return NextResponse.json({ error: 'الاسم الكامل والبريد الإلكتروني مطلوبان' }, { status: 400 });
+    }
 
-  const user = await prisma.user.create({
-    data: {
-      email: body.email,
-      name: body.name,
-      role: 'TEACHER',
-      passwordHash,
-      wilayaCode: body.wilayaCode || null,
-      wilayaName: body.wilayaName || null,
-      institutionName: body.university || null,
-      studentCardId: `DZ-TCH-${body.wilayaCode || 16}-${Math.floor(1000 + Math.random() * 9000)}`,
-      isVerified: true,
-    },
-  });
+    const normalizedEmail = String(email).toLowerCase().trim();
 
-  const profile = await prisma.teacherProfile.create({
-    data: {
-      userId: user.id,
-      university: body.university,
-      specialty: body.specialty || null,
-      hourlyRateDzd: body.hourlyRateDzd ?? 10000,
-      ccpAccount: body.ccpAccount || null,
-      ccpCle: body.ccpCle || null,
-    },
-  });
+    // Check if user already exists
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existing) {
+      return NextResponse.json({ error: 'هذا البريد الإلكتروني مسجل مسبقاً في المنصة' }, { status: 409 });
+    }
 
-  const { passwordHash: _omit, ...safeUser } = user;
-  return NextResponse.json({ ...profile, user: safeUser, tempPassword }, { status: 201 });
+    const clearPassword = (password && String(password).trim().length >= 6)
+      ? String(password).trim()
+      : generateTempPassword();
+
+    const passwordHash = await hashPassword(clearPassword);
+    const parsedWilayaCode = wilayaCode ? Number(wilayaCode) : 16;
+
+    const user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        name: String(name).trim(),
+        phone: phone ? String(phone).trim() : null,
+        role: 'TEACHER',
+        passwordHash,
+        wilayaCode: parsedWilayaCode,
+        wilayaName: wilayaName || null,
+        institutionName: university || 'Université Algérienne',
+        specialty: specialty || null,
+        studentCardId: `DZ-TCH-${parsedWilayaCode}-${Math.floor(1000 + Math.random() * 9000)}`,
+        isVerified: true,
+      },
+    });
+
+    const profile = await prisma.teacherProfile.create({
+      data: {
+        userId: user.id,
+        university: university || 'Université Algérienne',
+        specialty: specialty || null,
+        hourlyRateDzd: hourlyRateDzd ? Number(hourlyRateDzd) : 12000,
+        ccpAccount: ccpAccount || null,
+        ccpCle: ccpCle || null,
+      },
+    });
+
+    const { passwordHash: _omit, ...safeUser } = user;
+    return NextResponse.json({ ...profile, user: safeUser, tempPassword: clearPassword }, { status: 201 });
+  } catch (error: any) {
+    console.error('Error creating teacher:', error);
+    return NextResponse.json({ error: error?.message || 'فشل إضافة الأستاذ' }, { status: 500 });
+  }
 }

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { DashboardShell } from '@/components/layout/DashboardShell';
-import '@/app/globals.css';
+import '../globals.css';
 
 export const metadata: Metadata = {
   title: 'DZ PRIME ACADEMY | منصة تعليمية جزائرية متكاملة',

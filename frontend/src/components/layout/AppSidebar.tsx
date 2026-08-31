@@ -72,6 +72,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     { id: 'sessions', label: locale === 'ar' ? 'الحصص المباشرة والجدول' : 'Sessions en Direct', href: `/${locale}/teacher#sessions`, icon: Video, isActive: false },
     { id: 'roster', label: locale === 'ar' ? 'قائمة الطلبة والحضور' : 'Liste & Présence', href: `/${locale}/teacher#roster`, icon: ClipboardList, isActive: false },
     { id: 'drive', label: locale === 'ar' ? 'المطبوعات والسلاسل' : 'Supports & Séries', href: `/${locale}/teacher#drive`, icon: FolderOpen, isActive: false },
+    { id: 'profile', label: locale === 'ar' ? 'الملف الأكاديمي والأمان' : 'Profil & Sécurité', href: `/${locale}/teacher#profile`, icon: ShieldCheck, isActive: false },
     { id: 'card', label: locale === 'ar' ? 'بطاقة التدريس الرقمية' : 'Carte Enseignant', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
   ];
 
