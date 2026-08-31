@@ -81,11 +81,13 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
     );
   }
 
+  const isAdminPage = routeSegment === 'admin';
+
   return (
     <div className={`flex min-h-screen w-full bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white transition-colors ${isRtl ? 'flex-row-reverse' : 'flex-row'}`} data-testid="app-dashboard-shell">
       <GoogleAuthCallback />
 
-      {currentUser && (
+      {currentUser && !isAdminPage && (
         <AppSidebar
           isMobileOpen={isMobileSidebarOpen}
           onMobileClose={() => setIsMobileSidebarOpen(false)}
@@ -93,7 +95,11 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        <Navbar onToggleSidebar={() => setIsMobileSidebarOpen(true)} onOpenAuth={(tab) => setAuthModal({ open: true, tab })} />
+        <Navbar
+          onToggleSidebar={() => setIsMobileSidebarOpen(true)}
+          onOpenAuth={(tab) => setAuthModal({ open: true, tab })}
+          hideSidebarToggle={isAdminPage}
+        />
         {currentUser && (currentUser.role === 'STUDENT_FREE' || currentUser.role === 'STUDENT_PAID') && <SessionReminderBanner />}
         <main className="flex-1 w-full">{bodyContent}</main>
         <Footer />

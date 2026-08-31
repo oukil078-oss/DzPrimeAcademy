@@ -32,9 +32,10 @@ import { UpgradeModal } from '../shared/UpgradeModal';
 interface NavbarProps {
   onToggleSidebar?: () => void;
   onOpenAuth?: (tab: 'login' | 'register') => void;
+  hideSidebarToggle?: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth, hideSidebarToggle = false }) => {
   const { t, locale, isRtl } = useTranslation();
   const { currentUser, signOut } = useAuthStore();
   const pathname = usePathname();
@@ -76,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth }) =
         <div className="px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-6">
           {/* Left: Mobile Menu Trigger & Greeting */}
           <div className="flex items-center gap-3 min-w-0">
-            {currentUser && (
+            {currentUser && !hideSidebarToggle && (
               <button
                 onClick={onToggleSidebar}
                 data-testid="navbar-mobile-menu-btn"
