@@ -86,8 +86,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   ];
 
   const ambassadorItems: NavItem[] = [
-    { id: 'dashboard', label: locale === 'ar' ? 'لوحة تحكم السفير' : 'Espace Ambassadeur', href: `/${locale}/ambassador`, icon: Award, isActive: isOn('ambassador') && !isOn('ambassadors') },
+    { id: 'dashboard', label: locale === 'ar' ? 'لوحة تحكم السفير' : 'Espace Ambassadeur', href: `/${locale}/ambassador`, icon: Award, isActive: isOn('ambassador') && !isOn('ambassadors') && !pathname.includes('#') },
     { id: 'network', label: locale === 'ar' ? 'شبكة السفراء (58 ولاية)' : 'Réseau (58 wilayas)', href: `/${locale}/ambassadors`, icon: Users, isActive: isOn('ambassadors') },
+    { id: 'profile', label: locale === 'ar' ? 'الملف الأكاديمي والأمان' : 'Profil & Sécurité', href: `/${locale}/ambassador#profile`, icon: ShieldCheck, isActive: false },
     { id: 'card', label: locale === 'ar' ? 'بطاقتي الرقمية' : 'Ma Carte Digitale', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
   ];
 

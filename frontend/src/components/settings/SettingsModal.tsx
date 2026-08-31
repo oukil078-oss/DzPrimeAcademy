@@ -22,6 +22,8 @@ import {
   Loader2,
   Sparkles,
   CreditCard,
+  Award,
+  Tag,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -44,6 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
   const { theme, setTheme } = useTheme();
   const isAdmin = isStaff(currentUser?.role);
   const isTeacher = currentUser?.role === 'TEACHER';
+  const isAmbassador = currentUser?.role === 'AMBASSADOR';
 
   const [tab, setTab] = useState<SettingsTab>(defaultTab);
   const [notifEnabled, setNotifEnabled] = useState(true);
@@ -61,6 +64,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
     specialty: '',
     ccpAccount: '',
     ccpCle: '',
+    telegramHandle: '',
+    promoCode: '',
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState('');
@@ -88,9 +93,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
           specialty: currentUser.specialty || '',
           ccpAccount: '',
           ccpCle: '',
+          telegramHandle: '',
+          promoCode: '',
         });
-        // Fetch teacher profile if teacher
-        if (currentUser.role === 'TEACHER') {
+        // Fetch extended profile if teacher or ambassador
+        if (currentUser.role === 'TEACHER' || currentUser.role === 'AMBASSADOR') {
           fetch('/api/account')
             .then((r) => r.json())
             .then((data) => {
@@ -101,6 +108,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                   ccpCle: data.teacherProfile.ccpCle || '',
                   institutionName: data.teacherProfile.university || prev.institutionName,
                   specialty: data.teacherProfile.specialty || prev.specialty,
+                }));
+              }
+              if (data.ambassadorProfile) {
+                setProfileForm((prev) => ({
+                  ...prev,
+                  telegramHandle: data.ambassadorProfile.telegramHandle || '',
+                  promoCode: data.ambassadorProfile.promoCode || '',
+                  institutionName: data.ambassadorProfile.institutionNameAr || prev.institutionName,
+                  specialty: data.ambassadorProfile.specialtyName || prev.specialty,
                 }));
               }
             })
@@ -369,6 +385,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                             className="w-full px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 font-mono text-center text-xs focus:outline-none focus:border-lime-400"
                           />
                         </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isAmbassador && (
+                    <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-lime-400 font-bold text-xs">
+                          <Award className="w-4 h-4" />
+                          <span>{locale === 'ar' ? 'بيانات سفير الولاية المعتمد' : 'Profil Ambassadeur Officiel'}</span>
+                        </div>
+                        {profileForm.promoCode && (
+                          <span className="px-2.5 py-0.5 rounded-lg bg-lime-400/20 text-lime-300 font-mono text-xs font-bold flex items-center gap-1">
+                            <Tag className="w-3 h-3" />
+                            {profileForm.promoCode}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 mb-1 text-[10px]">
+                          {locale === 'ar' ? 'معرف تليغرام (للتواصل والتوجيه)' : 'Identifiant Telegram (sans @)'}
+                        </label>
+                        <input
+                          value={profileForm.telegramHandle}
+                          onChange={(e) => setProfileForm({ ...profileForm, telegramHandle: e.target.value })}
+                          placeholder="username"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 font-mono text-xs focus:outline-none focus:border-lime-400"
+                        />
                       </div>
                     </div>
                   )}

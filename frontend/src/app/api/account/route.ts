@@ -9,14 +9,20 @@ export async function GET(request: NextRequest) {
   }
 
   let teacherProfile = null;
+  let ambassadorProfile = null;
+
   if (currentUser.role === 'TEACHER') {
     teacherProfile = await prisma.teacherProfile.findUnique({
       where: { userId: currentUser.id },
       include: { payouts: { orderBy: { createdAt: 'desc' }, take: 5 } },
     });
+  } else if (currentUser.role === 'AMBASSADOR') {
+    ambassadorProfile = await prisma.ambassadorProfile.findUnique({
+      where: { userId: currentUser.id },
+    });
   }
 
-  return NextResponse.json({ user: currentUser, teacherProfile });
+  return NextResponse.json({ user: currentUser, teacherProfile, ambassadorProfile });
 }
 
 export async function PUT(request: NextRequest) {
@@ -66,5 +72,33 @@ export async function PUT(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ user, teacherProfile });
+  // If user is an AMBASSADOR, update or create AmbassadorProfile
+  let ambassadorProfile = null;
+  if (user.role === 'AMBASSADOR') {
+    ambassadorProfile = await prisma.ambassadorProfile.upsert({
+      where: { userId: user.id },
+      update: {
+        institutionNameAr: body.institutionName || user.institutionName || 'الجامعة',
+        institutionNameFr: body.institutionNameFr || null,
+        specialtyName: body.specialty !== undefined ? body.specialty : user.specialty,
+        phone: body.phone !== undefined ? body.phone : user.phone,
+        telegramHandle: body.telegramHandle !== undefined ? String(body.telegramHandle).replace('@', '') : undefined,
+        bioAr: body.bioAr !== undefined ? body.bioAr : undefined,
+      },
+      create: {
+        userId: user.id,
+        wilayaCode: user.wilayaCode || 16,
+        wilayaNameAr: user.wilayaName || 'الجزائر',
+        institutionNameAr: body.institutionName || user.institutionName || 'الجامعة',
+        specialtyName: body.specialty || user.specialty || null,
+        phone: body.phone || user.phone || null,
+        telegramHandle: body.telegramHandle ? String(body.telegramHandle).replace('@', '') : null,
+        bioAr: body.bioAr || null,
+        promoCode: `WIL${user.wilayaCode || 16}-AMB${Math.floor(100 + Math.random() * 900)}`,
+        isVerified: true,
+      },
+    });
+  }
+
+  return NextResponse.json({ user, teacherProfile, ambassadorProfile });
 }
