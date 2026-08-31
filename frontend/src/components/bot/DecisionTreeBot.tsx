@@ -48,9 +48,11 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
   const { currentUser } = useAuthStore();
   const [currentStep, setCurrentStep] = useState<BotStep>('TRACK');
   const [selection, setSelection] = useState<BotSelectionState>({});
+  const [finalTab, setFinalTab] = useState<'SUMMARIES' | 'EXAMS'>('SUMMARIES');
   const [examFilter, setExamFilter] = useState<'ALL' | 'MIDTERM_EMD' | 'FINAL_SEMESTRIAL' | 'RATTRAPAGE'>('ALL');
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [activePdfPreview, setActivePdfPreview] = useState<ExamItem | null>(null);
+  const [activeSummaryPreview, setActiveSummaryPreview] = useState<any | null>(null);
 
   const isUserGold = isGoldenMember(currentUser);
 
@@ -709,194 +711,444 @@ export const DecisionTreeBot: React.FC<DecisionTreeBotProps> = ({ isFloating = f
           </motion.div>
         )}
 
-        {/* ================= STEP 7: EXAM ARCHIVE ================= */}
+        {/* ================= STEP 7: MODULE REVISION SUMMARIES & EXAM ARCHIVE ================= */}
         {currentStep === 'EXAMS' && (
           <motion.div
             key="step-exams"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            className="space-y-4"
+            className="space-y-5"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Step Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-gold-500/20">
               <div>
-                <h3 className="text-base sm:text-lg font-bold font-arabic text-gold-700 dark:text-gold-300">
-                  {selection.moduleName} - {t('bot.step7_title')}
+                <h3 className="text-base sm:text-xl font-black font-arabic text-slate-900 dark:text-gold-200">
+                  {selection.moduleName}
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-gray-300 font-arabic">
+                <p className="text-xs text-slate-600 dark:text-gray-300 font-arabic mt-0.5">
                   {selection.institutionName} • {selection.academicYearName}
                 </p>
               </div>
 
-              {/* Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/20 text-xs font-arabic">
-                {(['ALL', 'FINAL_SEMESTRIAL', 'MIDTERM_EMD', 'RATTRAPAGE'] as const).map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setExamFilter(filter)}
-                    className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
-                      examFilter === filter
-                        ? 'bg-gold-500 text-navy-950 font-bold shadow-sm'
-                        : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {filter === 'ALL'
-                      ? t('common.all')
-                      : filter === 'FINAL_SEMESTRIAL'
-                      ? t('bot.final')
-                      : filter === 'MIDTERM_EMD'
-                      ? t('bot.midterm')
-                      : t('bot.rattrapage')}
-                  </button>
-                ))}
+              {/* Main Sub-Tab Toggle (Summaries vs Exams) */}
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/30">
+                <button
+                  onClick={() => setFinalTab('SUMMARIES')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    finalTab === 'SUMMARIES'
+                      ? 'bg-gold-500 text-navy-950 shadow-sm font-black'
+                      : 'text-slate-600 dark:text-gray-400 hover:text-slate-950 dark:hover:text-white'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>{t('bot.summariesTab')}</span>
+                </button>
+                <button
+                  onClick={() => setFinalTab('EXAMS')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    finalTab === 'EXAMS'
+                      ? 'bg-gold-500 text-navy-950 shadow-sm font-black'
+                      : 'text-slate-600 dark:text-gray-400 hover:text-slate-950 dark:hover:text-white'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{t('bot.examsTab')}</span>
+                </button>
               </div>
             </div>
 
-            {/* Free vs. Paid Notice Banner */}
-            {!isUserGold && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-gold-500/10 to-transparent border border-gold-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-gold-500/20 border border-gold-400/50 flex items-center justify-center text-gold-600 dark:text-gold-400 shrink-0">
-                    <Sparkles className="w-4 h-4" />
+            {/* ================= SUB-TAB 1: MODULE SUMMARIES (الملخصات والمراجعة) ================= */}
+            {finalTab === 'SUMMARIES' && (
+              <div className="space-y-4">
+                {/* Intro Callout Banner */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-gold-500/10 to-transparent border border-gold-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 flex items-center justify-center text-gold-600 dark:text-gold-400 shrink-0 mt-0.5">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-gold-200 font-arabic">
+                        {t('bot.moduleSummaryTitle')}
+                      </h4>
+                      <p className="text-[11px] sm:text-xs text-slate-600 dark:text-gray-300 font-arabic mt-0.5 leading-relaxed">
+                        {t('bot.moduleSummaryDesc')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-gold-200 font-arabic">
-                      {locale === 'ar'
-                        ? 'الحساب المجاني: متاح لك أول موضوعين كعينة مجانية'
-                        : locale === 'fr'
-                        ? 'Compte Gratuit : Accès aux 2 premiers sujets d\'annales'
-                        : 'Free Account: Access to 2 sample exam papers'}
-                    </h4>
-                    <p className="text-[11px] text-slate-600 dark:text-gray-300 font-arabic">
-                      {locale === 'ar'
-                        ? 'فعّل العضوية الذهبية VIP للوصول غير المحدود لكافة المواضيع والحلول النموذجية.'
-                        : locale === 'fr'
-                        ? 'Passez en VIP Gold pour débloquer l\'intégralité des 12 000+ sujets et corrigés.'
-                        : 'Upgrade to VIP Gold for unlimited access to all 12,000+ exam papers & solutions.'}
-                    </p>
+                  <button
+                    onClick={() => setFinalTab('EXAMS')}
+                    className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 text-gold-300 border border-gold-500/40 text-xs font-bold font-arabic shrink-0 transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <span>{locale === 'ar' ? 'الانتقال إلى الامتحانات' : 'Voir les Examens'}</span>
+                    <span>→</span>
+                  </button>
+                </div>
+
+                {/* Summaries & Revision Packs Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {/* Card 1: Comprehensive Module Digest */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-850/90 border border-slate-200 dark:border-gold-500/30 shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded-md bg-gold-500/20 text-gold-700 dark:text-gold-300 text-[10px] font-mono font-bold">
+                          PDF • 24 Pages
+                        </span>
+                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>{locale === 'ar' ? 'معتمد رسميًا' : 'Validé'}</span>
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
+                        {locale === 'ar' ? `الملخص الشامل لمقياس ${selection.moduleName}` : `Résumé Complet : ${selection.moduleName}`}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
+                        {locale === 'ar'
+                          ? 'شرح مبسط لكافة المحاور، مفاهيم الدروس النظرية، وتطبيقات عملية مع أمثلة توضيحية.'
+                          : 'Synthèse claire de tous les chapitres du cours avec exemples d\'application.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-gray-800">
+                      <button
+                        onClick={() =>
+                          setActiveSummaryPreview({
+                            title: locale === 'ar' ? `الملخص الشامل - ${selection.moduleName}` : `Résumé Complet - ${selection.moduleName}`,
+                            desc: locale === 'ar' ? 'ملخص مركّز يغطي جميع وحدات المقرر الدراسي بطريقة منهجية.' : 'Synthèse condensée de tous les modules du semestre.',
+                          })
+                        }
+                        className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-gold-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-gold-500" />
+                        <span>{t('bot.viewSummary')}</span>
+                      </button>
+                      <a
+                        href="/sample-exam.pdf"
+                        download
+                        className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm"
+                        title={t('bot.downloadSummary')}
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Formulas & Key Theorems Cheat Sheet */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-850/90 border border-slate-200 dark:border-gold-500/30 shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold">
+                          CHEAT-SHEET • 6 Pages
+                        </span>
+                        <span className="text-[11px] text-gold-600 dark:text-gold-400 font-bold">
+                          ⚡ {t('bot.keyFormulas')}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
+                        {locale === 'ar' ? `ورقة القوانين والتعاريف الأساسية (${selection.moduleName})` : `Fiche de Formules & Théorèmes (${selection.moduleName})`}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
+                        {locale === 'ar'
+                          ? 'بطاقات مراجعة سريعة تحتوي على جميع القوانين الرياضية، النظريات، والنقاط الواجب حفظها للامتحان.'
+                          : 'Fiche récapitulative des formules, théorèmes et définitions indispensables pour le jour J.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-gray-800">
+                      <button
+                        onClick={() =>
+                          setActiveSummaryPreview({
+                            title: locale === 'ar' ? `ورقة القوانين - ${selection.moduleName}` : `Fiche de Formules - ${selection.moduleName}`,
+                            desc: locale === 'ar' ? 'ملخص القوانين والنتائج الرياضية المباشرة للاستعمال في حل التمارين.' : 'Formules mathématiques et règles de calcul clés.',
+                          })
+                        }
+                        className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-gold-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                        <span>{t('bot.viewSummary')}</span>
+                      </button>
+                      <a
+                        href="/sample-exam.pdf"
+                        download
+                        className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm"
+                        title={t('bot.downloadSummary')}
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Common Pitfalls & Exam Traps */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-850/90 border border-slate-200 dark:border-gold-500/30 shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-mono font-bold">
+                          METHODOLOGY GUIDE
+                        </span>
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
+                          🎯 {locale === 'ar' ? 'فخاخ وأخطاء الامتحانات' : 'Pièges Classiques'}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
+                        {locale === 'ar' ? 'دليل الأخطاء الشائعة ومنهجية الإجابة' : 'Guide Méthodologique & Pièges d\'Examens'}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
+                        {locale === 'ar'
+                          ? 'أهم الهفوات التي يقع فيها الطلبة في الامتحانات السابقة مع نصائح الأساتذة المصححين لضمان العلامة الكاملة.'
+                          : 'Conseils des correcteurs et astuces pour éviter les erreurs fréquentes lors des épreuves.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-gray-800">
+                      <button
+                        onClick={() =>
+                          setActiveSummaryPreview({
+                            title: locale === 'ar' ? `دليل المنهجية والأخطاء - ${selection.moduleName}` : `Guide Méthodologique - ${selection.moduleName}`,
+                            desc: locale === 'ar' ? 'نصائح حصرية من نخبة الأساتذة لضمان الحصول على أعلى الدرجات.' : 'Conseils exclusifs pour maximiser votre note aux examens.',
+                          })
+                        }
+                        className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-gold-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{t('bot.viewSummary')}</span>
+                      </button>
+                      <a
+                        href="/sample-exam.pdf"
+                        download
+                        className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm"
+                        title={t('bot.downloadSummary')}
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Card 4: Step-by-Step Solved Core Exercises */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-navy-850/90 border border-slate-200 dark:border-gold-500/30 shadow-sm flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold">
+                          PRACTICE SET • 15 EXERCISES
+                        </span>
+                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
+                          ⭐ {locale === 'ar' ? 'تمارين نموذجية' : 'Exercices Types'}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
+                        {locale === 'ar' ? 'سلسلة التمارين النموذجية مع الحل المفصل' : 'Série d\'Exercices Types Corrigés Pas à Pas'}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 leading-relaxed">
+                        {locale === 'ar'
+                          ? 'تمارين تطبيقية مجهزة لاختبار فهمك قبل البدء في حل مواضيع السنوات السابقة.'
+                          : 'Exercices d\'entraînement conçus pour tester vos acquis avant les annales.'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-gray-800">
+                      <button
+                        onClick={() =>
+                          setActiveSummaryPreview({
+                            title: locale === 'ar' ? `سلسلة التمارين النموذجية - ${selection.moduleName}` : `Exercices Types - ${selection.moduleName}`,
+                            desc: locale === 'ar' ? 'حلول مفصلة خطوة بخطوة لمساعدتك على الإتقان.' : 'Corrections détaillées étape par étape.',
+                          })
+                        }
+                        className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-gold-200 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>{t('bot.viewSummary')}</span>
+                      </button>
+                      <a
+                        href="/sample-exam.pdf"
+                        download
+                        className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm"
+                        title={t('bot.downloadSummary')}
+                      >
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 text-xs font-extrabold font-arabic shadow-gold-glow shrink-0 active:scale-95 transition-all touch-target"
-                >
-                  {t('bot.upgradeBtn')}
-                </button>
               </div>
             )}
 
-            {/* Exam Items List */}
-            <div className="space-y-2.5">
-              {availableExams.length === 0 ? (
-                <div className="p-8 text-center text-slate-500 dark:text-gray-400 rounded-2xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-navy-850 font-arabic text-xs">
-                  {locale === 'ar'
-                    ? 'لا توجد مواضيع مضافة لهذا التصنيف حالياً.'
-                    : locale === 'fr'
-                    ? 'Aucun sujet disponible pour cette sélection.'
-                    : 'No exam papers available for this category.'}
+            {/* ================= SUB-TAB 2: EXAMS ARCHIVE (بنك الامتحانات) ================= */}
+            {finalTab === 'EXAMS' && (
+              <div className="space-y-4">
+                {/* Filter Tabs */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs font-bold text-slate-600 dark:text-gray-300 font-arabic">
+                    {t('bot.availableExamsCount')}: <strong className="text-gold-600 dark:text-gold-400">{availableExams.length}</strong>
+                  </span>
+
+                  <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/20 text-xs font-arabic">
+                    {(['ALL', 'FINAL_SEMESTRIAL', 'MIDTERM_EMD', 'RATTRAPAGE'] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setExamFilter(filter)}
+                        className={`px-2.5 py-1 rounded-lg transition-all text-[11px] ${
+                          examFilter === filter
+                            ? 'bg-gold-500 text-navy-950 font-bold shadow-sm'
+                            : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        {filter === 'ALL'
+                          ? t('common.all')
+                          : filter === 'FINAL_SEMESTRIAL'
+                          ? t('bot.final')
+                          : filter === 'MIDTERM_EMD'
+                          ? t('bot.midterm')
+                          : t('bot.rattrapage')}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                availableExams.map((exam, index) => {
-                  const isLocked = !isUserGold && index >= 2;
-                  return (
-                    <div
-                      key={exam.id}
-                      className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                        isLocked
-                          ? 'border-slate-200 dark:border-gold-500/20 bg-slate-50 dark:bg-navy-950/60 opacity-90'
-                          : 'border-slate-200 dark:border-gold-500/40 bg-white dark:bg-navy-850/90 shadow-sm hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                            isLocked
-                              ? 'bg-amber-500/10 dark:bg-navy-900 border-amber-400/40 text-amber-600 dark:text-gold-400'
-                              : 'bg-gold-500/15 border-gold-500/40 text-gold-600 dark:text-gold-300'
-                          }`}
-                        >
-                          {isLocked ? (
-                            <Lock className="w-4 h-4 text-amber-600 dark:text-gold-400" />
-                          ) : (
-                            <FileText className="w-5 h-5" />
-                          )}
-                        </div>
 
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold font-arabic ${
-                                exam.termType === 'FINAL_SEMESTRIAL'
-                                  ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-400/30'
-                                  : exam.termType === 'MIDTERM_EMD'
-                                  ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30'
-                                  : 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-400/30'
-                              }`}
-                            >
-                              {exam.termType === 'FINAL_SEMESTRIAL'
-                                ? t('bot.final')
-                                : exam.termType === 'MIDTERM_EMD'
-                                ? t('bot.midterm')
-                                : t('bot.rattrapage')}
-                            </span>
-
-                            <span className="font-mono text-xs text-gold-700 dark:text-gold-400 font-semibold">
-                              {exam.year}
-                            </span>
-
-                            {isLocked && (
-                              <span className="px-2 py-0.2 rounded-md bg-gold-500/20 text-gold-700 dark:text-gold-300 font-bold font-arabic text-[9px]">
-                                VIP GOLD
-                              </span>
-                            )}
-                          </div>
-
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1 font-arabic">
-                            {exam.title}
-                          </h4>
-
-                          <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5 font-arabic">
-                            {exam.authorName || 'DZ Prime Faculty'} • {exam.downloadsCount} {t('bot.downloads')}
-                          </p>
-                        </div>
+                {/* Free vs. Paid Notice Banner */}
+                {!isUserGold && (
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-gold-500/10 to-transparent border border-gold-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-gold-500/20 border border-gold-400/50 flex items-center justify-center text-gold-600 dark:text-gold-400 shrink-0">
+                        <Sparkles className="w-4 h-4" />
                       </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                        {isLocked ? (
-                          <button
-                            onClick={() => setIsUpgradeModalOpen(true)}
-                            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500/20 to-amber-500/20 hover:from-gold-500/30 hover:to-amber-500/30 border border-gold-500/40 text-gold-800 dark:text-gold-300 text-xs font-bold font-arabic flex items-center gap-1.5 transition-all active:scale-95 touch-target"
-                          >
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>{locale === 'ar' ? 'فتح الموضوع (VIP)' : 'Débloquer (VIP)'}</span>
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => setActivePdfPreview(exam)}
-                              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gold-500/30 text-slate-800 dark:text-gold-200 text-xs font-semibold font-arabic flex items-center gap-1.5 transition-all touch-target"
-                            >
-                              <FileText className="w-3.5 h-3.5" />
-                              <span>{t('bot.viewExam')}</span>
-                            </button>
-
-                            <a
-                              href={exam.fileUrl}
-                              download
-                              className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm active:scale-95 touch-target"
-                              title={t('bot.downloadPdf')}
-                            >
-                              <Download className="w-4 h-4" />
-                            </a>
-                          </>
-                        )}
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-gold-200 font-arabic">
+                          {locale === 'ar'
+                            ? 'الحساب المجاني: متاح لك أول موضوعين كعينة مجانية'
+                            : locale === 'fr'
+                            ? 'Compte Gratuit : Accès aux 2 premiers sujets d\'annales'
+                            : 'Free Account: Access to 2 sample exam papers'}
+                        </h4>
+                        <p className="text-[11px] text-slate-600 dark:text-gray-300 font-arabic">
+                          {locale === 'ar'
+                            ? 'فعّل العضوية الذهبية VIP للوصول غير المحدود لكافة المواضيع والحلول النموذجية.'
+                            : locale === 'fr'
+                            ? 'Passez en VIP Gold pour débloquer l\'intégralité des 12 000+ sujets et corrigés.'
+                            : 'Upgrade to VIP Gold for unlimited access to all 12,000+ exam papers & solutions.'}
+                        </p>
                       </div>
                     </div>
-                  );
-                })
-              )}
-            </div>
+                    <button
+                      onClick={() => setIsUpgradeModalOpen(true)}
+                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-navy-950 text-xs font-extrabold font-arabic shadow-gold-glow shrink-0 active:scale-95 transition-all touch-target"
+                    >
+                      {t('bot.upgradeBtn')}
+                    </button>
+                  </div>
+                )}
+
+                {/* Exam Items List */}
+                <div className="space-y-2.5">
+                  {availableExams.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 dark:text-gray-400 rounded-2xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-navy-850 font-arabic text-xs">
+                      {locale === 'ar'
+                        ? 'لا توجد مواضيع مضافة لهذا التصنيف حالياً.'
+                        : locale === 'fr'
+                        ? 'Aucun sujet disponible pour cette sélection.'
+                        : 'No exam papers available for this category.'}
+                    </div>
+                  ) : (
+                    availableExams.map((exam, index) => {
+                      const isLocked = !isUserGold && index >= 2;
+                      return (
+                        <div
+                          key={exam.id}
+                          className={`p-3.5 sm:p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                            isLocked
+                              ? 'border-slate-200 dark:border-gold-500/20 bg-slate-50 dark:bg-navy-950/60 opacity-90'
+                              : 'border-slate-200 dark:border-gold-500/40 bg-white dark:bg-navy-850/90 shadow-sm hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                                isLocked
+                                  ? 'bg-amber-500/10 dark:bg-navy-900 border-amber-400/40 text-amber-600 dark:text-gold-400'
+                                  : 'bg-gold-500/15 border-gold-500/40 text-gold-600 dark:text-gold-300'
+                              }`}
+                            >
+                              {isLocked ? (
+                                <Lock className="w-4 h-4 text-amber-600 dark:text-gold-400" />
+                              ) : (
+                                <FileText className="w-5 h-5" />
+                              )}
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold font-arabic ${
+                                    exam.termType === 'FINAL_SEMESTRIAL'
+                                      ? 'bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-400/30'
+                                      : exam.termType === 'MIDTERM_EMD'
+                                      ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/30'
+                                      : 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-400/30'
+                                  }`}
+                                >
+                                  {exam.termType === 'FINAL_SEMESTRIAL'
+                                    ? t('bot.final')
+                                    : exam.termType === 'MIDTERM_EMD'
+                                    ? t('bot.midterm')
+                                    : t('bot.rattrapage')}
+                                </span>
+
+                                <span className="font-mono text-xs text-gold-700 dark:text-gold-400 font-semibold">
+                                  {exam.year}
+                                </span>
+
+                                {isLocked && (
+                                  <span className="px-2 py-0.2 rounded-md bg-gold-500/20 text-gold-700 dark:text-gold-300 font-bold font-arabic text-[9px]">
+                                    VIP GOLD
+                                  </span>
+                                )}
+                              </div>
+
+                              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1 font-arabic">
+                                {exam.title}
+                              </h4>
+
+                              <p className="text-[10px] text-slate-500 dark:text-gray-400 mt-0.5 font-arabic">
+                                {exam.authorName || 'DZ Prime Faculty'} • {exam.downloadsCount} {t('bot.downloads')}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-center">
+                            {isLocked ? (
+                              <button
+                                onClick={() => setIsUpgradeModalOpen(true)}
+                                className="px-3.5 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-xs font-bold font-arabic flex items-center gap-1.5 shadow-sm active:scale-95 touch-target"
+                              >
+                                <Lock className="w-3.5 h-3.5" />
+                                <span>{locale === 'ar' ? 'فتح الموضوع (VIP)' : 'Débloquer (VIP)'}</span>
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => setActivePdfPreview(exam)}
+                                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 border border-slate-300 dark:border-gold-500/30 text-slate-800 dark:text-gold-200 text-xs font-semibold font-arabic flex items-center gap-1.5 transition-all touch-target"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  <span>{t('bot.viewExam')}</span>
+                                </button>
+
+                                <a
+                                  href={exam.fileUrl}
+                                  download
+                                  className="p-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 transition-all shadow-sm active:scale-95 touch-target"
+                                  title={t('bot.downloadPdf')}
+                                >
+                                 <Download className="w-4 h-4" />
+                                </a>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

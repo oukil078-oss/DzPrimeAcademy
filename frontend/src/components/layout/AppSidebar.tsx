@@ -22,6 +22,7 @@ import {
   Calendar,
   Layers,
   Zap,
+  Trophy,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
@@ -63,7 +64,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     { id: 'sessions', label: locale === 'ar' ? 'الحصص والمحاضرات الوطنية' : 'Sessions Nationales', href: `/${locale}/admin#sessions`, icon: Video, isActive: false },
     { id: 'ambassadors', label: locale === 'ar' ? 'شبكة السفراء (58 ولاية)' : 'Réseau Ambassadeurs', href: `/${locale}/admin#ambassadors`, icon: Award, isActive: false },
     { id: 'courses', label: locale === 'ar' ? 'دليل المقاييس والحزم' : 'Modules & Packs', href: `/${locale}/admin#courses`, icon: Layers, isActive: false },
-    { id: 'card', label: locale === 'ar' ? 'بطاقة الإدارة الرقمية' : 'Carte Administration', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
   ];
 
   const teacherItems: NavItem[] = [
@@ -73,15 +73,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     { id: 'roster', label: locale === 'ar' ? 'قائمة الطلبة والحضور' : 'Liste & Présence', href: `/${locale}/teacher#roster`, icon: ClipboardList, isActive: false },
     { id: 'drive', label: locale === 'ar' ? 'المطبوعات والسلاسل' : 'Supports & Séries', href: `/${locale}/teacher#drive`, icon: FolderOpen, isActive: false },
     { id: 'profile', label: locale === 'ar' ? 'الملف الأكاديمي والأمان' : 'Profil & Sécurité', href: `/${locale}/teacher#profile`, icon: ShieldCheck, isActive: false },
-    { id: 'card', label: locale === 'ar' ? 'بطاقة التدريس الرقمية' : 'Carte Enseignant', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
   ];
 
   const studentItems: NavItem[] = [
     { id: 'dashboard', label: locale === 'ar' ? 'لوحة دراستي' : 'Mon Tableau de Bord', href: `/${locale}/student`, icon: GraduationCap, isActive: isOn('student') },
     { id: 'dawarat', label: locale === 'ar' ? 'دورات الامتياز (Live)' : 'Dawarat Excellence (Live)', href: `/${locale}/dawarat`, icon: Video, isActive: isOn('dawarat'), badge: 'Live' },
     { id: 'exams', label: locale === 'ar' ? 'بنك الامتحانات السريع' : "Banque d'Examens", href: `/${locale}/exams`, icon: Zap, isActive: isOn('exams') },
-    { id: 'bot', label: locale === 'ar' ? 'بوت الامتحانات الذكي' : 'Bot Examens IA', href: `/${locale}/bot`, icon: Bot, isActive: isOn('bot') },
-    { id: 'card', label: locale === 'ar' ? 'بطاقتي الجامعية الرقمية' : 'Ma Carte Digitale', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
     { id: 'ambassadors', label: locale === 'ar' ? 'سفراء 58 ولاية' : 'Ambassadeurs (58 wilayas)', href: `/${locale}/ambassadors`, icon: Award, isActive: isOn('ambassadors') },
   ];
 
@@ -89,7 +86,6 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     { id: 'dashboard', label: locale === 'ar' ? 'لوحة تحكم السفير' : 'Espace Ambassadeur', href: `/${locale}/ambassador`, icon: Award, isActive: isOn('ambassador') && !isOn('ambassadors') && !pathname.includes('#') },
     { id: 'network', label: locale === 'ar' ? 'شبكة السفراء (58 ولاية)' : 'Réseau (58 wilayas)', href: `/${locale}/ambassadors`, icon: Users, isActive: isOn('ambassadors') },
     { id: 'profile', label: locale === 'ar' ? 'الملف الأكاديمي والأمان' : 'Profil & Sécurité', href: `/${locale}/ambassador#profile`, icon: ShieldCheck, isActive: false },
-    { id: 'card', label: locale === 'ar' ? 'بطاقتي الرقمية' : 'Ma Carte Digitale', href: `/${locale}/card`, icon: CreditCard, isActive: isOn('card') },
   ];
 
   let navItems = studentItems;
@@ -101,9 +97,10 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   const settingsLabel = locale === 'ar' ? 'إعدادات الحساب' : 'Paramètres';
 
   const sidebarContent = (
-    <div className="flex flex-col h-full justify-between p-4 sm:p-5 select-none font-arabic" data-testid="app-sidebar-content">
+    <div className="flex flex-col h-full justify-between p-4 sm:p-5 select-none font-arabic overflow-y-auto no-scrollbar" data-testid="app-sidebar-content">
       <div>
-        <div className="flex items-center justify-between gap-3 mb-6 sm:mb-8 px-2 pt-1">
+        {/* Brand Header */}
+        <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6 px-2 pt-1">
           <Link href={`/${locale}`} onClick={onMobileClose} className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-lime-400 via-emerald-400 to-teal-400 dark:from-lime-500 dark:via-lime-400 dark:to-emerald-300 p-0.5 shadow-md flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-[#121829] dark:bg-[#070D1F] rounded-[14px] flex items-center justify-center">
@@ -130,6 +127,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
           )}
         </div>
 
+        {/* Navigation List */}
         <nav className="space-y-1.5" data-testid="app-sidebar-nav">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -169,7 +167,48 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
         </nav>
       </div>
 
-      <div className="pt-4 mt-auto">
+      {/* ================= FIXED BOTTOM ACTION SECTION ================= */}
+      {/* 1. Leaderboard Button  2. Bot Button  3. Digital Card Button */}
+      <div className="pt-4 mt-auto space-y-2 border-t border-slate-800/60" data-testid="sidebar-bottom-actions">
+        {/* 1. Leaderboard Button */}
+        <Link
+          href={`/${locale}/leaderboard`}
+          onClick={onMobileClose}
+          data-testid="sidebar-fixed-leaderboard-btn"
+          className={`group relative flex items-center justify-between px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-[13px] font-bold transition-all duration-200 border ${
+            isOn('leaderboard')
+              ? 'bg-gradient-to-r from-gold-500 to-amber-500 text-navy-950 border-gold-400 shadow-md font-black'
+              : 'bg-[#0A1224] border-gold-500/30 text-gold-300 hover:border-gold-400 hover:bg-gold-500/10'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Trophy className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${isOn('leaderboard') ? 'text-navy-950' : 'text-gold-400'}`} />
+            <span>{locale === 'ar' ? 'لوحة صدارة المتفوقين' : 'Classement & Majors'}</span>
+          </div>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isOn('leaderboard') ? 'bg-navy-950/20 text-navy-950 font-black' : 'bg-gold-500/20 text-gold-300'}`}>
+            TOP
+          </span>
+        </Link>
+
+        {/* 2. Bot Button (fixed above Card button) */}
+        <Link
+          href={`/${locale}/bot`}
+          onClick={onMobileClose}
+          data-testid="sidebar-fixed-bot-btn"
+          className={`group relative flex items-center justify-between px-3.5 sm:px-4 py-2.5 rounded-2xl text-xs sm:text-[13px] font-bold transition-all duration-200 border ${
+            isOn('bot')
+              ? 'bg-lime-400 text-slate-950 border-lime-300 shadow-md font-black'
+              : 'bg-[#0E172A] border-lime-400/30 text-lime-300 hover:border-lime-400 hover:bg-lime-400/10'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <Bot className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${isOn('bot') ? 'text-slate-950' : 'text-lime-400'}`} />
+            <span>{locale === 'ar' ? 'بوت الامتحانات والملخصات' : 'Bot Examens & Résumés'}</span>
+          </div>
+          <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
+        </Link>
+
+        {/* 3. Digital Card Button */}
         <SidebarCardWidget />
       </div>
     </div>

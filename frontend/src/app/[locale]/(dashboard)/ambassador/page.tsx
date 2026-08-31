@@ -139,8 +139,55 @@ export default function AmbassadorDashboardPage() {
   const isUserAmb = isAmbassador(currentUser?.role);
   const isUserTch = isTeacher(currentUser?.role);
 
+  const defaultAmbassadorProfile: AmbassadorProfile = {
+    id: 'amb-default',
+    userId: currentUser?.id || 'user-ambassador',
+    user: {
+      id: currentUser?.id || 'user-ambassador',
+      name: currentUser?.name || 'Ambassadeur DZ PRIME',
+      email: currentUser?.email || 'ambassador@dzprime.academy',
+      role: 'AMBASSADOR',
+      phone: currentUser?.phone || '0555000000',
+      createdAt: currentUser?.createdAt || '2026-01-01T00:00:00.000Z',
+    },
+    wilayaCode: currentUser?.wilayaCode || 16,
+    wilayaNameAr: currentUser?.wilayaName || 'الجزائر',
+    wilayaNameFr: 'Alger',
+    institutionId: 'inst-usthb',
+    institutionNameAr: currentUser?.institutionName || 'جامعة العلوم والتكنولوجيا هواري بومدين (USTHB)',
+    institutionNameFr: 'USTHB Bab Ezzouar',
+    specialtyName: currentUser?.specialty || 'Informatique & Sciences',
+    telegramHandle: '@dzprime_ambassador',
+    bioAr: 'سفير معتمد لمنصة DZ PRIME ACADEMY، أرافق الطلبة للتحضير والتميز الأكاديمي.',
+    bioFr: "Ambassadeur certifié DZ PRIME ACADEMY, j'accompagne les étudiants vers l'excellence.",
+    ratingAverage: 5.0,
+    ratingsCount: 48,
+    isVerified: true,
+    upcomingSessionsCount: 3,
+    totalTipsShared: 12,
+    studentsMentoredCount: 1240,
+    reviews: [
+      {
+        id: 'rev-1',
+        studentName: 'Yacine B.',
+        institution: 'USTHB',
+        comment: 'سفير متميز وحصص مراجعة في القمة!',
+        score: 5,
+        createdAt: '2026-02-15T00:00:00.000Z',
+      },
+      {
+        id: 'rev-2',
+        studentName: 'Amira M.',
+        institution: 'Fac Centrale',
+        comment: 'Disponibilité et explications très claires.',
+        score: 5,
+        createdAt: '2026-02-20T00:00:00.000Z',
+      },
+    ],
+  };
+
   const fallbackAmbassador: AmbassadorProfile =
-    AMBASSADORS.find((a) => a.userId === currentUser?.id) || AMBASSADORS[0];
+    AMBASSADORS.find((a) => a.userId === currentUser?.id) || (AMBASSADORS.length > 0 ? AMBASSADORS[0] : defaultAmbassadorProfile);
 
   const currentPromoCode = dbAmbassador?.promoCode || `WIL${currentUser?.wilayaCode || 16}-VIP`;
   const currentCommission = dbAmbassador?.commissionDzd ?? 14500;
@@ -157,7 +204,7 @@ export default function AmbassadorDashboardPage() {
     },
     {
       title: t('dashboards.ambassador.myRating'),
-      value: `${dbAmbassador?.ratingAverage ?? fallbackAmbassador.ratingAverage ?? 5.0} / 5.0`,
+      value: `${dbAmbassador?.ratingAverage ?? fallbackAmbassador?.ratingAverage ?? 5.0} / 5.0`,
       change: '+0.15',
       isPositive: true,
       icon: Star,
@@ -165,7 +212,7 @@ export default function AmbassadorDashboardPage() {
     },
     {
       title: t('dashboards.ambassador.scheduledSessions'),
-      value: `${dbAmbassador?.upcomingSessionsCount ?? fallbackAmbassador.upcomingSessionsCount ?? 3}`,
+      value: `${dbAmbassador?.upcomingSessionsCount ?? fallbackAmbassador?.upcomingSessionsCount ?? 3}`,
       change: 'Active',
       isPositive: true,
       icon: Calendar,
@@ -173,11 +220,11 @@ export default function AmbassadorDashboardPage() {
     },
     {
       title: locale === 'ar' ? 'الطلبة المستفيدون' : 'Étudiants Accompagnés',
-      value: `${fallbackAmbassador.studentsMentoredCount || 1240}+`,
+      value: `${fallbackAmbassador?.studentsMentoredCount || 1240}+`,
       change: '+150',
       isPositive: true,
       icon: Users,
-      description: currentUser?.institutionName || fallbackAmbassador.institutionNameAr,
+      description: currentUser?.institutionName || fallbackAmbassador?.institutionNameAr || 'USTHB',
     },
   ];
 
@@ -291,9 +338,9 @@ export default function AmbassadorDashboardPage() {
       title,
       content,
       type: postType,
-      wilayaCode: currentUser?.wilayaCode || fallbackAmbassador.wilayaCode || 16,
-      wilayaName: currentUser?.wilayaName || fallbackAmbassador.wilayaNameAr || 'Alger',
-      institutionName: currentUser?.institutionName || fallbackAmbassador.institutionNameAr || 'USTHB Bab Ezzouar',
+      wilayaCode: currentUser?.wilayaCode || fallbackAmbassador?.wilayaCode || 16,
+      wilayaName: currentUser?.wilayaName || fallbackAmbassador?.wilayaNameAr || 'Alger',
+      institutionName: currentUser?.institutionName || fallbackAmbassador?.institutionNameAr || 'USTHB Bab Ezzouar',
       isOnline,
       location: isOnline ? undefined : location || 'Amphithéâtre C',
       isApproved: true,
@@ -329,7 +376,7 @@ export default function AmbassadorDashboardPage() {
     const newComment: PostComment = {
       id: `comm-${Date.now()}`,
       authorId: currentUser?.id || 'user-guest',
-      authorName: currentUser?.name || (isUserTch ? 'Pr. Abdelrahim Kadri' : fallbackAmbassador.user.name),
+      authorName: currentUser?.name || (isUserTch ? 'Pr. Abdelrahim Kadri' : (fallbackAmbassador?.user?.name || 'Ambassadeur')),
       authorRole: currentUser?.role || 'AMBASSADOR',
       content: commentText.trim(),
       isVerifiedTeacher,
@@ -368,7 +415,7 @@ export default function AmbassadorDashboardPage() {
             <div className="relative shrink-0">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-gold-500 via-amber-400 to-lime-400 p-0.5 shadow-lg">
                 <div className="w-full h-full rounded-[22px] bg-slate-950 text-gold-300 font-black flex items-center justify-center text-2xl sm:text-3xl font-sans">
-                  {currentUser?.name?.charAt(0) || fallbackAmbassador.user.name.charAt(0)}
+                  {currentUser?.name?.charAt(0) || fallbackAmbassador?.user?.name?.charAt(0) || 'A'}
                 </div>
               </div>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md">
@@ -379,7 +426,7 @@ export default function AmbassadorDashboardPage() {
             <div className="space-y-1 text-left">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl sm:text-2xl font-black text-white">
-                  {currentUser?.name || fallbackAmbassador.user.name}
+                  {currentUser?.name || fallbackAmbassador?.user?.name || 'Ambassadeur DZ PRIME'}
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold">
                   {t('brand.verifiedAmbassador')}
@@ -391,9 +438,9 @@ export default function AmbassadorDashboardPage() {
               </div>
               <p className="text-xs text-slate-300 flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-gold-400" />
-                <span>{currentUser?.institutionName || fallbackAmbassador.institutionNameAr}</span>
+                <span>{currentUser?.institutionName || fallbackAmbassador?.institutionNameAr}</span>
                 <span>•</span>
-                <span>Wilaya {currentUser?.wilayaCode || fallbackAmbassador.wilayaCode} ({currentUser?.wilayaName || fallbackAmbassador.wilayaNameAr})</span>
+                <span>Wilaya {currentUser?.wilayaCode || fallbackAmbassador?.wilayaCode} ({currentUser?.wilayaName || fallbackAmbassador?.wilayaNameAr})</span>
               </p>
               <p className="text-xs text-slate-400 font-mono">
                 {locale === 'ar' ? 'معرف السفير:' : 'ID Ambassadeur:'} {currentUser?.studentCardId || 'DZ-AMB-16-0789'}
@@ -476,7 +523,7 @@ export default function AmbassadorDashboardPage() {
           <MessageSquare className="w-4 h-4" />
           <span>{locale === 'ar' ? 'تقييمات وآراء الطلبة' : 'Avis des Étudiants'}</span>
           <span className="px-1.5 py-0.2 rounded-full bg-gold-500/20 text-gold-600 dark:text-gold-300 text-[10px] font-mono font-bold">
-            {fallbackAmbassador.reviews?.length || 3}
+            {fallbackAmbassador?.reviews?.length || 3}
           </span>
         </button>
 
@@ -758,12 +805,12 @@ export default function AmbassadorDashboardPage() {
               {locale === 'ar' ? 'سجل تقييمات الطلبة وآرائهم المعتمدة' : "Avis et Retours d'Expérience"}
             </h3>
             <span className="text-xs font-bold text-gold-500 font-mono">
-              ⭐ {fallbackAmbassador.ratingAverage} / 5.0 ({fallbackAmbassador.ratingsCount} avis)
+              ⭐ {fallbackAmbassador?.ratingAverage ?? 5.0} / 5.0 ({fallbackAmbassador?.ratingsCount ?? 0} avis)
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(fallbackAmbassador.reviews || []).map((rev) => (
+            {(fallbackAmbassador?.reviews || []).map((rev) => (
               <div
                 key={rev.id}
                 className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-2"

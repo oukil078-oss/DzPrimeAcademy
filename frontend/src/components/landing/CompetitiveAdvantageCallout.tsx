@@ -11,19 +11,19 @@ export const CompetitiveAdvantageCallout: React.FC = () => {
     ar: {
       badge: 'DZ PRIME • EXCELLENCE',
       title: 'ميزتك التنافسية للتفوق',
-      body: 'برامجنا تضمن حصولك على أفضل المكتسبات والمساندة المجانية في البكالوريا، بث مباشر، ودليل يوم بيوم للمسارات التعليمية.',
+      body: 'برامجنا تضمن لك ملخصات حصرية لجميع المقاييس، بنك امتحانات محلولة، مساندة مجانية في البكالوريا، وبث مباشر تفاعلي.',
       cta: 'استكشف الحزم',
     },
     fr: {
       badge: 'DZ PRIME • EXCELLENCE',
       title: 'Votre avantage compétitif',
-      body: 'Nos programmes garantissent le meilleur accompagnement gratuit au BAC, du direct live, et un guide jour par jour de votre parcours.',
+      body: 'Nos programmes vous garantissent des résumés exclusifs de chaque module, une banque d\'annales corrigées, un accompagnement BAC et du direct live interactif.',
       cta: 'Explorer les Bundles',
     },
     en: {
       badge: 'DZ PRIME • EXCELLENCE',
       title: 'Your Competitive Advantage',
-      body: 'Our programs guarantee the best free BAC support, live broadcasts, and a day-by-day guide to your academic path.',
+      body: 'Our programs guarantee exclusive module summaries, solved exam archives, free BAC support, and interactive live classes.',
       cta: 'Explore Bundles',
     },
   };

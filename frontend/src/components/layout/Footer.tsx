@@ -21,9 +21,11 @@ import {
 } from 'lucide-react';
 import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useAuthStore } from '@/lib/store';
 
 export const Footer: React.FC = () => {
   const { t, locale } = useTranslation();
+  const { currentUser } = useAuthStore();
 
   const socialLinks = [
     { name: 'Telegram', icon: Send, href: 'https://t.me/dzprimeacademy', color: 'hover:text-sky-500' },
@@ -39,7 +41,7 @@ export const Footer: React.FC = () => {
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-12 border-b border-slate-200 dark:border-gray-800">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-slate-200 dark:border-gray-800">
           {/* Col 1: Brand & Bio */}
           <div className="space-y-4">
             <DzPrimeLogo size={40} showText={true} />
@@ -89,12 +91,14 @@ export const Footer: React.FC = () => {
                   <span>{t('hierarchy.ambassadorsNetwork')}</span>
                 </Link>
               </li>
-              <li>
-                <Link href={`/${locale}/exams#hierarchy`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
-                  <span>{t('hierarchy.title')}</span>
-                </Link>
-              </li>
+              {currentUser && (
+                <li>
+                  <Link href={`/${locale}/leaderboard#hierarchy`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
+                    <span>{t('hierarchy.title')}</span>
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
 

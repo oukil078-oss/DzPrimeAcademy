@@ -13,15 +13,15 @@ const STEPS = [
   },
   {
     icon: Bot,
-    ar: { title: 'استخدم البوت التوجيهي الذكي', desc: 'دعه يقودك مباشرة إلى بنك امتحاناتك ومقاييسك الدقيقة.' },
-    fr: { title: 'Utilisez le bot de guidage intelligent', desc: 'Il vous mène directement à votre banque de sujets et modules.' },
-    en: { title: 'Use the Smart Guidance Bot', desc: 'It leads you straight to your exact exam bank and modules.' },
+    ar: { title: 'استخدم بوت الامتحانات والملخصات', desc: 'دعه يجهز لك ملخصات المقاييس المركزة، بطاقات القوانين، وبنك الامتحانات الشامل.' },
+    fr: { title: 'Bot Intelligent : Résumés & Examens', desc: 'Accédez aux résumés de cours condensés, fiches de formules et annales officielles.' },
+    en: { title: 'Smart Bot: Summaries & Exam Bank', desc: 'Instantly get high-yield module summaries, formula cheat sheets, and verified exam archives.' },
   },
   {
     icon: Video,
-    ar: { title: 'انضم لحصة مباشرة أو حمّل أرشيفك', desc: 'تابع البث المباشر مع أستاذك، أو حمّل امتحانات محلولة فوراً.' },
-    fr: { title: 'Rejoignez un live ou téléchargez vos archives', desc: 'Suivez le direct avec votre professeur ou téléchargez les sujets corrigés.' },
-    en: { title: 'Join a Live Session or Download Archives', desc: 'Follow the live class or instantly download solved exam papers.' },
+    ar: { title: 'راجع الملخصات وخض الامتحانات أو تابع المباشر', desc: 'ثبّت مكتسباتك بالملخصات المركزة، حل مواضيع السنوات السابقة، أو انضم للحصص التفاعلية.' },
+    fr: { title: 'Révisez vos résumés et traitez les annales', desc: 'Maîtrisez les concepts clés grâce aux résumés synthétiques ou suivez le direct interactif.' },
+    en: { title: 'Study Module Summaries & Tackle Past Exams', desc: 'Master key concepts through condensed digests, practice with solved archives, or join live classes.' },
   },
 ];
 

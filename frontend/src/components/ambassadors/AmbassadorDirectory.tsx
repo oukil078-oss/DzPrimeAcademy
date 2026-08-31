@@ -127,16 +127,18 @@ export const AmbassadorDirectory: React.FC<AmbassadorDirectoryProps> = ({
         if (a.id === rateModalAmbassador.id) {
           const currentReviews = a.reviews || [];
           const newReviews = [newReview, ...currentReviews];
+          const currAvg = a.ratingAverage ?? 5.0;
+          const currCount = a.ratingsCount ?? 0;
           const newAvg = Number(
             (
-              (a.ratingAverage * a.ratingsCount + ratingScore) /
-              (a.ratingsCount + 1)
+              (currAvg * currCount + ratingScore) /
+              (currCount + 1)
             ).toFixed(2)
           );
           const updated = {
             ...a,
             ratingAverage: newAvg,
-            ratingsCount: a.ratingsCount + 1,
+            ratingsCount: currCount + 1,
             reviews: newReviews,
           };
           if (activeProfileAmbassador?.id === a.id) {
