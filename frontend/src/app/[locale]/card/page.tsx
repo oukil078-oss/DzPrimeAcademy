@@ -6,10 +6,10 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { INSTITUTIONS, WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 import { User } from '@/types';
-import { CreditCard, Sparkles, Check } from 'lucide-react';
+import { CreditCard, Sparkles, Check, Loader2 } from 'lucide-react';
 
 export default function CardStudioPage() {
-  const { currentUser, setCurrentUser } = useAuthStore();
+  const { currentUser, setCurrentUser, updateProfile } = useAuthStore();
   const { t, locale } = useTranslation();
 
   const [name, setName] = useState(currentUser?.name || (locale === 'ar' ? 'طالب جزائري' : 'Étudiant'));
@@ -29,23 +29,45 @@ export default function CardStudioPage() {
     }
   }, [currentUser]);
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
+    setSaveSuccess(false);
+
     const wilaya = WILAYAS.find((w) => w.code === Number(wilayaCode));
-    const updated: User = {
-      id: currentUser?.id || `user-${Date.now()}`,
-      email: currentUser?.email || 'student@dzprime.academy',
-      role: currentUser?.role || 'STUDENT_FREE',
+    const payload = {
       name,
       wilayaCode: Number(wilayaCode),
       wilayaName: wilaya ? getLocalizedWilayaName(wilaya, locale) : 'Alger',
       institutionName,
       phone,
-      studentCardId: currentUser?.studentCardId || `DZ-STU-${wilayaCode}-${Math.floor(1000 + Math.random() * 9000)}`,
-      isVerified: currentUser?.isVerified ?? true,
-      createdAt: currentUser?.createdAt || new Date().toISOString().split('T')[0],
     };
-    setCurrentUser(updated);
+
+    if (currentUser) {
+      await updateProfile(payload);
+    } else {
+      const updated: User = {
+        id: `user-${Date.now()}`,
+        email: 'student@dzprime.academy',
+        role: 'STUDENT_FREE',
+        name,
+        wilayaCode: Number(wilayaCode),
+        wilayaName: wilaya ? getLocalizedWilayaName(wilaya, locale) : 'Alger',
+        institutionName,
+        phone,
+        studentCardId: `DZ-STU-${wilayaCode}-${Math.floor(1000 + Math.random() * 9000)}`,
+        isVerified: true,
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      setCurrentUser(updated);
+    }
+
+    setIsSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   return (
@@ -123,11 +145,19 @@ export default function CardStudioPage() {
               />
             </div>
 
+            {saveSuccess && (
+              <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5">
+                <Check className="w-4 h-4" />
+                <span>{locale === 'ar' ? 'تم حفظ التعديلات في الحساب بنجاح ✓' : 'Modifications enregistrées ✓'}</span>
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs shadow-gold-glow flex items-center justify-center gap-2 active:scale-95 transition-all mt-2"
+              disabled={isSaving}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs shadow-gold-glow flex items-center justify-center gap-2 active:scale-95 transition-all mt-2 disabled:opacity-60"
             >
-              <Check className="w-4 h-4" />
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               <span>{t('card.updateBtn')}</span>
             </button>
           </form>

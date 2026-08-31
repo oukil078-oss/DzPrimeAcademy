@@ -54,6 +54,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
   const [commissionRate, setCommissionRate] = useState(10);
   const [baridiMob, setBaridiMob] = useState(true);
   const [edahabia, setEdahabia] = useState(true);
+  const [systemSaving, setSystemSaving] = useState(false);
+  const [systemSuccess, setSystemSuccess] = useState('');
+  const [systemError, setSystemError] = useState('');
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
@@ -123,12 +126,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
             .catch(() => {});
         }
       }
+
+      if (isAdmin) {
+        fetch('/api/settings')
+          .then((r) => r.json())
+          .then((data) => {
+            if (data) {
+              if (data.academicYear) setAcademicYear(data.academicYear);
+              if (data.ambassadorCommissionRate !== undefined) setCommissionRate(data.ambassadorCommissionRate);
+              if (data.baridiMobEnabled !== undefined) setBaridiMob(data.baridiMobEnabled);
+              if (data.edahabiaEnabled !== undefined) setEdahabia(data.edahabiaEnabled);
+            }
+          })
+          .catch(() => {});
+      }
+
       setPasswordSuccess('');
       setPasswordError('');
       setProfileSuccess('');
       setProfileError('');
+      setSystemSuccess('');
+      setSystemError('');
     }
-  }, [isOpen, defaultTab, currentUser]);
+  }, [isOpen, defaultTab]);
 
   if (!isOpen) return null;
 
@@ -203,6 +223,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
       setPasswordError(err?.message || (locale === 'ar' ? 'حدث خطأ في الاتصال' : 'Erreur réseau'));
     } finally {
       setPasswordSaving(false);
+    }
+  };
+
+  const handleSaveSystem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSystemSaving(true);
+    setSystemSuccess('');
+    setSystemError('');
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          academicYear,
+          ambassadorCommissionRate: commissionRate,
+          baridiMobEnabled: baridiMob,
+          edahabiaEnabled: edahabia,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setSystemError(data.error || (locale === 'ar' ? 'فشل حفظ إعدادات النظام' : 'Échec de l\'enregistrement'));
+      } else {
+        setSystemSuccess(locale === 'ar' ? 'تم حفظ إعدادات النظام بنجاح ✓' : 'Paramètres système enregistrés ✓');
+        setTimeout(() => setSystemSuccess(''), 3500);
+      }
+    } catch (err: any) {
+      setSystemError(err?.message || (locale === 'ar' ? 'خطأ في الاتصال' : 'Erreur réseau'));
+    } finally {
+      setSystemSaving(false);
     }
   };
 
@@ -632,7 +684,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
 
               {/* System Tab (Admin only) */}
               {tab === 'system' && isAdmin && (
-                <div className="space-y-4" data-testid="settings-tab-system-content">
+                <form onSubmit={handleSaveSystem} className="space-y-4" data-testid="settings-tab-system-content">
+                  {systemSuccess && (
+                    <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
+                      <Check className="w-4 h-4 shrink-0" />
+                      <span>{systemSuccess}</span>
+                    </div>
+                  )}
+                  {systemError && (
+                    <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{systemError}</span>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-slate-500 dark:text-gray-400 mb-1 font-semibold text-[11px]">
                       {locale === 'ar' ? 'السنة الجامعية' : 'Année académique'}
@@ -640,7 +705,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                     <input
                       value={academicYear}
                       onChange={(e) => setAcademicYear(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:outline-none font-mono"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:outline-none font-mono text-xs"
                     />
                   </div>
                   <div>
@@ -649,9 +714,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                     </label>
                     <input
                       type="number"
+                      min={1}
+                      max={50}
                       value={commissionRate}
                       onChange={(e) => setCommissionRate(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:outline-none font-mono"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:outline-none font-mono text-xs text-lime-600 dark:text-lime-400 font-bold"
                     />
                   </div>
 
@@ -661,6 +728,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                       <span className="text-xs font-bold">BaridiMob</span>
                     </div>
                     <button
+                      type="button"
                       data-testid="settings-baridimob-toggle"
                       onClick={() => setBaridiMob(!baridiMob)}
                       className={`w-10 h-5 rounded-full relative transition-all ${baridiMob ? 'bg-lime-400' : 'bg-slate-300 dark:bg-white/15'}`}
@@ -675,6 +743,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                       <span className="text-xs font-bold">EDAHABIA</span>
                     </div>
                     <button
+                      type="button"
                       data-testid="settings-edahabia-toggle"
                       onClick={() => setEdahabia(!edahabia)}
                       className={`w-10 h-5 rounded-full relative transition-all ${edahabia ? 'bg-lime-400' : 'bg-slate-300 dark:bg-white/15'}`}
@@ -682,7 +751,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${edahabia ? 'left-5' : 'left-0.5'}`} />
                     </button>
                   </div>
-                </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={systemSaving}
+                      className="w-full py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 active:scale-95 transition-all disabled:opacity-60"
+                    >
+                      {systemSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      <span>{locale === 'ar' ? 'حفظ إعدادات النظام في قاعدة البيانات' : 'Sauvegarder les paramètres'}</span>
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
           </div>

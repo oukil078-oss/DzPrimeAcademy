@@ -32,11 +32,13 @@ export function verifyJwt(token: string): { sub: string } | null {
   }
 }
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export function setAuthCookie(response: NextResponse, token: string) {
   response.cookies.set(TOKEN_COOKIE, token, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: isProd,
+    sameSite: 'lax',
     path: '/',
     maxAge: TOKEN_MAX_AGE_SECONDS,
   });
@@ -45,8 +47,8 @@ export function setAuthCookie(response: NextResponse, token: string) {
 export function setSessionCookie(response: NextResponse, sessionToken: string) {
   response.cookies.set(SESSION_COOKIE, sessionToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: isProd,
+    sameSite: 'lax',
     path: '/',
     maxAge: TOKEN_MAX_AGE_SECONDS,
   });
@@ -78,6 +80,18 @@ const SAFE_USER_SELECT = {
 };
 
 export async function getUserFromRequest(request: NextRequest) {
+  // 1. Check Bearer token in Authorization header
+  const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const bearerToken = authHeader.substring(7).trim();
+    const payload = verifyJwt(bearerToken);
+    if (payload?.sub) {
+      const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: SAFE_USER_SELECT });
+      if (user) return user;
+    }
+  }
+
+  // 2. Check jwt cookie
   const jwtToken = request.cookies.get(TOKEN_COOKIE)?.value;
   if (jwtToken) {
     const payload = verifyJwt(jwtToken);
@@ -87,6 +101,7 @@ export async function getUserFromRequest(request: NextRequest) {
     }
   }
 
+  // 3. Check session cookie
   const sessionToken = request.cookies.get(SESSION_COOKIE)?.value;
   if (sessionToken) {
     const session = await prisma.session.findUnique({ where: { sessionToken } });

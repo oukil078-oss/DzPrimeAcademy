@@ -21,9 +21,13 @@ import {
   Globe,
   Bell,
   Smartphone,
+  User,
+  UserCheck,
+  Building2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
+import { WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 import { Locale } from '@/types';
 
 interface AdminSettingsTabProps {
@@ -31,7 +35,19 @@ interface AdminSettingsTabProps {
 }
 
 export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) => {
-  const { currentUser } = useAuthStore();
+  const { currentUser, updateProfile } = useAuthStore();
+
+  // Admin Profile State
+  const [profileForm, setProfileForm] = useState({
+    name: currentUser?.name || '',
+    phone: currentUser?.phone || '',
+    wilayaCode: currentUser?.wilayaCode || 16,
+    institutionName: currentUser?.institutionName || 'DZ Prime Academy HQ',
+    specialty: currentUser?.specialty || 'الإدارة العامة والتحكم المالي',
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   // System Config State
   const [academicYear, setAcademicYear] = useState('2025/2026');
@@ -40,9 +56,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
   const [edahabiaEnabled, setEdahabiaEnabled] = useState(true);
   const [ccpReceiptsEnabled, setCcpReceiptsEnabled] = useState(true);
   const [autoVerifyCards, setAutoVerifyCards] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [systemSaving, setSystemSaving] = useState(false);
   const [systemSuccess, setSystemSuccess] = useState('');
+  const [systemError, setSystemError] = useState('');
 
   // Password Change State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -54,14 +70,88 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const handleSaveSystemSettings = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (currentUser) {
+      setProfileForm({
+        name: currentUser.name || '',
+        phone: currentUser.phone || '',
+        wilayaCode: currentUser.wilayaCode || 16,
+        institutionName: currentUser.institutionName || 'DZ Prime Academy HQ',
+        specialty: currentUser.specialty || 'الإدارة العامة والتحكم المالي',
+      });
+    }
+
+    // Load live platform settings from database
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          if (data.academicYear) setAcademicYear(data.academicYear);
+          if (data.ambassadorCommissionRate !== undefined) setCommissionRate(data.ambassadorCommissionRate);
+          if (data.baridiMobEnabled !== undefined) setBaridiMobEnabled(data.baridiMobEnabled);
+          if (data.edahabiaEnabled !== undefined) setEdahabiaEnabled(data.edahabiaEnabled);
+          if (data.ccpReceiptsEnabled !== undefined) setCcpReceiptsEnabled(data.ccpReceiptsEnabled);
+          if (data.autoVerifyCards !== undefined) setAutoVerifyCards(data.autoVerifyCards);
+        }
+      })
+      .catch(() => {});
+  }, [currentUser]);
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileSuccess('');
+    setProfileError('');
+
+    const wilaya = WILAYAS.find((w) => w.code === Number(profileForm.wilayaCode));
+    const payload = {
+      ...profileForm,
+      wilayaCode: Number(profileForm.wilayaCode),
+      wilayaName: wilaya ? getLocalizedWilayaName(wilaya, locale as Locale) : undefined,
+    };
+
+    const res = await updateProfile(payload);
+    setProfileSaving(false);
+    if (res.success) {
+      setProfileSuccess(locale === 'ar' ? 'تم حفظ وتحديث بيانات المسؤول في قاعدة البيانات بنجاح ✓' : 'Profil administrateur mis à jour ✓');
+      setTimeout(() => setProfileSuccess(''), 3500);
+    } else {
+      setProfileError(res.error || (locale === 'ar' ? 'فشل حفظ التعديلات' : 'Échec de la mise à jour'));
+    }
+  };
+
+  const handleSaveSystemSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setSystemSaving(true);
-    setTimeout(() => {
+    setSystemSuccess('');
+    setSystemError('');
+
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          academicYear,
+          ambassadorCommissionRate: commissionRate,
+          baridiMobEnabled,
+          edahabiaEnabled,
+          ccpReceiptsEnabled,
+          autoVerifyCards,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setSystemError(data.error || (locale === 'ar' ? 'فشل حفظ إعدادات النظام' : 'Échec de l\'enregistrement'));
+      } else {
+        setSystemSuccess(locale === 'ar' ? 'تم حفظ إعدادات النظام في قاعدة البيانات بنجاح ✓' : 'Paramètres système enregistrés ✓');
+        setTimeout(() => setSystemSuccess(''), 3500);
+      }
+    } catch (err: any) {
+      setSystemError(err?.message || (locale === 'ar' ? 'خطأ في الاتصال' : 'Erreur réseau'));
+    } finally {
       setSystemSaving(false);
-      setSystemSuccess(locale === 'ar' ? 'تم حفظ إعدادات النظام بنجاح ✓' : 'Paramètres système enregistrés ✓');
-      setTimeout(() => setSystemSuccess(''), 3500);
-    }, 500);
+    }
   };
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -123,8 +213,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
               {locale === 'ar'
-                ? 'التحكم في معايير المنصة، النسب المالية، بوابات الدفع الجزائرية، وأمان حسابات الإدارة'
-                : 'Configuration de la plateforme, commissions et sécurité'}
+                ? 'التحكم في معايير المنصة، بيانات المسؤول الشخصية، بوابات الدفع الجزائرية، وأمان الحساب'
+                : 'Configuration de la plateforme, compte administrateur et sécurité'}
             </p>
           </div>
         </div>
@@ -132,13 +222,112 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
         <div className="flex items-center gap-2">
           <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gray-300 flex items-center gap-2">
             <Server className="w-3.5 h-3.5 text-emerald-400" />
-            <span>PostgreSQL Online</span>
+            <span>PostgreSQL Synchronized</span>
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* System & Commission Config */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Card 1: Admin Profile Info (Saved to User in DB) */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/10 space-y-5">
+          <div className="flex items-center gap-2 text-white font-black text-sm border-b border-white/10 pb-3">
+            <UserCheck className="w-4 h-4 text-lime-400" />
+            <span>{locale === 'ar' ? 'بيانات المسؤول وتعديل الاسم' : 'Profil Administrateur'}</span>
+          </div>
+
+          {profileSuccess && (
+            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
+              <Check className="w-4 h-4 shrink-0" />
+              <span>{profileSuccess}</span>
+            </div>
+          )}
+          {profileError && (
+            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{profileError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleProfileSubmit} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'الاسم الكامل للمسؤول' : 'Nom complet'} *
+              </label>
+              <input
+                required
+                value={profileForm.name}
+                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                placeholder="الاسم الكامل"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+              </label>
+              <input
+                disabled
+                value={currentUser?.email || ''}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.02] border border-white/5 text-gray-400 font-mono cursor-not-allowed"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'رقم الهاتف' : 'Téléphone'}
+              </label>
+              <input
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                placeholder="0555 12 34 56"
+                dir="ltr"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'الولاية والمقر' : 'Wilaya'}
+              </label>
+              <select
+                value={profileForm.wilayaCode}
+                onChange={(e) => setProfileForm({ ...profileForm, wilayaCode: Number(e.target.value) })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#0E1528] border border-white/10 text-white focus:outline-none focus:border-lime-400"
+              >
+                {WILAYAS.map((w) => (
+                  <option key={w.code} value={w.code}>
+                    {w.code} - {getLocalizedWilayaName(w, locale as Locale)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'المؤسسة أو الهيئة' : 'Institution'}
+              </label>
+              <input
+                value={profileForm.institutionName}
+                onChange={(e) => setProfileForm({ ...profileForm, institutionName: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="w-full py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 active:scale-95 transition-all disabled:opacity-60"
+              >
+                {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                <span>{locale === 'ar' ? 'حفظ تعديل الاسم والبيانات' : 'Sauvegarder le profil'}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Card 2: System & Commission Config */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/10 space-y-5">
           <div className="flex items-center gap-2 text-white font-black text-sm border-b border-white/10 pb-3">
             <Zap className="w-4 h-4 text-lime-400" />
@@ -147,57 +336,61 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
 
           {systemSuccess && (
             <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
-              <Check className="w-4 h-4" />
+              <Check className="w-4 h-4 shrink-0" />
               <span>{systemSuccess}</span>
             </div>
           )}
+          {systemError && (
+            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{systemError}</span>
+            </div>
+          )}
 
-          <form onSubmit={handleSaveSystemSettings} className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div>
-                <label className="block text-gray-300 mb-1 font-semibold">
-                  {locale === 'ar' ? 'السنة الجامعية المعتمدة' : 'Année académique'}
-                </label>
-                <input
-                  value={academicYear}
-                  onChange={(e) => setAcademicYear(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono focus:outline-none focus:border-lime-400"
-                />
-              </div>
+          <form onSubmit={handleSaveSystemSettings} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'السنة الجامعية المعتمدة' : 'Année académique'}
+              </label>
+              <input
+                value={academicYear}
+                onChange={(e) => setAcademicYear(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-mono focus:outline-none focus:border-lime-400"
+              />
+            </div>
 
-              <div>
-                <label className="block text-gray-300 mb-1 font-semibold">
-                  {locale === 'ar' ? 'نسبة عمولة السفراء (%)' : 'Taux commission ambassadeurs (%)'}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={commissionRate}
-                  onChange={(e) => setCommissionRate(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-lime-400 font-bold font-mono focus:outline-none focus:border-lime-400"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-300 mb-1 font-semibold">
+                {locale === 'ar' ? 'نسبة عمولة السفراء (%)' : 'Taux commission ambassadeurs (%)'}
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={commissionRate}
+                onChange={(e) => setCommissionRate(Number(e.target.value))}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-lime-400 font-bold font-mono focus:outline-none focus:border-lime-400"
+              />
             </div>
 
             {/* Payment Gateways */}
-            <div className="space-y-2.5 pt-2">
+            <div className="space-y-2 pt-1">
               <label className="block text-gray-300 font-semibold">
-                {locale === 'ar' ? 'بوابات الدفع الإلكتروني المفعلة (Algeria FinTech)' : 'Moyens de Paiement Activés'}
+                {locale === 'ar' ? 'بوابات الدفع الإلكتروني' : 'Moyens de Paiement'}
               </label>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setBaridiMobEnabled(!baridiMobEnabled)}
-                  className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
                     baridiMobEnabled
                       ? 'bg-lime-400/10 border-lime-400/40 text-lime-300'
                       : 'bg-white/5 border-white/10 text-gray-400'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <Smartphone className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5" />
                     <span className="font-bold">BaridiMob</span>
                   </div>
                   <span className="text-[10px] font-mono font-bold">{baridiMobEnabled ? 'ON' : 'OFF'}</span>
@@ -206,43 +399,27 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
                 <button
                   type="button"
                   onClick={() => setEdahabiaEnabled(!edahabiaEnabled)}
-                  className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                  className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
                     edahabiaEnabled
                       ? 'bg-gold-500/10 border-gold-500/40 text-gold-300'
                       : 'bg-white/5 border-white/10 text-gray-400'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" />
-                    <span className="font-bold">Edahabia GIM</span>
+                  <div className="flex items-center gap-1.5">
+                    <CreditCard className="w-3.5 h-3.5" />
+                    <span className="font-bold">Edahabia</span>
                   </div>
                   <span className="text-[10px] font-mono font-bold">{edahabiaEnabled ? 'ON' : 'OFF'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCcpReceiptsEnabled(!ccpReceiptsEnabled)}
-                  className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                    ccpReceiptsEnabled
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/5 border-white/10 text-gray-400'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4" />
-                    <span className="font-bold">{locale === 'ar' ? 'وصولات CCP' : 'Reçus CCP'}</span>
-                  </div>
-                  <span className="text-[10px] font-mono font-bold">{ccpReceiptsEnabled ? 'ON' : 'OFF'}</span>
                 </button>
               </div>
             </div>
 
             {/* Automation toggles */}
-            <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2">
+            <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/10">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-bold text-gray-200">{locale === 'ar' ? 'التفعيل التلقائي للبطاقات' : 'Validation auto des cartes'}</div>
-                  <div className="text-[10px] text-gray-400">{locale === 'ar' ? 'تفعيل بطاقات الطلبة فور رفع وصل الدفع المعتمد' : 'Activer automatiquement'}</div>
+                  <div className="text-[10px] text-gray-400">{locale === 'ar' ? 'تفعيل بطاقات الطلبة فور رفع وصل الدفع' : 'Activer automatiquement'}</div>
                 </div>
                 <button
                   type="button"
@@ -258,25 +435,25 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
               <button
                 type="submit"
                 disabled={systemSaving}
-                className="px-6 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-lime-400/20 active:scale-95 transition-all disabled:opacity-60"
+                className="w-full py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 active:scale-95 transition-all disabled:opacity-60"
               >
                 {systemSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                <span>{locale === 'ar' ? 'حفظ إعدادات المنصة' : 'Enregistrer'}</span>
+                <span>{locale === 'ar' ? 'حفظ إعدادات المنصة في DB' : 'Enregistrer les paramètres'}</span>
               </button>
             </div>
           </form>
         </div>
 
-        {/* Admin Password & Security */}
+        {/* Card 3: Admin Password & Security */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white/[0.03] border border-white/10 space-y-5">
           <div className="flex items-center gap-2 text-white font-black text-sm border-b border-white/10 pb-3">
             <KeyRound className="w-4 h-4 text-lime-400" />
-            <span>{locale === 'ar' ? 'أمان حساب الإدارة وتغيير كلمة المرور' : 'Sécurité du Compte Admin'}</span>
+            <span>{locale === 'ar' ? 'تغيير كلمة مرور الإدارة' : 'Modifier le mot de passe'}</span>
           </div>
 
           {passwordSuccess && (
             <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-2">
-              <Check className="w-4 h-4" />
+              <Check className="w-4 h-4 shrink-0" />
               <span>{passwordSuccess}</span>
             </div>
           )}
@@ -290,7 +467,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
           <form onSubmit={handlePasswordChange} className="space-y-3.5 text-xs">
             <div>
               <label className="block text-gray-300 mb-1 font-semibold text-[11px]">
-                {locale === 'ar' ? 'كلمة المرور الحالية للمسؤول' : 'Mot de passe actuel'}
+                {locale === 'ar' ? 'كلمة المرور الحالية' : 'Mot de passe actuel'}
               </label>
               <div className="relative">
                 <input
@@ -319,7 +496,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
                 <input
                   type={showNewPassword ? 'text' : 'password'}
                   required
-                  placeholder="•••••••• (6 أحرف على الأقل)"
+                  placeholder="•••••••• (6+ أحرف)"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full px-3.5 py-2.5 pr-10 rounded-xl bg-white/5 border border-white/10 font-mono text-white focus:outline-none focus:border-lime-400"
@@ -348,24 +525,11 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
               />
             </div>
 
-            {/* 2FA & Session badge */}
-            <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3">
-              <ShieldAlert className="w-5 h-5 text-emerald-400 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-emerald-300">
-                  {locale === 'ar' ? 'جلسة أمان الإدارة: مشفرة 256-bit' : 'Session chiffrée 256-bit'}
-                </p>
-                <p className="text-[10px] text-gray-400">
-                  {locale === 'ar' ? 'تشفير كلمات المرور عبر خوارزمية bcrypt مع توقيع JWT الآمن' : 'Sécurité JWT & Bcrypt'}
-                </p>
-              </div>
-            </div>
-
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
                 disabled={passwordSaving}
-                className="px-6 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-lime-400/20 active:scale-95 transition-all disabled:opacity-60"
+                className="w-full py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 active:scale-95 transition-all disabled:opacity-60"
               >
                 {passwordSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
                 <span>{locale === 'ar' ? 'تحديث كلمة مرور الإدارة' : 'Modifier mot de passe'}</span>

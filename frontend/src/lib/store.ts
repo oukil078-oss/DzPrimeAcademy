@@ -132,18 +132,22 @@ export function useAuthStore() {
   }, []);
 
   const updateProfile = useCallback(async (payload: Record<string, unknown>) => {
-    const res = await fetch('/api/account', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setUser(data.user);
-      return { success: true };
+    try {
+      const res = await fetch('/api/account', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.user) {
+        setUser(data.user);
+        return { success: true, user: data.user as User };
+      }
+      return { success: false, error: data.error || 'فشل حفظ التعديلات' };
+    } catch (e: any) {
+      return { success: false, error: e?.message || 'خطأ في الاتصال بالخادم' };
     }
-    return { success: false, error: data.error };
   }, []);
 
   return {

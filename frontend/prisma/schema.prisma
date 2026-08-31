@@ -397,5 +397,7 @@ model PlatformSettings {
   ambassadorCommissionRate Int      @default(10)
   baridiMobEnabled         Boolean  @default(true)
   edahabiaEnabled          Boolean  @default(true)
+  ccpReceiptsEnabled       Boolean  @default(true)
+  autoVerifyCards          Boolean  @default(false)
   updatedAt                DateTime @updatedAt
 }
