@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Sparkles,
   Plus,
@@ -22,30 +23,53 @@ import {
   Phone,
   Mail,
   Loader2,
+  Calendar,
+  Clock,
+  ExternalLink,
+  ChevronRight,
+  TrendingUp,
+  Award,
+  Layers,
+  ArrowUpRight,
+  CheckCircle2,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { usePlatformStore } from '@/lib/platformStore';
 import { formatDZD } from '@/lib/format';
 import { TeacherRosterPanel } from '@/components/dashboard/TeacherRosterPanel';
+import { MembershipCard } from '@/components/card/MembershipCard';
 import { WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 
 type TeacherTab = 'studio' | 'courses' | 'sessions' | 'roster' | 'drive' | 'profile';
 
 export default function TeacherStudioPage() {
-  const { locale } = useTranslation();
+  const { locale, isRtl } = useTranslation();
   const { currentUser, updateProfile } = useAuthStore();
   const { courses, sessions, addCourse, addSession, removeCourse } = usePlatformStore();
   const [tab, setTab] = useState<TeacherTab>('studio');
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
   // Course Form
   const [showCourseForm, setShowCourseForm] = useState(false);
-  const [courseForm, setCourseForm] = useState({ titleAr: '', titleFr: '', category: 'UNIVERSITY_LMD' as const, priceDzd: 3000, lessonsCount: 10 });
+  const [courseForm, setCourseForm] = useState({
+    titleAr: '',
+    titleFr: '',
+    category: 'UNIVERSITY_LMD' as const,
+    priceDzd: 3000,
+    lessonsCount: 10,
+  });
 
   // Session Form
   const [showSessionForm, setShowSessionForm] = useState(false);
-  const [sessionForm, setSessionForm] = useState({ title: '', scheduledAt: '', durationMinutes: 60, platform: 'GOOGLE_MEET' as const, category: 'UNIVERSITY_LMD' as const });
+  const [sessionForm, setSessionForm] = useState({
+    title: '',
+    scheduledAt: '',
+    durationMinutes: 60,
+    platform: 'GOOGLE_MEET' as const,
+    category: 'UNIVERSITY_LMD' as const,
+  });
   const [sessionFormError, setSessionFormError] = useState('');
   const minDateTime = new Date().toISOString().slice(0, 16);
 
@@ -121,7 +145,7 @@ export default function TeacherStudioPage() {
       teacherId: currentUser?.id || null,
       teacherName: currentUser?.name || 'Enseignant',
       isLive: true,
-      colorTheme: 'lime',
+      colorTheme: 'gold',
     });
     setCourseForm({ titleAr: '', titleFr: '', category: 'UNIVERSITY_LMD', priceDzd: 3000, lessonsCount: 10 });
     setShowCourseForm(false);
@@ -157,14 +181,14 @@ export default function TeacherStudioPage() {
     const payload = {
       ...profileForm,
       wilayaCode: Number(profileForm.wilayaCode),
-      wilayaName: wilaya ? getLocalizedWilayaName(wilaya, locale) : undefined,
+      wilayaName: wilaya ? getLocalizedWilayaName(wilaya, locale as any) : undefined,
       institutionName: profileForm.university,
     };
 
     const res = await updateProfile(payload);
     setProfileSaving(false);
     if (res.success) {
-      setProfileSuccess(locale === 'ar' ? 'تم حفظ بيانات الأستاذ بنجاح ✓' : 'Profil enseignant mis à jour ✓');
+      setProfileSuccess(locale === 'ar' ? 'تم حفظ بيانات الأستاذ وحساب CCP بنجاح ✓' : 'Profil enseignant et CCP mis à jour ✓');
       setTimeout(() => setProfileSuccess(''), 3500);
     } else {
       setProfileError(res.error || (locale === 'ar' ? 'فشل حفظ التعديلات' : 'Échec de la mise à jour'));
@@ -214,433 +238,802 @@ export default function TeacherStudioPage() {
   };
 
   const tabs: { id: TeacherTab; icon: any; labelAr: string; labelFr: string }[] = [
-    { id: 'studio', icon: Sparkles, labelAr: 'استوديو التدريس', labelFr: 'Studio' },
+    { id: 'studio', icon: Sparkles, labelAr: 'استوديو التدريس (Bento)', labelFr: 'Studio Bento' },
     { id: 'courses', icon: BookOpen, labelAr: 'مقرراتي ومقاييسي', labelFr: 'Mes Modules' },
-    { id: 'sessions', icon: Video, labelAr: 'الحصص المباشرة', labelFr: 'Sessions' },
-    { id: 'roster', icon: Users2, labelAr: 'قائمة الطلبة', labelFr: 'Roster' },
-    { id: 'drive', icon: FolderOpen, labelAr: 'المطبوعات', labelFr: 'Drive' },
-    { id: 'profile', icon: UserCheck, labelAr: 'الملف الأكاديمي والأمان', labelFr: 'Profil & Sécurité' },
+    { id: 'sessions', icon: Video, labelAr: 'الحصص المباشرة', labelFr: 'Sessions Live' },
+    { id: 'roster', icon: Users2, labelAr: 'قائمة الطلبة والحضور', labelFr: 'Liste & Présence' },
+    { id: 'drive', icon: FolderOpen, labelAr: 'المطبوعات والسلاسل', labelFr: 'Drive & Supports' },
+    { id: 'profile', icon: UserCheck, labelAr: 'الملف وحساب CCP', labelFr: 'Profil & CCP' },
   ];
 
   return (
-    <div className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 font-arabic" data-testid="teacher-studio-page">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-          <Sparkles className="w-6 h-6 text-lime-500" />
-          <span>{locale === 'ar' ? `استوديو التدريس — ${currentUser?.name || ''}` : `Studio Enseignant — ${currentUser?.name || ''}`}</span>
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-          {locale === 'ar' ? 'أنشئ مقررات جديدة، جدول حصصك المباشرة، وتابع طلبتك وإعدادات أمان حسابك في الوقت الفعلي.' : 'Créez des modules, planifiez vos sessions live, gérez vos identifiants et votre profil.'}
-        </p>
+    <div className="min-h-screen bg-[#FDFBF7] dark:bg-[#070B18] text-slate-900 dark:text-white font-arabic p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-8" data-testid="teacher-crextio-studio">
+      {/* ================= 1. CREXTIO STYLE TOP BAR ================= */}
+      <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 sm:p-7 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-gold-500 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-widest text-gold-700 dark:text-gold-400">
+              CREXTIO ACADEMIC WORKSPACE
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+            {locale === 'ar' ? `مرحباً، أستاذ ${currentUser?.name || ''}` : `Hello, Prof. ${currentUser?.name || 'Valentina'}`}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+            {currentUser?.institutionName || 'Université des Sciences et de la Technologie Houari Boumediene (USTHB)'} • {currentUser?.specialty || 'Informatique & Mathématiques'}
+          </p>
+        </div>
+
+        {/* Output Metrics Bar (Image 2 Style) */}
+        <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
+          <div className="text-center">
+            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">91</span>
+            <span className="text-[10px] text-slate-400 uppercase block font-bold">{locale === 'ar' ? 'طالب نشط' : 'Students'}</span>
+          </div>
+          <div className="h-8 w-px bg-slate-200 dark:bg-gray-800" />
+          <div className="text-center">
+            <span className="text-2xl sm:text-3xl font-black text-gold-600 dark:text-gold-400 font-mono">104</span>
+            <span className="text-[10px] text-slate-400 uppercase block font-bold">{locale === 'ar' ? 'تسجيل بالدورات' : 'Enrollments'}</span>
+          </div>
+          <div className="h-8 w-px bg-slate-200 dark:bg-gray-800" />
+          <div className="text-center">
+            <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">185</span>
+            <span className="text-[10px] text-slate-400 uppercase block font-bold">{locale === 'ar' ? 'ساعة تدريس' : 'Hours Live'}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar" data-testid="teacher-tabs">
-        {tabs.map((tItem) => {
-          const Icon = tItem.icon;
-          const active = tab === tItem.id;
-          return (
-            <button
-              key={tItem.id}
-              data-testid={`teacher-tab-${tItem.id}`}
-              onClick={() => {
-                setTab(tItem.id);
-                window.history.replaceState(null, '', `#${tItem.id}`);
-              }}
-              className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all ${
-                active ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950' : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300'
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{locale === 'ar' ? tItem.labelAr : tItem.labelFr}</span>
-            </button>
-          );
-        })}
+      {/* Top Pill Navigation Bar & Quick Action Tools */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 overflow-x-auto no-scrollbar shadow-sm">
+          {tabs.map((tItem) => {
+            const Icon = tItem.icon;
+            const active = tab === tItem.id;
+            return (
+              <button
+                key={tItem.id}
+                onClick={() => {
+                  setTab(tItem.id);
+                  window.history.replaceState(null, '', `#${tItem.id}`);
+                }}
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${
+                  active
+                    ? 'bg-slate-950 dark:bg-gold-500 text-white dark:text-navy-950 shadow-md font-black'
+                    : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{locale === 'ar' ? tItem.labelAr : tItem.labelFr}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Quick Launchers: Digital Card + Leaderboard + Bot */}
+        <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-auto">
+          <button
+            onClick={() => setIsCardModalOpen(true)}
+            data-testid="teacher-header-card-btn"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-gold-500 via-amber-400 to-yellow-400 hover:from-gold-400 hover:to-yellow-300 text-navy-950 font-black text-xs transition-all shadow-md flex items-center gap-2 shrink-0 group"
+          >
+            <CreditCard className="w-4 h-4 text-navy-950 group-hover:scale-110 transition-transform" />
+            <span className="font-mono">{currentUser?.studentCardId || 'DZ-TCH-16'}</span>
+            <span className="px-1.5 py-0.2 rounded bg-black/15 text-[9px] font-extrabold uppercase">VIP</span>
+          </button>
+
+          <Link
+            href={`/${locale}/leaderboard`}
+            className="p-2 rounded-xl bg-white dark:bg-[#0D1429] hover:bg-slate-100 dark:hover:bg-white/10 border border-amber-200/60 dark:border-gold-500/20 text-gold-600 dark:text-gold-400 text-xs transition-colors"
+            title={locale === 'ar' ? 'لوحة الصدارة' : 'Leaderboard'}
+          >
+            <Award className="w-4 h-4" />
+          </Link>
+
+          <Link
+            href={`/${locale}/bot`}
+            className="p-2 rounded-xl bg-white dark:bg-[#0D1429] hover:bg-slate-100 dark:hover:bg-white/10 border border-amber-200/60 dark:border-gold-500/20 text-emerald-600 dark:text-emerald-400 text-xs transition-colors"
+            title={locale === 'ar' ? 'بوت الامتحانات والملخصات' : 'Smart Bot'}
+          >
+            <Sparkles className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
 
-      {(tab === 'studio' || tab === 'courses') && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">
-              {locale === 'ar' ? 'مقرراتي المنشورة' : 'Mes Modules Publiés'}
+      {/* Embedded Membership Card Modal */}
+      {isCardModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/30 p-6 space-y-4 shadow-2xl relative text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-gold-500" />
+                <h3 className="font-black text-base font-arabic">
+                  {locale === 'ar' ? 'بطاقة الأستاذ الرقمية المعتمدة' : 'Carte Officielle Enseignant'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCardModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="py-2 flex justify-center">
+              <MembershipCard user={currentUser} allowExport={true} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 2. MAIN CREXTIO BENTO GRID ================= */}
+      {tab === 'studio' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* LEFT COLUMN: Vertical Schedule Timeline (Image 2 Style) */}
+          <div className="lg:col-span-4 rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 sm:p-6 space-y-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  {locale === 'ar' ? 'الجدول الزمني للحصص' : 'Schedule Timeline'}
+                </h3>
+                <span className="text-xs text-slate-400 font-mono">LIVE MEET SESSIONS</span>
+              </div>
+              <button
+                onClick={() => setShowSessionForm(true)}
+                className="w-8 h-8 rounded-full bg-slate-900 dark:bg-gold-500 text-white dark:text-navy-950 flex items-center justify-center shadow-sm hover:scale-105 transition-transform"
+                title="Schedule Session"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Calendar Mini Header */}
+            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-amber-500/10 dark:bg-navy-950 border border-amber-500/20 text-xs font-mono">
+              <span className="text-slate-500 dark:text-slate-400">Sun 22</span>
+              <span className="text-slate-500 dark:text-slate-400">Mon 23</span>
+              <span className="text-slate-500 dark:text-slate-400">Tue 24</span>
+              <span className="font-black px-2 py-0.5 rounded-lg bg-slate-950 dark:bg-gold-500 text-white dark:text-navy-950 shadow-sm">
+                Wed 25
+              </span>
+              <span className="text-slate-500 dark:text-slate-400">Thu 26</span>
+              <span className="text-slate-500 dark:text-slate-400">Fri 27</span>
+            </div>
+
+            {/* Vertical Timeline Nodes */}
+            <div className="space-y-4 relative pl-6 border-l-2 border-slate-200 dark:border-gray-800 ml-3">
+              {mySessions.length === 0 ? (
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 text-xs text-slate-500 text-center font-arabic">
+                  {locale === 'ar' ? 'لا توجد حصص مجدولة اليوم. انقر على + لإضافة حصة مباشرة.' : 'Aucune session aujourd\'hui.'}
+                </div>
+              ) : (
+                mySessions.map((ses, idx) => (
+                  <div key={ses.id} className="relative group">
+                    {/* Step Node Dot */}
+                    <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-white dark:bg-navy-900 border-2 border-gold-500 flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gold-500" />
+                    </div>
+
+                    <div className="p-4 rounded-2xl bg-slate-900 dark:bg-navy-950 text-white space-y-2 shadow-md">
+                      <div className="flex items-center justify-between text-[10px] text-gold-400 font-mono">
+                        <span>{new Date(ses.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-300 font-bold">
+                          {ses.durationMinutes} min
+                        </span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold truncate">{ses.title}</h4>
+                      <div className="flex items-center justify-between pt-1 text-xs">
+                        <span className="text-[11px] text-slate-400 font-mono">{ses.platform}</span>
+                        {ses.meetUrl ? (
+                          <a
+                            href={ses.meetUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-bold text-[10px] flex items-center gap-1"
+                          >
+                            <Video className="w-3 h-3" />
+                            <span>{locale === 'ar' ? 'بدء البث' : 'Lancer'}</span>
+                          </a>
+                        ) : (
+                          <span className="text-[10px] text-slate-400">Google Meet</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* CENTER COLUMN: Salary & Payout Ledger + Courses Bento (Image 2 Center) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Salary & CCP Payouts Table Card */}
+            <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 sm:p-6 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">
+                    {locale === 'ar' ? 'مستحقات وأرباح المقاييس' : 'Salary & Module Earnings'}
+                  </h3>
+                  <span className="text-xs text-slate-400 font-mono">CCP PAYOUT LEDGER</span>
+                </div>
+                <button
+                  onClick={() => setShowCourseForm(true)}
+                  className="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all flex items-center gap-1 shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{locale === 'ar' ? 'إضافة مقياس' : 'Ajouter Module'}</span>
+                </button>
+              </div>
+
+              {/* Table List */}
+              <div className="space-y-2.5">
+                {myCourses.length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-950 text-center text-xs text-slate-500 font-arabic">
+                    {locale === 'ar' ? 'لم تقم بإنشاء مقاييس بعد. انقر على "إضافة مقياس".' : 'Aucun module créé pour le moment.'}
+                  </div>
+                ) : (
+                  myCourses.map((c) => (
+                    <div
+                      key={c.id}
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200 dark:border-gray-800 flex items-center justify-between gap-3 hover:border-gold-500/40 transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gold-500/20 text-gold-600 dark:text-gold-400 flex items-center justify-center shrink-0">
+                          <BookOpen className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                            {locale === 'ar' ? c.titleAr : c.titleFr}
+                          </h4>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {c.lessonsCount} {locale === 'ar' ? 'درس' : 'Leçons'} • {c.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="font-mono text-xs font-black text-gold-700 dark:text-gold-400">
+                          {formatDZD(c.priceDzd)}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold font-mono">
+                          Active
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Teaching Statistics Waves & Output Bento */}
+            <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 sm:p-6 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  {locale === 'ar' ? 'مؤشرات التفاعل الأكاديمي' : 'Teaching Analytics'}
+                </h3>
+                <span className="text-xs text-gold-600 dark:text-gold-400 font-mono font-bold">2026</span>
+              </div>
+              <div className="h-28 flex items-end justify-between gap-2 px-2 pt-2">
+                {[
+                  { m: 'Jan', h: 30 },
+                  { m: 'Feb', h: 45 },
+                  { m: 'Mar', h: 60 },
+                  { m: 'Apr', h: 80 },
+                  { m: 'May', h: 95 },
+                  { m: 'Jun', h: 70 },
+                ].map((pt) => (
+                  <div key={pt.m} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                    <div style={{ height: `${pt.h}%` }} className="w-full rounded-t-lg bg-gold-400/80 dark:bg-gold-500/80 transition-all hover:bg-gold-500" />
+                    <span className="text-[10px] text-slate-400 font-mono">{pt.m}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: Attendance Punch-Card & Composition (Image 2 Right) */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Dark Attendance Report Card with Punch Dots (Image 2 Style) */}
+            <div className="rounded-3xl bg-[#090E1F] border border-white/10 text-white p-5 sm:p-6 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-300">
+                  {locale === 'ar' ? 'تقرير الحضور' : 'Attendance Report'}
+                </span>
+                <ArrowUpRight className="w-4 h-4 text-gold-400" />
+              </div>
+
+              <div className="flex items-baseline gap-2 font-mono">
+                <span className="text-3xl font-black text-white">63</span>
+                <span className="text-xs text-emerald-400 font-bold">↗ 12</span>
+                <span className="text-[10px] text-slate-400">{locale === 'ar' ? 'حاضر اليوم' : 'Present'}</span>
+              </div>
+
+              {/* Punch-card dot matrix (4 rows x 8 cols) */}
+              <div className="grid grid-cols-8 gap-2 pt-2">
+                {Array.from({ length: 32 }).map((_, i) => {
+                  const isGold = (i * 3 + 7) % 3 === 0;
+                  return (
+                    <div
+                      key={i}
+                      className={`w-3.5 h-3.5 rounded-full ${
+                        isGold ? 'bg-gold-400 shadow-sm shadow-gold-400/50' : 'bg-slate-800'
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Student Composition Circular Arc (Image 2 Style) */}
+            <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 sm:p-6 space-y-4 shadow-sm text-center">
+              <span className="text-xs font-black uppercase tracking-wider text-slate-400 block">
+                {locale === 'ar' ? 'توزع التخصصات' : 'Student Composition'}
+              </span>
+
+              <div className="relative w-28 h-28 mx-auto flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="text-slate-100 dark:text-slate-800"
+                    strokeWidth="4"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                  <path
+                    className="text-gold-500"
+                    strokeDasharray="70, 100"
+                    strokeWidth="4.5"
+                    strokeLinecap="round"
+                    stroke="currentColor"
+                    fill="none"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-lg font-black font-mono">345</span>
+                  <span className="text-[9px] text-slate-400 uppercase">Total</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-4 text-xs font-mono text-slate-600 dark:text-slate-400">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gold-500" /> 70% LMD</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700" /> 30% BAC</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 3. COURSES TAB ================= */}
+      {tab === 'courses' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 dark:border-gray-800">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-gold-500" />
+              <span>{locale === 'ar' ? 'مقرراتي ومقاييسي التعليمية' : 'Mes Modules & Cours'}</span>
             </h3>
             <button
-              data-testid="teacher-add-course-btn"
-              onClick={() => setShowCourseForm(!showCourseForm)}
-              className="px-3.5 py-2 rounded-xl bg-lime-400 text-slate-950 font-black text-xs flex items-center gap-1.5"
+              onClick={() => setShowCourseForm(true)}
+              className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{locale === 'ar' ? 'إضافة مقرر جديد' : 'Ajouter un Module'}</span>
+              <Plus className="w-4 h-4" />
+              <span>{locale === 'ar' ? 'إضافة مقياس جديد' : 'Créer un Module'}</span>
             </button>
           </div>
 
-          {showCourseForm && (
-            <form onSubmit={handleAddCourse} data-testid="teacher-course-form" className="p-4 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input required placeholder={locale === 'ar' ? 'العنوان (عربي)' : 'Titre (AR)'} value={courseForm.titleAr} onChange={(e) => setCourseForm({ ...courseForm, titleAr: e.target.value })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
-              <input placeholder="Titre (FR)" value={courseForm.titleFr} onChange={(e) => setCourseForm({ ...courseForm, titleFr: e.target.value })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
-              <select value={courseForm.category} onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value as any })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
-                <option value="UNIVERSITY_LMD">University LMD</option>
-                <option value="BAC">BAC</option>
-                <option value="MEDICAL">Medical</option>
-              </select>
-              <input type="number" placeholder="Prix DZD" value={courseForm.priceDzd} onChange={(e) => setCourseForm({ ...courseForm, priceDzd: Number(e.target.value) })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
-              <input type="number" placeholder="Lessons" value={courseForm.lessonsCount} onChange={(e) => setCourseForm({ ...courseForm, lessonsCount: Number(e.target.value) })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
-              <button type="submit" data-testid="teacher-submit-course-btn" className="py-2 rounded-xl bg-lime-400 text-slate-950 font-black text-xs">
-                {locale === 'ar' ? 'نشر فوراً' : 'Publier'}
-              </button>
-            </form>
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {myCourses.map((c) => (
-              <div key={c.id} data-testid={`teacher-course-card-${c.id}`} className="p-4 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="px-2 py-0.5 rounded-lg bg-lime-500/15 text-lime-700 dark:text-lime-300 text-[10px] font-bold">{c.category}</span>
-                  <button data-testid={`teacher-remove-course-${c.id}`} onClick={() => removeCourse(c.id)} className="p-1 rounded hover:bg-rose-500/10 text-slate-400 hover:text-rose-500">
-                    <Trash2 className="w-3.5 h-3.5" />
+              <div
+                key={c.id}
+                className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 space-y-3 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-700 dark:text-gold-400 text-[10px] font-bold">
+                      {c.category}
+                    </span>
+                    <span className="text-xs font-mono font-black text-slate-900 dark:text-white">
+                      {formatDZD(c.priceDzd)}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
+                    {locale === 'ar' ? c.titleAr : c.titleFr}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                    {c.lessonsCount} {locale === 'ar' ? 'درس تفاعلي مع المطبوعات والامتحانات' : 'Leçons interactives'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-gray-800">
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Active Live</span>
+                  </span>
+                  <button
+                    onClick={() => removeCourse(c.id)}
+                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
+                    title="Remove"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
-                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{locale === 'ar' ? c.titleAr : c.titleFr || c.titleAr}</h4>
-                <p className="text-[10px] text-slate-500 dark:text-gray-400">{c.lessonsCount} {locale === 'ar' ? 'حصة' : 'leçons'}</p>
-                <p className="text-xs font-mono font-bold text-lime-600 dark:text-lime-400">{formatDZD(c.priceDzd, locale)}</p>
               </div>
             ))}
-            {myCourses.length === 0 && (
-              <p className="text-xs text-slate-400 py-8 text-center sm:col-span-3">
-                {locale === 'ar' ? 'لم تنشر أي مقرر بعد. أضف مقررك الأول الآن!' : 'Aucun module publié. Ajoutez votre premier module !'}
-              </p>
-            )}
           </div>
-        </motion.div>
+        </div>
       )}
 
+      {/* ================= 4. SESSIONS TAB ================= */}
       {tab === 'sessions' && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">
-              {locale === 'ar' ? 'حصصي المباشرة' : 'Mes Sessions Live'}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 dark:border-gray-800">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Video className="w-5 h-5 text-gold-500" />
+              <span>{locale === 'ar' ? 'جدول الحصص المباشرة' : 'Sessions en Direct'}</span>
             </h3>
             <button
-              data-testid="teacher-add-session-btn"
-              onClick={() => setShowSessionForm(!showSessionForm)}
-              className="px-3.5 py-2 rounded-xl bg-lime-400 text-slate-950 font-black text-xs flex items-center gap-1.5"
+              onClick={() => setShowSessionForm(true)}
+              className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>{locale === 'ar' ? 'جدولة حصة جديدة' : 'Planifier une Session'}</span>
+              <Plus className="w-4 h-4" />
+              <span>{locale === 'ar' ? 'جدولة حصة جديدة' : 'Planifier Session'}</span>
             </button>
           </div>
 
-          {showSessionForm && (
-            <form onSubmit={handleAddSession} data-testid="teacher-session-form" className="p-4 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {sessionFormError && (
-                <p data-testid="teacher-session-error" className="sm:col-span-3 text-[11px] font-bold text-rose-500">{sessionFormError}</p>
-              )}
-              <input required placeholder={locale === 'ar' ? 'عنوان الحصة' : 'Titre de la session'} value={sessionForm.title} onChange={(e) => setSessionForm({ ...sessionForm, title: e.target.value })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs sm:col-span-2" />
-              <input required type="datetime-local" min={minDateTime} value={sessionForm.scheduledAt} onChange={(e) => setSessionForm({ ...sessionForm, scheduledAt: e.target.value })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
-              <select value={sessionForm.platform} onChange={(e) => setSessionForm({ ...sessionForm, platform: e.target.value as any })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
-                <option value="GOOGLE_MEET">Google Meet</option>
-                <option value="CLASSROOM">Classroom</option>
-                <option value="ONSITE">{locale === 'ar' ? 'حضوري' : 'Présentiel'}</option>
-              </select>
-              <select value={sessionForm.category} onChange={(e) => setSessionForm({ ...sessionForm, category: e.target.value as any })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs">
-                <option value="UNIVERSITY_LMD">University LMD</option>
-                <option value="BAC">BAC</option>
-                <option value="MEDICAL">Medical</option>
-              </select>
-              <input type="number" placeholder={locale === 'ar' ? 'المدة (دقيقة)' : 'Durée (min)'} value={sessionForm.durationMinutes} onChange={(e) => setSessionForm({ ...sessionForm, durationMinutes: Number(e.target.value) })} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs" />
-              <button type="submit" data-testid="teacher-submit-session-btn" className="py-2 rounded-xl bg-lime-400 text-slate-950 font-black text-xs">
-                {locale === 'ar' ? 'نشر الحصة' : 'Publier'}
-              </button>
-            </form>
-          )}
-
-          {mySessions.map((s) => (
-            <div key={s.id} data-testid={`teacher-session-${s.id}`} className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800">
-              <Video className="w-4 h-4 text-lime-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{s.title}</h4>
-                <p className="text-[10px] text-slate-500 dark:text-gray-400 font-mono">{new Date(s.scheduledAt).toLocaleString(locale === 'ar' ? 'ar-DZ' : 'fr-DZ')}</p>
-              </div>
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-lime-500/15 text-lime-700 dark:text-lime-300 text-[10px] font-bold shrink-0">
-                <Users2 className="w-3 h-3" /> {s.registrationsCount ?? 0}
-              </span>
-            </div>
-          ))}
-          {mySessions.length === 0 && (
-            <p className="text-xs text-slate-400 py-8 text-center">{locale === 'ar' ? 'لا توجد حصص مجدولة بعد.' : 'Aucune session planifiée.'}</p>
-          )}
-        </motion.div>
-      )}
-
-      {tab === 'roster' && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <TeacherRosterPanel locale={locale} />
-        </motion.div>
-      )}
-
-      {tab === 'drive' && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-8 rounded-2xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400" data-testid="teacher-drive-placeholder">
-          {locale === 'ar' ? 'مساحة رفع المطبوعات والسلاسل التمرينية قريباً.' : 'Espace de dépôt des supports et séries bientôt disponible.'}
-        </motion.div>
-      )}
-
-      {/* Profile & Security Tab for Teachers */}
-      {tab === 'profile' && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6" data-testid="teacher-profile-tab">
-          {/* Official Teacher Card Badge */}
-          <div className="p-5 rounded-3xl bg-gradient-to-r from-[#0E162B] via-[#101B34] to-[#0A1020] border border-lime-500/30 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-lime-400 to-emerald-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shrink-0">
-                {currentUser?.name?.charAt(0) || 'P'}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black">{currentUser?.name}</h3>
-                  <span className="px-2 py-0.5 rounded-full bg-lime-400/20 border border-lime-400/40 text-lime-300 text-[10px] font-bold">
-                    ✓ {locale === 'ar' ? 'أستاذ معتمد' : 'Enseignant Agréé'}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {mySessions.map((ses) => (
+              <div
+                key={ses.id}
+                className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 space-y-3 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-700 dark:text-gold-400 text-[10px] font-bold">
+                    {ses.platform}
                   </span>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">{ses.title}</h4>
+                  <div className="text-xs text-slate-500 dark:text-gray-400 mt-2 space-y-1 font-mono">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-gold-500" />
+                      <span>{new Date(ses.scheduledAt).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-gold-500" />
+                      <span>{ses.durationMinutes} min</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs text-gray-300 font-mono mt-0.5">
-                  <span>ID: {currentUser?.studentCardId || 'DZ-TCH-16-0000'}</span>
-                  <span className="mx-2 text-gray-500">•</span>
-                  <span>{currentUser?.email}</span>
+
+                <div className="pt-3 border-t border-slate-100 dark:border-gray-800">
+                  {ses.meetUrl ? (
+                    <a
+                      href={ses.meetUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>{locale === 'ar' ? 'دخول غرفة البث' : 'Rejoindre le Live'}</span>
+                    </a>
+                  ) : (
+                    <span className="text-xs text-slate-400 block text-center">Google Meet Link Pending</span>
+                  )}
                 </div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-            <div className="flex items-center gap-2 text-xs text-gray-300 bg-white/5 px-3 py-2 rounded-xl border border-white/10 shrink-0">
-              <Building2 className="w-4 h-4 text-lime-400" />
-              <span>{profileForm.university || (locale === 'ar' ? 'جامعة معتمدة' : 'Université')}</span>
-            </div>
+      {/* ================= 5. ROSTER TAB ================= */}
+      {tab === 'roster' && <TeacherRosterPanel locale={locale} />}
+
+      {/* ================= 6. DRIVE TAB ================= */}
+      {tab === 'drive' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 dark:border-gray-800">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <FolderOpen className="w-5 h-5 text-gold-500" />
+              <span>{locale === 'ar' ? 'المطبوعات وسلاسل التمارين (Drive)' : 'Supports de Cours & Séries'}</span>
+            </h3>
+            <span className="text-xs text-slate-400 font-mono">PDF & Slides</span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Edit Profile Form */}
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-sm">
-                <UserCheck className="w-4 h-4 text-lime-500" />
-                <span>{locale === 'ar' ? 'تعديل البيانات الأكاديمية والمهنية' : 'Modifier le profil académique'}</span>
-              </div>
+          <div className="p-8 rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 text-center space-y-3 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-gold-500/20 text-gold-500 flex items-center justify-center mx-auto">
+              <FolderOpen className="w-7 h-7" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+              {locale === 'ar' ? 'مركز رفع وتخزين المطبوعات لطلبتك' : 'Espace de Partage Pédagogique'}
+            </h4>
+            <p className="text-xs text-slate-500 dark:text-gray-400 max-w-md mx-auto">
+              {locale === 'ar'
+                ? 'الملفات المرفوعة ترتبط تلقائياً بمقاييسك وبنك امتحانات DZ PRIME Academy.'
+                : 'Vos séries de TD et résumés sont automatiquement synchronisés avec les fiches de vos étudiants.'}
+            </p>
+          </div>
+        </div>
+      )}
 
-              {profileSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  <span>{profileSuccess}</span>
-                </div>
-              )}
-              {profileError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{profileError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleProfileSubmit} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'الاسم الكامل' : 'Nom complet'}
-                  </label>
-                  <input
-                    value={profileForm.name}
-                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                      {locale === 'ar' ? 'الهاتف (واتساب)' : 'Téléphone'}
-                    </label>
-                    <input
-                      value={profileForm.phone}
-                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      dir="ltr"
-                      placeholder="0555 12 34 56"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-lime-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                      {locale === 'ar' ? 'الولاية' : 'Wilaya'}
-                    </label>
-                    <select
-                      value={profileForm.wilayaCode}
-                      onChange={(e) => setProfileForm({ ...profileForm, wilayaCode: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    >
-                      {WILAYAS.map((w) => (
-                        <option key={w.code} value={w.code}>
-                          {w.code} - {getLocalizedWilayaName(w, locale)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'الجامعة / الكلية' : 'Université / Faculté'}
-                  </label>
-                  <input
-                    value={profileForm.university}
-                    onChange={(e) => setProfileForm({ ...profileForm, university: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'التخصص الأكاديمي / المواد' : 'Spécialité'}
-                  </label>
-                  <input
-                    value={profileForm.specialty}
-                    onChange={(e) => setProfileForm({ ...profileForm, specialty: e.target.value })}
-                    placeholder="Mathématiques, Informatique..."
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                {/* CCP Details */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10 space-y-2">
-                  <div className="flex items-center gap-1.5 text-lime-600 dark:text-lime-400 font-bold text-[11px]">
-                    <CreditCard className="w-3.5 h-3.5" />
-                    <span>{locale === 'ar' ? 'حساب تسوية المستحقات (CCP)' : 'Compte CCP'}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="col-span-2">
-                      <input
-                        placeholder="0012345678"
-                        value={profileForm.ccpAccount}
-                        onChange={(e) => setProfileForm({ ...profileForm, ccpAccount: e.target.value })}
-                        className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                      />
-                    </div>
-                    <div>
-                      <input
-                        placeholder="Clé 99"
-                        maxLength={2}
-                        value={profileForm.ccpCle}
-                        onChange={(e) => setProfileForm({ ...profileForm, ccpCle: e.target.value })}
-                        className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-center text-xs text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={profileSaving}
-                    className="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-60"
-                  >
-                    {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                    <span>{locale === 'ar' ? 'حفظ تعديلات الملف' : 'Sauvegarder'}</span>
-                  </button>
-                </div>
-              </form>
+      {/* ================= 7. PROFILE & CCP TAB ================= */}
+      {tab === 'profile' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* CCP & University Profile */}
+          <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-5 h-5 text-gold-500" />
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                {locale === 'ar' ? 'حساب تحويل المستحقات (CCP)' : 'Coordonnées Financières & CCP'}
+              </h3>
             </div>
 
-            {/* Change Password Form */}
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-sm">
-                <KeyRound className="w-4 h-4 text-lime-500" />
-                <span>{locale === 'ar' ? 'تغيير كلمة المرور والأمان' : 'Modifier le mot de passe'}</span>
+            <form onSubmit={handleProfileSubmit} className="space-y-3.5 pt-2">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'الاسم واللقب' : 'Nom Complet'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white focus:outline-none font-arabic"
+                />
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                {locale === 'ar'
-                  ? 'يُنصح بتغيير كلمة المرور المؤقتة التي استلمتها من الإدارة عند تسجيل دخولك الأول.'
-                  : 'Changez votre mot de passe temporaire pour sécuriser vos accès.'}
-              </p>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'رقم حساب CCP' : 'Numéro de Compte CCP'}
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.ccpAccount}
+                    onChange={(e) => setProfileForm({ ...profileForm, ccpAccount: e.target.value })}
+                    placeholder="0012345678"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white font-mono focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'المفتاح (Clé)' : 'Clé CCP'}
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.ccpCle}
+                    onChange={(e) => setProfileForm({ ...profileForm, ccpCle: e.target.value })}
+                    placeholder="45"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white font-mono focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'الجامعة / الكلية' : 'Université / Faculté'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.university}
+                  onChange={(e) => setProfileForm({ ...profileForm, university: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white focus:outline-none font-arabic"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'التخصص والمادة' : 'Spécialité & Matière'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.specialty}
+                  onChange={(e) => setProfileForm({ ...profileForm, specialty: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white focus:outline-none font-arabic"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                <span>{locale === 'ar' ? 'حفظ بيانات الحساب و CCP' : 'Enregistrer'}</span>
+              </button>
+
+              {profileSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold text-center">
+                  {profileSuccess}
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* Password Security Form */}
+          <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-6 space-y-4 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Lock className="w-5 h-5 text-purple-500" />
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                {locale === 'ar' ? 'تغيير كلمة المرور' : 'Sécurité du compte'}
+              </h3>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="space-y-3.5 pt-2">
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'كلمة المرور الحالية' : 'Mot de passe actuel'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white font-mono focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white font-mono focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'تأكيد كلمة المرور' : 'Confirmer le mot de passe'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs text-slate-900 dark:text-white font-mono focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={passwordSaving}
+                className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-purple-600 text-white font-black text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                {passwordSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+                <span>{locale === 'ar' ? 'تحديث كلمة المرور' : 'Mettre à jour'}</span>
+              </button>
 
               {passwordSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  <span>{passwordSuccess}</span>
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold text-center">
+                  {passwordSuccess}
                 </div>
               )}
               {passwordError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{passwordError}</span>
+                <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-700 dark:text-rose-300 text-xs font-bold text-center">
+                  {passwordError}
                 </div>
               )}
+            </form>
+          </div>
+        </div>
+      )}
 
-              <form onSubmit={handlePasswordChange} className="space-y-3.5 text-xs">
+      {/* Course Modal */}
+      {showCourseForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/30 p-6 space-y-4 shadow-2xl text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-gray-800">
+              <h3 className="font-black text-base">{locale === 'ar' ? 'إضافة مقياس تعليمي جديد' : 'Créer un Module'}</h3>
+              <button onClick={() => setShowCourseForm(false)} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+            </div>
+            <form onSubmit={handleAddCourse} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عنوان المقياس (بالعربية)' : 'Titre (Arabe)'}</label>
+                <input
+                  type="text"
+                  required
+                  value={courseForm.titleAr}
+                  onChange={(e) => setCourseForm({ ...courseForm, titleAr: e.target.value })}
+                  placeholder="مثال: مادة الفيزياء النووية"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-arabic"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عنوان المقياس (بالفرنسية)' : 'Titre (Français)'}</label>
+                <input
+                  type="text"
+                  required
+                  value={courseForm.titleFr}
+                  onChange={(e) => setCourseForm({ ...courseForm, titleFr: e.target.value })}
+                  placeholder="Ex: Physique Nucléaire"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'كلمة المرور الحالية' : 'Mot de passe actuel'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      required
-                      placeholder="••••••••"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-3 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      required
-                      placeholder="•••••••• (6 أحرف على الأقل)"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                    >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirmer le nouveau mot de passe'}
-                  </label>
+                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'السعر (دج)' : 'Prix (DZD)'}</label>
                   <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
+                    type="number"
+                    value={courseForm.priceDzd}
+                    onChange={(e) => setCourseForm({ ...courseForm, priceDzd: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
                   />
                 </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={passwordSaving}
-                    className="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-60"
-                  >
-                    {passwordSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
-                    <span>{locale === 'ar' ? 'تحديث كلمة المرور' : 'Modifier mot de passe'}</span>
-                  </button>
+                <div>
+                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عدد الدروس' : 'Leçons'}</label>
+                  <input
+                    type="number"
+                    value={courseForm.lessonsCount}
+                    onChange={(e) => setCourseForm({ ...courseForm, lessonsCount: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
+                  />
                 </div>
-              </form>
-            </div>
+              </div>
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs mt-2"
+              >
+                {locale === 'ar' ? 'حفظ ونشر المقياس' : 'Publier le module'}
+              </button>
+            </form>
           </div>
-        </motion.div>
+        </div>
+      )}
+
+      {/* Session Modal */}
+      {showSessionForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/30 p-6 space-y-4 shadow-2xl text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-gray-800">
+              <h3 className="font-black text-base">{locale === 'ar' ? 'جدولة حصة بث مباشر جديدة' : 'Planifier Session Live'}</h3>
+              <button onClick={() => setShowSessionForm(false)} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+            </div>
+            <form onSubmit={handleAddSession} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عنوان الحصة' : 'Titre de la session'}</label>
+                <input
+                  type="text"
+                  required
+                  value={sessionForm.title}
+                  onChange={(e) => setSessionForm({ ...sessionForm, title: e.target.value })}
+                  placeholder="مثال: مراجعة شاملة لتمارين الوحدة 1"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-arabic"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'تاريخ وتوقيت الحصة' : 'Date & Heure'}</label>
+                  <input
+                    type="datetime-local"
+                    min={minDateTime}
+                    required
+                    value={sessionForm.scheduledAt}
+                    onChange={(e) => setSessionForm({ ...sessionForm, scheduledAt: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'المدة (دقيقة)' : 'Durée (min)'}</label>
+                  <input
+                    type="number"
+                    value={sessionForm.durationMinutes}
+                    onChange={(e) => setSessionForm({ ...sessionForm, durationMinutes: Number(e.target.value) })}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
+                  />
+                </div>
+              </div>
+              {sessionFormError && <div className="text-xs text-rose-500">{sessionFormError}</div>}
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs mt-2"
+              >
+                {locale === 'ar' ? 'جدولة وتثبيت الموعد' : 'Planifier la session'}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

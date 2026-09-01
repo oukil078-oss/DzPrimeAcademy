@@ -19,6 +19,7 @@ import {
   CreditCard,
   Layers,
 } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
@@ -26,6 +27,19 @@ import { useAuthStore } from '@/lib/store';
 export const Footer: React.FC = () => {
   const { t, locale } = useTranslation();
   const { currentUser } = useAuthStore();
+  const pathname = usePathname() || '';
+
+  const isAdmin = pathname.includes('/admin');
+  const isAmbassador = pathname.includes('/ambassador');
+  const isTeacher = pathname.includes('/teacher');
+
+  const footerBgClass = isAdmin
+    ? 'bg-[#05070D] border-white/10 text-white'
+    : isAmbassador
+    ? 'bg-[#060A17] border-white/10 text-white'
+    : isTeacher
+    ? 'bg-[#FDFBF7] dark:bg-[#070B18] border-amber-200/60 dark:border-gold-500/20 text-slate-800 dark:text-white'
+    : 'bg-slate-100 dark:bg-[#040817] border-slate-200 dark:border-gold-500/30 text-slate-800 dark:text-white';
 
   const socialLinks = [
     { name: 'Telegram', icon: Send, href: 'https://t.me/dzprimeacademy', color: 'hover:text-sky-500' },
@@ -36,7 +50,7 @@ export const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="w-full border-t border-slate-200 dark:border-gold-500/30 bg-slate-100 dark:bg-[#040711] text-slate-800 dark:text-white pt-12 pb-8 relative overflow-hidden transition-colors duration-300">
+    <footer className={`w-full border-t ${footerBgClass} pt-12 pb-8 relative overflow-hidden transition-colors duration-300`}>
       {/* Top Gold Border Accent */}
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
 

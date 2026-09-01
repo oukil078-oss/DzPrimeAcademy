@@ -34,11 +34,18 @@ import {
   Mail,
   Tag,
   Loader2,
+  TrendingUp,
+  ArrowUpRight,
+  ChevronRight,
+  Search,
+  Activity,
+  DollarSign,
+  PieChart,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { MetricsGrid, MetricCardItem } from '@/components/dashboard/MetricsGrid';
 import { AmbassadorDirectory } from '@/components/ambassadors/AmbassadorDirectory';
+import { MembershipCard } from '@/components/card/MembershipCard';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { isAmbassador, isTeacher } from '@/lib/rbac';
@@ -46,13 +53,13 @@ import { RECENT_POSTS, AMBASSADORS, CERTIFIED_TEACHERS, WILAYAS, getLocalizedWil
 import { Post, PostType, PostComment, AmbassadorProfile, Locale } from '@/types';
 import { formatDZD } from '@/lib/format';
 
-type AmbassadorTab = 'workshops' | 'reviews' | 'network' | 'profile';
+type AmbassadorTab = 'overview' | 'workshops' | 'reviews' | 'network' | 'profile';
 
 export default function AmbassadorDashboardPage() {
-  const { t, locale } = useTranslation();
+  const { t, locale, isRtl } = useTranslation();
   const { currentUser, updateProfile } = useAuthStore();
 
-  const [activeTab, setActiveTab] = useState<AmbassadorTab>('workshops');
+  const [activeTab, setActiveTab] = useState<AmbassadorTab>('overview');
   const [posts, setPosts] = useState<Post[]>(RECENT_POSTS);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -63,6 +70,7 @@ export default function AmbassadorDashboardPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPromo, setCopiedPromo] = useState(false);
+  const [growthView, setGrowthView] = useState<'MONTH' | 'ANNUAL'>('MONTH');
 
   // Active comment input
   const [activeCommentPostId, setActiveCommentPostId] = useState<string | null>(null);
@@ -98,7 +106,7 @@ export default function AmbassadorDashboardPage() {
   useEffect(() => {
     const applyHash = () => {
       const hash = window.location.hash.replace('#', '') as AmbassadorTab;
-      if (['workshops', 'reviews', 'network', 'profile'].includes(hash)) {
+      if (['overview', 'workshops', 'reviews', 'network', 'profile'].includes(hash)) {
         setActiveTab(hash);
       }
     };
@@ -135,9 +143,6 @@ export default function AmbassadorDashboardPage() {
         .catch(() => {});
     }
   }, [currentUser]);
-
-  const isUserAmb = isAmbassador(currentUser?.role);
-  const isUserTch = isTeacher(currentUser?.role);
 
   const defaultAmbassadorProfile: AmbassadorProfile = {
     id: 'amb-default',
@@ -190,49 +195,17 @@ export default function AmbassadorDashboardPage() {
     AMBASSADORS.find((a) => a.userId === currentUser?.id) || (AMBASSADORS.length > 0 ? AMBASSADORS[0] : defaultAmbassadorProfile);
 
   const currentPromoCode = dbAmbassador?.promoCode || `WIL${currentUser?.wilayaCode || 16}-VIP`;
-  const currentCommission = dbAmbassador?.commissionDzd ?? 14500;
-  const currentReferrals = dbAmbassador?.referralsCount ?? 29;
+  const currentCommission = dbAmbassador?.commissionDzd ?? 432988;
+  const currentReferrals = dbAmbassador?.referralsCount ?? 215;
 
-  const ambassadorMetrics: MetricCardItem[] = [
-    {
-      title: locale === 'ar' ? 'كود الترويج والعمولة' : 'Code Promo & Gains',
-      value: currentPromoCode,
-      change: formatDZD(currentCommission, locale as Locale),
-      isPositive: true,
-      icon: Tag,
-      description: locale === 'ar' ? `إجمالي الإحالات: ${currentReferrals} مشترك` : `${currentReferrals} parrainages`,
-    },
-    {
-      title: t('dashboards.ambassador.myRating'),
-      value: `${dbAmbassador?.ratingAverage ?? fallbackAmbassador?.ratingAverage ?? 5.0} / 5.0`,
-      change: '+0.15',
-      isPositive: true,
-      icon: Star,
-      description: locale === 'ar' ? 'بناءً على تقييمات الطلبة المعتمدة' : 'Note certifiée des étudiants',
-    },
-    {
-      title: t('dashboards.ambassador.scheduledSessions'),
-      value: `${dbAmbassador?.upcomingSessionsCount ?? fallbackAmbassador?.upcomingSessionsCount ?? 3}`,
-      change: 'Active',
-      isPositive: true,
-      icon: Calendar,
-      description: locale === 'ar' ? 'حصص حضورية وافتراضية' : 'Séances actives',
-    },
-    {
-      title: locale === 'ar' ? 'الطلبة المستفيدون' : 'Étudiants Accompagnés',
-      value: `${fallbackAmbassador?.studentsMentoredCount || 1240}+`,
-      change: '+150',
-      isPositive: true,
-      icon: Users,
-      description: currentUser?.institutionName || fallbackAmbassador?.institutionNameAr || 'USTHB',
-    },
-  ];
+  const handleTabClick = (tKey: AmbassadorTab) => {
+    setActiveTab(tKey);
+    window.history.replaceState(null, '', `#${tKey}`);
+  };
 
   const handleCopyLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(
-        `${window.location.origin}/${locale}/ambassadors`
-      );
+      navigator.clipboard.writeText(`${window.location.origin}/${locale}/ambassadors`);
       setCopiedLink(true);
       try {
         confetti({
@@ -252,10 +225,10 @@ export default function AmbassadorDashboardPage() {
       setCopiedPromo(true);
       try {
         confetti({
-          particleCount: 20,
-          spread: 40,
+          particleCount: 25,
+          spread: 45,
           origin: { y: 0.8 },
-          colors: ['#A3E635', '#10B981'],
+          colors: ['#D4AF37', '#10B981', '#A3E635'],
         });
       } catch (e) {}
       setTimeout(() => setCopiedPromo(false), 2500);
@@ -348,9 +321,9 @@ export default function AmbassadorDashboardPage() {
       authorName: currentUser?.name || 'Ambassadeur',
       authorRole: currentUser?.role || 'AMBASSADOR',
       assignedTeacherId: teacherObj?.id || selectedTeacherId,
-      assignedTeacherName: teacherObj?.name || 'Pr. Abdelrahim Kadri',
+      assignedTeacherName: teacherObj?.name || 'Professeur Invité',
       comments: [],
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
     };
 
     setPosts([newPost, ...posts]);
@@ -358,745 +331,896 @@ export default function AmbassadorDashboardPage() {
     setContent('');
     setLocation('');
     setIsSubmitted(true);
-    try {
-      confetti({
-        particleCount: 30,
-        spread: 50,
-        origin: { y: 0.7 },
-        colors: ['#10B981', '#D4AF37'],
-      });
-    } catch (e) {}
     setTimeout(() => setIsSubmitted(false), 3000);
   };
 
   const handleAddComment = (postId: string) => {
     if (!commentText.trim()) return;
-
-    const isVerifiedTeacher = isUserTch;
     const newComment: PostComment = {
-      id: `comm-${Date.now()}`,
-      authorId: currentUser?.id || 'user-guest',
-      authorName: currentUser?.name || (isUserTch ? 'Pr. Abdelrahim Kadri' : (fallbackAmbassador?.user?.name || 'Ambassadeur')),
+      id: `cmt-${Date.now()}`,
+      authorId: currentUser?.id || 'user-ambassador',
+      authorName: currentUser?.name || 'Ambassadeur',
       authorRole: currentUser?.role || 'AMBASSADOR',
       content: commentText.trim(),
-      isVerifiedTeacher,
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
     };
 
-    setPosts(
-      posts.map((p) => {
-        if (p.id === postId) {
-          return {
-            ...p,
-            comments: [...(p.comments || []), newComment],
-          };
-        }
-        return p;
-      })
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, comments: [...(p.comments || []), newComment] } : p))
     );
-
     setCommentText('');
     setActiveCommentPostId(null);
   };
 
-  const handleTabClick = (tabId: AmbassadorTab) => {
-    setActiveTab(tabId);
-    window.history.replaceState(null, '', `#${tabId}`);
-  };
+  const navTabs = [
+    { id: 'overview', labelAr: 'نظرة عامة والأداء', labelFr: 'Overview', icon: Activity },
+    { id: 'workshops', labelAr: 'الحصص والورشات', labelFr: 'Workshops', icon: Video },
+    { id: 'network', labelAr: 'شبكة 58 ولاية', labelFr: 'Réseau 58', icon: Users },
+    { id: 'reviews', labelAr: 'تقييمات الطلبة', labelFr: 'Avis & Notes', icon: Star },
+    { id: 'profile', labelAr: 'الملف والأمان', labelFr: 'Profil & Sécurité', icon: ShieldCheck },
+  ];
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
   return (
-    <div className="py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 select-none font-arabic" data-testid="ambassador-dashboard-page">
-      {/* ================= AMBASSADOR PROFILE HEADER HERO ================= */}
-      <div className="relative p-5 sm:p-8 rounded-3xl bg-gradient-to-br from-[#060D1F] via-[#0B1530] to-[#040813] border border-gold-500/35 text-white shadow-xl overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gold-500/15 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start sm:items-center gap-4">
-            <div className="relative shrink-0">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-gold-500 via-amber-400 to-lime-400 p-0.5 shadow-lg">
-                <div className="w-full h-full rounded-[22px] bg-slate-950 text-gold-300 font-black flex items-center justify-center text-2xl sm:text-3xl font-sans">
-                  {currentUser?.name?.charAt(0) || fallbackAmbassador?.user?.name?.charAt(0) || 'A'}
-                </div>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="space-y-1 text-left">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-black text-white">
-                  {currentUser?.name || fallbackAmbassador?.user?.name || 'Ambassadeur DZ PRIME'}
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-bold">
-                  {t('brand.verifiedAmbassador')}
-                </span>
-                <span className="px-2 py-0.5 rounded-lg bg-lime-400/20 text-lime-300 font-mono text-xs font-bold flex items-center gap-1">
-                  <Tag className="w-3 h-3 text-lime-400" />
-                  {currentPromoCode}
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-gold-400" />
-                <span>{currentUser?.institutionName || fallbackAmbassador?.institutionNameAr}</span>
-                <span>•</span>
-                <span>Wilaya {currentUser?.wilayaCode || fallbackAmbassador?.wilayaCode} ({currentUser?.wilayaName || fallbackAmbassador?.wilayaNameAr})</span>
-              </p>
-              <p className="text-xs text-slate-400 font-mono">
-                {locale === 'ar' ? 'معرف السفير:' : 'ID Ambassadeur:'} {currentUser?.studentCardId || 'DZ-AMB-16-0789'}
-              </p>
+    <div className="min-h-screen bg-slate-950 text-white font-arabic p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-8" data-testid="ambassador-slesforcess-dashboard">
+      {/* ================= 1. SLESFORCESS STYLE TOP BAR WITH EMBEDDED CARD & ACTIONS ================= */}
+      <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-gold-500 via-amber-400 to-yellow-300 p-0.5 shadow-md flex items-center justify-center shrink-0">
+            <div className="w-full h-full bg-[#090E1F] rounded-[14px] flex items-center justify-center">
+              <Award className="w-6 h-6 text-gold-400" />
             </div>
           </div>
-
-          {/* Action CTAs */}
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <button
-              onClick={handleCopyPromo}
-              className="px-3.5 py-2.5 rounded-2xl bg-lime-400/15 hover:bg-lime-400/25 border border-lime-400/30 text-lime-300 text-xs font-bold flex items-center gap-1.5 transition-all"
-            >
-              {copiedPromo ? (
-                <>
-                  <Check className="w-4 h-4 text-lime-300" />
-                  <span>{locale === 'ar' ? 'تم نسخ الكود!' : 'Code copié!'}</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4 text-lime-400" />
-                  <span>{locale === 'ar' ? `نسخ الكود (${currentPromoCode})` : `Copier ${currentPromoCode}`}</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={handleCopyLink}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-bold flex items-center gap-2 transition-all"
-            >
-              {copiedLink ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span className="text-emerald-300">{locale === 'ar' ? 'تم نسخ الرابط!' : 'Lien copié!'}</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-4 h-4 text-gold-400" />
-                  <span>{locale === 'ar' ? 'مشاركة المنصة' : 'Partager'}</span>
-                </>
-              )}
-            </button>
-
-            <Link
-              href={`/${locale}/card`}
-              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-gold-500 via-amber-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs shadow-gold-glow flex items-center gap-2 transition-all"
-            >
-              <CreditCard className="w-4 h-4" />
-              <span>{locale === 'ar' ? 'بطاقتي الرقمية' : 'Ma Carte ID'}</span>
-            </Link>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-white">
+                {locale === 'ar' ? `فضاء السفير: ${currentUser?.name || 'سفير DZ PRIME'}` : `Espace Ambassadeur : ${currentUser?.name || 'DZ PRIME'}`}
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-300 border border-gold-500/40 text-[10px] font-bold font-mono">
+                58 WILAYAS
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {currentUser?.institutionName || fallbackAmbassador?.institutionNameAr || 'USTHB Bab Ezzouar'} • {fallbackAmbassador?.wilayaNameAr || 'الجزائر'}
+            </p>
           </div>
+        </div>
+
+        {/* Center: Pill Navigation Tabs (Image 1 Style) */}
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-black/40 border border-white/10 overflow-x-auto no-scrollbar shadow-inner">
+          {navTabs.map((tabItem) => {
+            const Icon = tabItem.icon;
+            const active = activeTab === tabItem.id;
+            return (
+              <button
+                key={tabItem.id}
+                onClick={() => handleTabClick(tabItem.id as AmbassadorTab)}
+                className={`relative px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 sm:gap-2 whitespace-nowrap ${
+                  active
+                    ? 'bg-white text-slate-950 shadow-md font-black'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 ${active ? 'text-slate-950' : 'text-gold-400'}`} />
+                <span>{locale === 'ar' ? tabItem.labelAr : tabItem.labelFr}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Header Actions: Digital Card Widget Button + Quick Links */}
+        <div className="flex items-center gap-2.5 flex-wrap self-start lg:self-auto">
+          {/* Digital Card Button */}
+          <button
+            onClick={() => setIsCardModalOpen(true)}
+            data-testid="ambassador-header-card-btn"
+            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-gold-500 via-amber-400 to-yellow-400 hover:from-gold-400 hover:to-yellow-300 text-navy-950 font-black text-xs transition-all shadow-md flex items-center gap-2 shrink-0 group"
+          >
+            <CreditCard className="w-4 h-4 text-navy-950 group-hover:scale-110 transition-transform" />
+            <span className="font-mono">{currentUser?.studentCardId || 'DZ-AMB-16'}</span>
+            <span className="px-1.5 py-0.2 rounded bg-black/15 text-[9px] font-extrabold uppercase">VIP</span>
+          </button>
+
+          {/* Leaderboard Link */}
+          <Link
+            href={`/${locale}/leaderboard`}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gold-400 hover:text-gold-300 text-xs transition-colors"
+            title={locale === 'ar' ? 'لوحة الصدارة' : 'Leaderboard'}
+          >
+            <Award className="w-4 h-4" />
+          </Link>
+
+          {/* Bot Link */}
+          <Link
+            href={`/${locale}/bot`}
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-lime-400 hover:text-lime-300 text-xs transition-colors"
+            title={locale === 'ar' ? 'بوت الامتحانات' : 'Smart Bot'}
+          >
+            <Sparkles className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 
-      {/* ================= KPI METRICS GRID ================= */}
-      <MetricsGrid metrics={ambassadorMetrics} />
-
-      {/* ================= DASHBOARD NAVIGATION TABS ================= */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto no-scrollbar">
-        <button
-          onClick={() => handleTabClick('workshops')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === 'workshops'
-              ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950 shadow-sm'
-              : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300'
-          }`}
-        >
-          <Calendar className="w-4 h-4" />
-          <span>{locale === 'ar' ? 'إدارة الورشات والمنشورات' : 'Ateliers & Publications'}</span>
-        </button>
-
-        <button
-          onClick={() => handleTabClick('reviews')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === 'reviews'
-              ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950 shadow-sm'
-              : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300'
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>{locale === 'ar' ? 'تقييمات وآراء الطلبة' : 'Avis des Étudiants'}</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-gold-500/20 text-gold-600 dark:text-gold-300 text-[10px] font-mono font-bold">
-            {fallbackAmbassador?.reviews?.length || 3}
-          </span>
-        </button>
-
-        <button
-          onClick={() => handleTabClick('network')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === 'network'
-              ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950 shadow-sm'
-              : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>{locale === 'ar' ? 'دليل السفراء (58 ولاية)' : 'Annuaire National'}</span>
-        </button>
-
-        <button
-          data-testid="ambassador-tab-profile"
-          onClick={() => handleTabClick('profile')}
-          className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 ${
-            activeTab === 'profile'
-              ? 'bg-slate-950 dark:bg-lime-400 text-white dark:text-slate-950 shadow-sm'
-              : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-gray-800 text-slate-700 dark:text-gray-300'
-          }`}
-        >
-          <ShieldCheck className="w-4 h-4 text-lime-500" />
-          <span>{locale === 'ar' ? 'الملف الأكاديمي والأمان' : 'Profil & Sécurité'}</span>
-        </button>
-      </div>
-
-      {/* ================= TAB 1: WORKSHOPS & POST CREATION ================= */}
-      {activeTab === 'workshops' && (
-        <div className="space-y-6">
-          {/* Post Creation Card */}
-          <div className="p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900/90 shadow-md text-left transition-colors">
-            <div className="flex items-center justify-between mb-4">
+      {/* Embedded Membership Card Modal */}
+      {isCardModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="w-full max-w-xl rounded-3xl bg-[#090E1F] border border-gold-500/30 p-6 space-y-4 shadow-2xl relative text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                  <PlusCircle className="w-4 h-4" />
+                <CreditCard className="w-5 h-5 text-gold-400" />
+                <h3 className="font-black text-base font-arabic">
+                  {locale === 'ar' ? 'بطاقة السفير المعتمدة (VIP Gold)' : 'Carte Officielle Ambassadeur'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCardModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="py-2 flex justify-center">
+              <MembershipCard user={currentUser} allowExport={true} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 2. MAIN BENTO GRID: SLESFORCESS STYLE OVERVIEW ================= */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Top 4 KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {/* Card 1: Total Insights */}
+            <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-5 flex flex-col justify-between space-y-4 hover:border-gold-500/40 transition-all shadow-md">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span>{locale === 'ar' ? 'إجمالي المشاهدات والتفاعل' : 'Total Insights'}</span>
+                <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300">
+                  <ArrowUpRight className="w-4 h-4" />
                 </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
-                    {locale === 'ar' ? 'جدولة ورشة مراجعة أو نشر نصيحة أكاديمية' : 'Créer une Session ou Ressource'}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                    {locale === 'ar'
-                      ? 'سيتم إشعار طلبة جامعتك وولايتك ومصادقة الأستاذ المشرف على المحتوى.'
-                      : 'Les étudiants de votre université seront notifiés.'}
-                  </p>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-white font-mono tracking-tight">215,756</div>
+                <div className="text-xs text-emerald-400 font-bold mt-1 flex items-center gap-1">
+                  <span>+2.3%</span>
+                  <span className="text-slate-500 font-normal">{locale === 'ar' ? 'مقارنة بالشهر الماضي' : "that's last month"}</span>
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleCreatePost} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Card 2: Overall Revenue */}
+            <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-5 flex flex-col justify-between space-y-4 hover:border-gold-500/40 transition-all shadow-md">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span>{locale === 'ar' ? 'إجمالي عوائد الإحالات' : 'Overall Revenue'}</span>
+                <div className="w-8 h-8 rounded-full bg-gold-500/20 border border-gold-400/40 flex items-center justify-center text-gold-400">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-black text-gold-400 font-mono tracking-tight">
+                  {formatDZD(currentCommission)}
+                </div>
+                <div className="text-xs text-gold-400 font-bold mt-1 flex items-center gap-1">
+                  <span>+12.5%</span>
+                  <span className="text-slate-500 font-normal">{locale === 'ar' ? 'مقارنة بالأسبوع الماضي' : "that's last week"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Finance Balance & Multi-Color Progress */}
+            <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-5 flex flex-col justify-between space-y-4 hover:border-gold-500/40 transition-all shadow-md">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span>{locale === 'ar' ? 'رصيد العمولة والهدف' : 'Finance Balance'}</span>
+                <div className="w-8 h-8 rounded-full bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-400">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-3xl font-black text-white font-mono tracking-tight">
+                  {formatDZD(currentCommission * 1.5)}
+                </div>
+                {/* Multi-segmented bar */}
+                <div className="w-full h-3 rounded-full bg-white/10 flex overflow-hidden p-0.5">
+                  <div className="bg-purple-500 h-full rounded-full w-[45%]" title="Profit" />
+                  <div className="bg-gold-400 h-full rounded-full w-[35%] ml-1" title="Total Earning" />
+                  <div className="bg-slate-700 h-full rounded-full w-[20%] ml-1" title="Target" />
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> {locale === 'ar' ? 'أرباح' : 'Profit'}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gold-400" /> {locale === 'ar' ? 'مكتسب' : 'Earning'}</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-700" /> {locale === 'ar' ? 'الهدف' : 'Target'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Conversion Rate Donut Gauge */}
+            <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-5 flex flex-col justify-between space-y-3 hover:border-gold-500/40 transition-all shadow-md">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400">
+                <span>{locale === 'ar' ? 'معدل تحويل الاشتراكات' : 'Sales Conversion Rate'}</span>
+                <span className="text-xs text-gold-400 font-mono font-bold">12.5%</span>
+              </div>
+              <div className="flex items-center justify-center py-1">
+                {/* SVG Donut */}
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-800"
+                      strokeWidth="3.8"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-purple-500"
+                      strokeDasharray="45, 100"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      className="text-gold-400"
+                      strokeDasharray="25, 100"
+                      strokeDashoffset="-45"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-sm font-black font-mono">12.5%</span>
+                    <span className="text-[8px] text-slate-400 uppercase">Success</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Leads</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-gold-400" /> VIP Gold</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-slate-700" /> Free</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Row: Heatmap Matrix + Growth Chart + Quick Activity Toolkit */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+            {/* Left: Referral & Activity Heatmap Matrix (Image 1 Style) */}
+            <div className="lg:col-span-5 rounded-3xl bg-[#090E1F] border border-white/10 p-5 sm:p-6 space-y-4 shadow-xl">
+              <div className="flex items-center justify-between">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
-                    {t('dashboards.ambassador.postTitle')}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder={
-                      locale === 'ar'
-                        ? 'مثال: ورشة حل مواضيع Analyse 1 بقاعة المحاضرات C'
-                        : 'Ex: Masterclass Analyse 1 - Amphi C'
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-gray-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-gold-500 font-arabic"
-                  />
+                  <h3 className="text-base font-black text-white">
+                    {locale === 'ar' ? 'مصفوفة نشاط وانضمام الطلبة' : 'Student Recruitment Matrix'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    {locale === 'ar' ? 'توزع التسجيلات الأسبوعية عبر ولايتك' : 'Weekly student enrollments across 58 wilayas'}
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-[11px] text-gold-400 font-mono">
+                  58 WILAYAS
+                </span>
+              </div>
+
+              {/* Heatmap Legend */}
+              <div className="flex items-center gap-3 text-[10px] text-slate-400 font-mono pt-1">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-slate-800 border border-white/5" /> 100</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gold-950 border border-gold-800" /> 300</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gold-600 border border-gold-500" /> 500</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-lime-400 text-slate-950 font-bold" /> 1000+</span>
+              </div>
+
+              {/* Heatmap Grid (6 rows x 10 cols) */}
+              <div className="grid grid-cols-10 gap-1.5 pt-2">
+                {Array.from({ length: 60 }).map((_, i) => {
+                  const intensity = (i * 7 + 13) % 4;
+                  const bgClass =
+                    intensity === 3
+                      ? 'bg-lime-400 shadow-sm shadow-lime-400/30'
+                      : intensity === 2
+                      ? 'bg-gold-500'
+                      : intensity === 1
+                      ? 'bg-gold-900/60'
+                      : 'bg-slate-800/80';
+                  return (
+                    <div
+                      key={i}
+                      className={`h-5 rounded-md ${bgClass} transition-all hover:scale-125 cursor-pointer`}
+                      title={`Week ${Math.floor(i / 10) + 1} - Activity Level ${intensity + 1}`}
+                    />
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono pt-2 border-t border-white/5">
+                <span>JAN</span>
+                <span>MAR</span>
+                <span>MAY</span>
+                <span>JUL</span>
+                <span>SEP</span>
+                <span>NOV</span>
+              </div>
+            </div>
+
+            {/* Center: Sales & Recruitment Growth Chart (Image 1 Style) */}
+            <div className="lg:col-span-4 rounded-3xl bg-[#090E1F] border border-white/10 p-5 sm:p-6 space-y-4 shadow-xl flex flex-col justify-between">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-black text-white">
+                    {locale === 'ar' ? 'نمو الإحالات والعمولات' : 'Sales & Commission Growth'}
+                  </h3>
+                  <span className="text-xs text-slate-400 font-mono">DZD / MONTH</span>
                 </div>
 
+                <div className="flex items-center p-1 rounded-xl bg-black/40 border border-white/10 text-[11px] font-mono">
+                  <button
+                    onClick={() => setGrowthView('MONTH')}
+                    className={`px-2.5 py-0.5 rounded-lg font-bold transition-all ${
+                      growthView === 'MONTH' ? 'bg-white text-slate-950 font-black' : 'text-slate-400'
+                    }`}
+                  >
+                    Month
+                  </button>
+                  <button
+                    onClick={() => setGrowthView('ANNUAL')}
+                    className={`px-2.5 py-0.5 rounded-lg font-bold transition-all ${
+                      growthView === 'ANNUAL' ? 'bg-white text-slate-950 font-black' : 'text-slate-400'
+                    }`}
+                  >
+                    Annually
+                  </button>
+                </div>
+              </div>
+
+              {/* Bar Visualizer with Highlighted August Peak */}
+              <div className="h-44 flex items-end justify-between gap-2 pt-4 px-2">
+                {[
+                  { month: 'Jun', val: 40 },
+                  { month: 'Jul', val: 65 },
+                  { month: 'Aug', val: 95, isPeak: true },
+                  { month: 'Sep', val: 70 },
+                  { month: 'Oct', val: 55 },
+                  { month: 'Nov', val: 80 },
+                ].map((bar) => (
+                  <div key={bar.month} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                    {bar.isPeak && (
+                      <div className="px-2 py-1 rounded-lg bg-purple-500 text-white text-[10px] font-mono font-black mb-1 shadow-lg animate-bounce">
+                        432,988
+                      </div>
+                    )}
+                    <div
+                      style={{ height: `${bar.val}%` }}
+                      className={`w-full rounded-t-xl transition-all ${
+                        bar.isPeak
+                          ? 'bg-gradient-to-t from-purple-600 via-purple-500 to-lime-300 shadow-lg shadow-purple-500/30'
+                          : 'bg-slate-800 group-hover:bg-slate-700'
+                      }`}
+                    />
+                    <span className={`text-[10px] font-mono ${bar.isPeak ? 'text-lime-300 font-bold' : 'text-slate-500'}`}>
+                      {bar.month}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right: Quick Action Toolkit & Promo Code ("Your Activity" Image 1) */}
+            <div className="lg:col-span-3 rounded-3xl bg-[#090E1F] border border-white/10 p-5 sm:p-6 space-y-4 shadow-xl flex flex-col justify-between">
+              <div>
+                <h3 className="text-base font-black text-white">
+                  {locale === 'ar' ? 'أدواتك التسويقية السريعة' : 'Your Activity & Toolkit'}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {locale === 'ar' ? 'انسخ كود الترويج أو رابط الإحالة فوراً' : 'Instant promo & referral tools'}
+                </p>
+              </div>
+
+              {/* Promo Code Box */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-gold-500/20 via-amber-500/10 to-transparent border border-gold-500/40 space-y-2">
+                <span className="text-[10px] font-bold text-gold-400 uppercase tracking-wider block font-mono">
+                  {locale === 'ar' ? 'كود الخصم الحصري الخاص بك' : 'YOUR EXCLUSIVE PROMO CODE'}
+                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-lg font-black font-mono text-white tracking-widest">
+                    {currentPromoCode}
+                  </span>
+                  <button
+                    onClick={handleCopyPromo}
+                    className="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-xs font-black transition-all flex items-center gap-1 shadow-sm"
+                  >
+                    {copiedPromo ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedPromo ? t('common.copied') : t('common.copy')}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2">
+                <button
+                  onClick={handleCopyLink}
+                  className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-gold-400" />
+                  <span>{copiedLink ? t('common.copied') : locale === 'ar' ? 'نسخ رابط دليل السفراء' : 'Copier le lien public'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleTabClick('workshops')}
+                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-purple-500/40 text-xs font-bold text-purple-300 transition-all flex items-center justify-center gap-2"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-purple-400" />
+                  <span>{locale === 'ar' ? 'إعلان ورشة / حصة جديدة' : 'Nouvelle session'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 3. WORKSHOPS & POST BROADCASTS TAB ================= */}
+      {activeTab === 'workshops' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Create Workshop Form */}
+          <div className="lg:col-span-5 rounded-3xl bg-[#090E1F] border border-white/10 p-6 space-y-4 shadow-xl h-fit">
+            <div className="flex items-center gap-2">
+              <PlusCircle className="w-5 h-5 text-gold-400" />
+              <h3 className="text-lg font-black text-white">
+                {locale === 'ar' ? 'إعلان ورشة دراسية أو حصة مراجعة' : 'Créer une session d\'étude'}
+              </h3>
+            </div>
+            <p className="text-xs text-slate-400">
+              {locale === 'ar' ? 'نظم حصة لطلبة ولايتك بالتعاون مع أساتذة المنصة المعتمدين.' : 'Planifiez un atelier pour les étudiants de votre campus.'}
+            </p>
+
+            <form onSubmit={handleCreatePost} className="space-y-3.5 pt-2">
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'عنوان الورشة / الحصة' : 'Titre de la session'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={locale === 'ar' ? 'مثال: ورشة التحضير لامتحان الرياضيات EMD1' : 'Ex: Atelier de préparation EMD1'}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs placeholder:text-slate-500 focus:border-gold-400 focus:outline-none font-arabic"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
-                    {t('dashboards.ambassador.postType')}
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'نوع الفعالية' : 'Type'}
                   </label>
                   <select
                     value={postType}
                     onChange={(e) => setPostType(e.target.value as PostType)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-gray-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-gold-500 font-arabic"
+                    className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
                   >
-                    <option value="SESSION_SCHEDULE">
-                      {locale === 'ar' ? '📅 موعد ورشة مراجعة (حضوري أو أونلاين)' : 'Séance de Révision'}
-                    </option>
-                    <option value="STUDY_TIP">
-                      {locale === 'ar' ? '💡 نصائح منهجية وملخصات' : 'Conseil & Méthodologie'}
-                    </option>
-                    <option value="EVENT">
-                      {locale === 'ar' ? '🎉 فعالية علمية أو مسابقة' : 'Événement & Concours'}
-                    </option>
+                    <option value="SESSION_SCHEDULE">{locale === 'ar' ? 'حصة مراجعة' : 'Session d\'étude'}</option>
+                    <option value="EVENT">{locale === 'ar' ? 'حدث جامعي' : 'Événement'}</option>
+                    <option value="STUDY_TIP">{locale === 'ar' ? 'نصيحة تفوق' : 'Conseil d\'étude'}</option>
+                    <option value="ANNOUNCEMENT">{locale === 'ar' ? 'إعلان هام' : 'Annonce'}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'طريقة البث' : 'Format'}
+                  </label>
+                  <select
+                    value={isOnline ? 'ONLINE' : 'IN_PERSON'}
+                    onChange={(e) => setIsOnline(e.target.value === 'ONLINE')}
+                    className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
+                  >
+                    <option value="ONLINE">🌐 {locale === 'ar' ? 'أونلاين (Google Meet)' : 'En ligne'}</option>
+                    <option value="IN_PERSON">🏫 {locale === 'ar' ? 'حضوري بالجامعة' : 'Présentiel'}</option>
                   </select>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
-                  {t('dashboards.ambassador.postContent')}
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={
-                    locale === 'ar'
-                      ? 'اكتب تفاصيل الورشة، المحاور التي ستتم مراجعتها، التمارين المقترحة...'
-                      : 'Détails des chapitres abordés, annales résolues...'
-                  }
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-gray-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-gold-500 font-arabic"
-                />
-              </div>
-
-              {/* Mode & Certified Teacher Assignment */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {!isOnline && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
-                    {locale === 'ar' ? 'مكان الحضور / الرابط:' : 'Lieu / Lien:'}
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'المدرج أو القاعة' : 'Lieu / Salle'}
                   </label>
                   <input
                     type="text"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder={
-                      locale === 'ar'
-                        ? 'مثال: قاعة C - كلية الإعلام الآلي أو رابط Google Meet'
-                        : "Ex: Amphi C - Faculté d'Informatique"
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-gray-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-gold-500 font-arabic"
+                    placeholder={locale === 'ar' ? 'مثال: مدرج C - كلية العلوم' : 'Ex: Amphithéâtre C'}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs placeholder:text-slate-500 focus:border-gold-400 focus:outline-none font-arabic"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'الأستاذ المؤطر' : 'Enseignant Encadrant'}
+                </label>
+                <select
+                  value={selectedTeacherId}
+                  onChange={(e) => setSelectedTeacherId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
+                >
+                  {CERTIFIED_TEACHERS.map((tch) => (
+                    <option key={tch.id} value={tch.id}>
+                      {tch.name} ({tch.specialty})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'تفاصيل ومحاور الحصة' : 'Détails & Programme'}
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder={locale === 'ar' ? 'اكتب محاور المراجعة ورابط المطبوعات...' : 'Détails de la séance...'}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs placeholder:text-slate-500 focus:border-gold-400 focus:outline-none font-arabic"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-navy-950 font-black text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>{locale === 'ar' ? 'نشر الإعلان للطلبة فوراً' : 'Publier la session'}</span>
+              </button>
+
+              {isSubmitted && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center font-arabic">
+                  {locale === 'ar' ? 'تم نشر الورشة بنجاح ووصلت لطلبة ولايتك! ✓' : 'Session publiée avec succès ! ✓'}
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* Posts Stream */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <h3 className="text-lg font-black text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-purple-400" />
+                <span>{locale === 'ar' ? 'منشورات وورشات السفراء المعتمدة' : 'Fil d\'actualités des sessions'}</span>
+              </h3>
+              <span className="text-xs text-slate-400 font-mono">{posts.length} Posts</span>
+            </div>
+
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <div
+                  key={post.id}
+                  className="rounded-3xl bg-[#090E1F] border border-white/10 p-5 space-y-3.5 hover:border-gold-500/30 transition-all shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-gold-500/20 border border-gold-400/40 text-gold-400 flex items-center justify-center shrink-0">
+                        <GraduationCap className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white">{post.title}</h4>
+                        <p className="text-[11px] text-slate-400 font-arabic">
+                          {post.authorName} • {post.institutionName} • {post.assignedTeacherName}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span className="px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono font-bold text-gold-300 shrink-0">
+                      {post.isOnline ? '🌐 Live Meet' : `🏫 ${post.location || 'Campus'}`}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-300 leading-relaxed font-arabic bg-black/20 p-3.5 rounded-2xl border border-white/5">
+                    {post.content}
+                  </p>
+
+                  {/* Comments Thread */}
+                  <div className="pt-2 border-t border-white/5 space-y-2">
+                    {post.comments && post.comments.length > 0 && (
+                      <div className="space-y-2">
+                        {post.comments.map((cmt) => (
+                          <div key={cmt.id} className="p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs">
+                            <span className="font-bold text-gold-400 mr-2">{cmt.authorName}:</span>
+                            <span className="text-slate-300">{cmt.content}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {activeCommentPostId === post.id ? (
+                      <div className="flex gap-2 pt-2">
+                        <input
+                          type="text"
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          placeholder={locale === 'ar' ? 'اكتب رداً أو سؤالاً...' : 'Écrire une réponse...'}
+                          className="flex-1 px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none font-arabic"
+                        />
+                        <button
+                          onClick={() => handleAddComment(post.id)}
+                          className="px-3.5 py-1.5 rounded-xl bg-gold-500 text-navy-950 font-bold text-xs font-arabic"
+                        >
+                          {locale === 'ar' ? 'إرسال' : 'Envoyer'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setActiveCommentPostId(post.id)}
+                        className="text-[11px] font-bold text-slate-400 hover:text-gold-400 transition-colors flex items-center gap-1 font-arabic"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>{locale === 'ar' ? 'إضافة رد أو تعليق' : 'Répondre'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 4. 58 WILAYAS NETWORK TAB ================= */}
+      {activeTab === 'network' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-gold-400" />
+              <span>{locale === 'ar' ? 'دليل شبكة سفراء 58 ولاية' : 'Annuaire National des Ambassadeurs'}</span>
+            </h3>
+            <span className="text-xs text-slate-400 font-mono">58 Wilayas Covered</span>
+          </div>
+          <AmbassadorDirectory />
+        </div>
+      )}
+
+      {/* ================= 5. REVIEWS TAB ================= */}
+      {activeTab === 'reviews' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+            <h3 className="text-lg font-black text-white flex items-center gap-2">
+              <Star className="w-5 h-5 text-gold-400 fill-gold-400" />
+              <span>{locale === 'ar' ? 'تقييمات وآراء الطلبة المعتمدة' : 'Avis et retours des étudiants'}</span>
+            </h3>
+            <span className="text-xs text-gold-400 font-mono font-bold">5.0 / 5.0 Rating</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(fallbackAmbassador?.reviews || defaultAmbassadorProfile.reviews || []).map((rev) => (
+              <div
+                key={rev.id}
+                className="rounded-3xl bg-[#090E1F] border border-white/10 p-5 space-y-3 shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-gold-500/20 text-gold-400 flex items-center justify-center font-bold text-xs font-mono">
+                      {rev.studentName.slice(0, 1)}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white">{rev.studentName}</h4>
+                      <span className="text-[10px] text-slate-400">{rev.institution}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-gold-400">
+                    {Array.from({ length: rev.score }).map((_, idx) => (
+                      <Star key={idx} className="w-3.5 h-3.5 fill-gold-400 text-gold-400" />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-arabic bg-black/20 p-3 rounded-2xl border border-white/5">
+                  "{rev.comment}"
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ================= 6. PROFILE & SECURITY SETTINGS TAB ================= */}
+      {activeTab === 'profile' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Profile Form */}
+          <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-6 space-y-4 shadow-xl">
+            <div className="flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-gold-400" />
+              <h3 className="text-lg font-black text-white">
+                {locale === 'ar' ? 'الملف الأكاديمي وسفير الولاية' : 'Profil Ambassadeur'}
+              </h3>
+            </div>
+
+            <form onSubmit={handleProfileSubmit} className="space-y-3.5 pt-2">
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'الاسم واللقب' : 'Nom Complet'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'رقم الهاتف' : 'Téléphone'}
+                  </label>
+                  <input
+                    type="text"
+                    value={profileForm.phone}
+                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-gray-300 mb-1">
-                    {locale === 'ar' ? 'الأستاذ المشرف المصادق:' : 'Enseignant référent:'}
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    {locale === 'ar' ? 'الولاية' : 'Wilaya'}
                   </label>
                   <select
-                    value={selectedTeacherId}
-                    onChange={(e) => setSelectedTeacherId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-gray-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-gold-500 font-arabic"
+                    value={profileForm.wilayaCode}
+                    onChange={(e) => setProfileForm({ ...profileForm, wilayaCode: Number(e.target.value) })}
+                    className="w-full px-3 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
                   >
-                    {CERTIFIED_TEACHERS.map((tch) => (
-                      <option key={tch.id} value={tch.id}>
-                        {tch.name} ({tch.specialty})
+                    {WILAYAS.map((w) => (
+                      <option key={w.code} value={w.code}>
+                        {w.code} - {getLocalizedWilayaName(w, locale as Locale)}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                {isSubmitted && (
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{t('dashboards.ambassador.success')}</span>
-                  </span>
-                )}
-
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-amber-500 text-navy-950 font-black text-xs shadow-gold-glow flex items-center gap-2 active:scale-95 transition-all ml-auto"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{t('dashboards.ambassador.publishBtn')}</span>
-                </button>
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'الجامعة أو المعهد' : 'Université / Établissement'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.institutionName}
+                  onChange={(e) => setProfileForm({ ...profileForm, institutionName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
+                />
               </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'حساب تيليجرام للتواصل' : 'Handle Telegram'}
+                </label>
+                <input
+                  type="text"
+                  value={profileForm.telegramHandle}
+                  onChange={(e) => setProfileForm({ ...profileForm, telegramHandle: e.target.value })}
+                  placeholder="@username"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'نبذة تعريفية (Bio)' : 'Biographie'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={profileForm.bioAr}
+                  onChange={(e) => setProfileForm({ ...profileForm, bioAr: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-gold-400 focus:outline-none font-arabic"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={profileSaving}
+                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                {profileSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                <span>{locale === 'ar' ? 'حفظ البيانات الأكاديمية' : 'Enregistrer le profil'}</span>
+              </button>
+
+              {profileSuccess && (
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center">
+                  {profileSuccess}
+                </div>
+              )}
             </form>
           </div>
 
-          {/* Posts & Feed List */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gold-500" />
-              <span>{locale === 'ar' ? 'الورشات والمنشورات النشطة' : 'Sessions Actives'}</span>
-            </h3>
-
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-lg bg-gold-500/20 text-gold-700 dark:text-gold-300 text-[10px] font-bold">
-                        {post.type}
-                      </span>
-                      <span className="text-xs font-bold text-slate-500 dark:text-gray-400">
-                        {post.wilayaName} • {post.institutionName}
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                      {post.title}
-                    </h4>
-                  </div>
-
-                  <span className="text-[10px] text-slate-400 font-mono">{post.createdAt}</span>
-                </div>
-
-                <p className="text-xs leading-relaxed text-slate-700 dark:text-gray-300">
-                  {post.content}
-                </p>
-
-                {post.location && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900 text-[11px] font-bold text-slate-600 dark:text-gray-300 flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 text-gold-500" />
-                    <span>{post.location}</span>
-                  </div>
-                )}
-
-                {/* Teacher Endorsement & Comments */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>{post.assignedTeacherName}</span>
-                    </span>
-
-                    <button
-                      onClick={() =>
-                        setActiveCommentPostId(
-                          activeCommentPostId === post.id ? null : post.id
-                        )
-                      }
-                      className="text-xs font-bold text-gold-600 dark:text-gold-400 hover:underline"
-                    >
-                      + {locale === 'ar' ? 'إضافة توجيه / تعليق' : 'Commenter'}
-                    </button>
-                  </div>
-
-                  {/* Comment Input */}
-                  {activeCommentPostId === post.id && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <input
-                        type="text"
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        placeholder={
-                          locale === 'ar' ? 'اكتب ملاحظتك الأكاديمية...' : 'Votre remarque...'
-                        }
-                        className="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-gray-700 text-xs text-slate-900 dark:text-white"
-                      />
-                      <button
-                        onClick={() => handleAddComment(post.id)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold"
-                      >
-                        {locale === 'ar' ? 'إرسال' : 'Publier'}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Comments List */}
-                  {post.comments && post.comments.length > 0 && (
-                    <div className="space-y-1.5 pt-1">
-                      {post.comments.map((comm) => (
-                        <div
-                          key={comm.id}
-                          className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900/60 text-xs text-slate-700 dark:text-gray-300"
-                        >
-                          <span className="font-bold text-slate-900 dark:text-white mr-2">
-                            {comm.authorName}:
-                          </span>
-                          <span>{comm.content}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ================= TAB 2: STUDENT REVIEWS ================= */}
-      {activeTab === 'reviews' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 dark:text-white">
-              {locale === 'ar' ? 'سجل تقييمات الطلبة وآرائهم المعتمدة' : "Avis et Retours d'Expérience"}
-            </h3>
-            <span className="text-xs font-bold text-gold-500 font-mono">
-              ⭐ {fallbackAmbassador?.ratingAverage ?? 5.0} / 5.0 ({fallbackAmbassador?.ratingsCount ?? 0} avis)
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(fallbackAmbassador?.reviews || []).map((rev) => (
-              <div
-                key={rev.id}
-                className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-2"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
-                      {rev.studentName}
-                    </h4>
-                    <p className="text-[10px] text-slate-400">{rev.institution}</p>
-                  </div>
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    {[...Array(rev.score)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-amber-500" />
-                    ))}
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-700 dark:text-gray-300 leading-relaxed">
-                  "{rev.comment}"
-                </p>
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 font-mono">
-                  <span>{rev.createdAt}</span>
-                  <span className="text-emerald-500 font-bold">✓ {locale === 'ar' ? 'طالب مؤكد' : 'Vérifié'}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ================= TAB 3: NATIONAL AMBASSADOR DIRECTORY ================= */}
-      {activeTab === 'network' && (
-        <div className="space-y-4">
-          <AmbassadorDirectory />
-        </div>
-      )}
-
-      {/* ================= TAB 4: AMBASSADOR PROFILE & SECURITY SETTINGS ================= */}
-      {activeTab === 'profile' && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6" data-testid="ambassador-profile-tab">
-          {/* Ambassador ID & Promo Card */}
-          <div className="p-5 rounded-3xl bg-gradient-to-r from-[#0B1530] via-[#101E42] to-[#080D1D] border border-gold-500/40 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-gold-500 via-amber-400 to-lime-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shrink-0">
-                {currentUser?.name?.charAt(0) || 'A'}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-black">{currentUser?.name}</h3>
-                  <span className="px-2 py-0.5 rounded-full bg-gold-500/20 border border-gold-500/40 text-gold-300 text-[10px] font-bold">
-                    ✓ {locale === 'ar' ? 'سفير ولاية معتمد' : 'Ambassadeur Officiel'}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-300 font-mono mt-0.5">
-                  <span>ID: {currentUser?.studentCardId || 'DZ-AMB-16-0789'}</span>
-                  <span className="mx-2 text-gray-500">•</span>
-                  <span>{currentUser?.email}</span>
-                </div>
-              </div>
-            </div>
-
+          {/* Password & Security Form */}
+          <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-6 space-y-4 shadow-xl">
             <div className="flex items-center gap-2">
-              <div className="bg-white/5 px-3.5 py-2 rounded-2xl border border-white/10 text-xs font-mono">
-                <span className="text-gray-400 text-[10px] block">{locale === 'ar' ? 'كود الترويج الخاص بك:' : 'Code Promo:'}</span>
-                <span className="text-lime-300 font-black text-sm">{currentPromoCode}</span>
-              </div>
+              <Lock className="w-5 h-5 text-purple-400" />
+              <h3 className="text-lg font-black text-white">
+                {locale === 'ar' ? 'أمان الحساب وكلمة المرور' : 'Sécurité du compte'}
+              </h3>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Edit Profile Form */}
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-sm">
-                <UserCheck className="w-4 h-4 text-lime-500" />
-                <span>{locale === 'ar' ? 'تعديل بيانات السفير الأكاديمية' : 'Modifier le profil ambassadeur'}</span>
-              </div>
-
-              {profileSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  <span>{profileSuccess}</span>
-                </div>
-              )}
-              {profileError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>{profileError}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleProfileSubmit} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'الاسم الكامل' : 'Nom complet'}
-                  </label>
+            <form onSubmit={handlePasswordChange} className="space-y-3.5 pt-2">
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'كلمة المرور الحالية' : 'Mot de passe actuel'}
+                </label>
+                <div className="relative">
                   <input
-                    value={profileForm.name}
-                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    required
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-purple-400 focus:outline-none font-mono"
                   />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                      {locale === 'ar' ? 'الهاتف (واتساب)' : 'Téléphone (WhatsApp)'}
-                    </label>
-                    <input
-                      value={profileForm.phone}
-                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      dir="ltr"
-                      placeholder="0555 12 34 56"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-lime-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                      {locale === 'ar' ? 'الولاية' : 'Wilaya'}
-                    </label>
-                    <select
-                      value={profileForm.wilayaCode}
-                      onChange={(e) => setProfileForm({ ...profileForm, wilayaCode: Number(e.target.value) })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1528] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    >
-                      {WILAYAS.map((w) => (
-                        <option key={w.code} value={w.code}>
-                          {w.code} - {getLocalizedWilayaName(w, locale as Locale)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'المؤسسة / الجامعة / الثانوية' : 'Université ou Lycée'}
-                  </label>
-                  <input
-                    value={profileForm.institutionName}
-                    onChange={(e) => setProfileForm({ ...profileForm, institutionName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                      {locale === 'ar' ? 'التخصص / الشعبة' : 'Spécialité'}
-                    </label>
-                    <input
-                      value={profileForm.specialty}
-                      onChange={(e) => setProfileForm({ ...profileForm, specialty: e.target.value })}
-                      placeholder="Informatique, BAC Math..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                      {locale === 'ar' ? 'معرف تليغرام' : 'Telegram'}
-                    </label>
-                    <input
-                      value={profileForm.telegramHandle}
-                      onChange={(e) => setProfileForm({ ...profileForm, telegramHandle: e.target.value })}
-                      placeholder="username"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-lime-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2 flex justify-end">
                   <button
-                    type="submit"
-                    disabled={profileSaving}
-                    className="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-60"
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
                   >
-                    {profileSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                    <span>{locale === 'ar' ? 'حفظ تعديلات الملف' : 'Sauvegarder'}</span>
+                    {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </form>
-            </div>
-
-            {/* Change Password Form */}
-            <div className="p-5 rounded-3xl bg-white dark:bg-[#0C1428] border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center gap-2 text-slate-900 dark:text-white font-black text-sm">
-                <KeyRound className="w-4 h-4 text-lime-500" />
-                <span>{locale === 'ar' ? 'تغيير كلمة المرور والأمان' : 'Modifier le mot de passe'}</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-gray-400">
-                {locale === 'ar'
-                  ? 'يُنصح بتغيير كلمة المرور المؤقتة التي استلمتها من الإدارة لضمان أمان حسابك.'
-                  : 'Modifiez votre mot de passe temporaire pour sécuriser vos accès.'}
-              </p>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-purple-400 focus:outline-none font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">
+                  {locale === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirmer le mot de passe'}
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-xs focus:border-purple-400 focus:outline-none font-mono"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={passwordSaving}
+                className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                {passwordSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+                <span>{locale === 'ar' ? 'تحديث كلمة المرور' : 'Changer le mot de passe'}</span>
+              </button>
 
               {passwordSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  <span>{passwordSuccess}</span>
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold text-center">
+                  {passwordSuccess}
                 </div>
               )}
               {passwordError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-bold flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{passwordError}</span>
+                <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-bold text-center">
+                  {passwordError}
                 </div>
               )}
-
-              <form onSubmit={handlePasswordChange} className="space-y-3.5 text-xs">
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'كلمة المرور الحالية' : 'Mot de passe actuel'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      required
-                      placeholder="••••••••"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full px-3 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      required
-                      placeholder="•••••••• (6 أحرف على الأقل)"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-3 py-2.5 pr-10 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
-                    >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 dark:text-gray-400 mb-1 font-semibold text-[11px]">
-                    {locale === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirmer le nouveau mot de passe'}
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-slate-900 dark:text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={passwordSaving}
-                    className="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all disabled:opacity-60"
-                  >
-                    {passwordSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Lock className="w-3.5 h-3.5" />}
-                    <span>{locale === 'ar' ? 'تحديث كلمة المرور' : 'Modifier mot de passe'}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );

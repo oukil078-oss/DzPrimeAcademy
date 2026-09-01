@@ -6,6 +6,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { getDashboardPath } from '@/lib/rbac';
 import { LandingHero } from '@/components/landing/LandingHero';
+import { CourseTopicExplorer } from '@/components/landing/CourseTopicExplorer';
 import { CompetitiveAdvantageCallout } from '@/components/landing/CompetitiveAdvantageCallout';
 import { BundlesSection } from '@/components/landing/BundlesSection';
 import { ThreeStepsSection } from '@/components/landing/ThreeStepsSection';
@@ -29,6 +30,7 @@ export default function HomePage() {
     <div data-testid="landing-page" className="w-full">
       <LandingHero />
       <div className="py-10 sm:py-14 space-y-14 sm:space-y-20">
+        <CourseTopicExplorer />
         <CompetitiveAdvantageCallout />
         <BundlesSection />
         <ThreeStepsSection />

@@ -92,10 +92,10 @@ export default function AdminCommandCenterPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-lime-400" />
+                <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-gold-400" />
                 <span>{locale === 'ar' ? 'مركز القيادة المالية والإدارية' : 'Centre de Commandement Admin'}</span>
               </h1>
-              <span className="px-3 py-0.5 rounded-full bg-lime-400/20 border border-lime-400/40 text-lime-300 text-xs font-mono font-bold">
+              <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-400/40 text-gold-300 text-xs font-mono font-bold">
                 SUPER ADMIN
               </span>
             </div>
@@ -129,18 +129,18 @@ export default function AdminCommandCenterPage() {
                 onClick={() => handleTabClick(tItem.id)}
                 className={`relative px-3.5 sm:px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 whitespace-nowrap transition-all shrink-0 ${
                   active
-                    ? 'text-slate-950 shadow-md'
+                    ? 'text-navy-950 shadow-md font-black'
                     : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 {active && (
                   <motion.div
                     layoutId="admin-active-pill"
-                    className="absolute inset-0 bg-gradient-to-r from-lime-400 via-lime-300 to-lime-400 rounded-xl -z-10 shadow-lg shadow-lime-400/20"
+                    className="absolute inset-0 bg-gradient-to-r from-gold-400 via-amber-400 to-yellow-400 rounded-xl -z-10 shadow-lg shadow-gold-500/20"
                     transition={{ type: 'spring', duration: 0.45 }}
                   />
                 )}
-                <Icon className={`w-4 h-4 ${active ? 'text-slate-950' : 'text-gray-400'}`} />
+                <Icon className={`w-4 h-4 ${active ? 'text-navy-950' : 'text-gray-400'}`} />
                 <span>{locale === 'ar' ? tItem.labelAr : tItem.labelFr}</span>
               </button>
             );
