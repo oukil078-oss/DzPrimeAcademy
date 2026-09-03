@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Video, Check, Loader2 } from 'lucide-react';
 import { PlatformSession } from '@/lib/platformStore';
 import { useAuthStore } from '@/lib/store';
+import { useAuthModal } from '@/lib/authModalContext';
 
 interface LiveSessionsPanelProps {
   sessions: PlatformSession[];
@@ -12,6 +13,7 @@ interface LiveSessionsPanelProps {
 
 export const LiveSessionsPanel: React.FC<LiveSessionsPanelProps> = ({ sessions, locale }) => {
   const { currentUser } = useAuthStore();
+  const { openAuth } = useAuthModal();
   const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
   const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -27,7 +29,10 @@ export const LiveSessionsPanel: React.FC<LiveSessionsPanelProps> = ({ sessions, 
   }, [currentUser]);
 
   const toggleRegistration = async (sessionId: string) => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      openAuth('login');
+      return;
+    }
     setPendingId(sessionId);
     const isRegistered = registeredIds.has(sessionId);
     try {
@@ -89,11 +94,11 @@ export const LiveSessionsPanel: React.FC<LiveSessionsPanelProps> = ({ sessions, 
               <button
                 data-testid={`live-session-register-btn-${s.id}`}
                 onClick={() => toggleRegistration(s.id)}
-                disabled={!currentUser || pendingId === s.id}
+                disabled={pendingId === s.id}
                 className={`w-full py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-60 ${
                   isRegistered
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40'
-                    : 'bg-lime-400 text-slate-950'
+                    : 'bg-lime-400 text-slate-950 hover:bg-lime-300'
                 }`}
               >
                 {pendingId === s.id ? (

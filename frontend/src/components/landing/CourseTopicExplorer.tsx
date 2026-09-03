@@ -142,7 +142,7 @@ export const CourseTopicExplorer: React.FC = () => {
       : FEATURED_COURSES.filter((c) => c.category === selectedCategory);
 
   return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 font-arabic" data-testid="course-topic-explorer">
+    <section id="courses-explorer" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 font-arabic scroll-mt-24" data-testid="course-topic-explorer">
       {/* ================= 1. CATEGORY PILLS FILTER (Learnova style) ================= */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-white/10 pb-6">
         <div>

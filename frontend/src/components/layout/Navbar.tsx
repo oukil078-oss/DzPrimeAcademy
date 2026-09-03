@@ -134,7 +134,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth, hid
                 <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 border-b border-slate-100 dark:border-slate-800 pb-1.5">
                   <span>{locale === 'ar' ? 'نتائج سريعة مقترحة' : 'Résultats instantanés'}</span>
                   <Link
-                    href={`/${locale}`}
+                    href={`/${locale}/exams?q=${encodeURIComponent(searchQuery)}`}
                     onClick={() => setSearchQuery('')}
                     className="text-gold-600 dark:text-gold-400 hover:underline"
                   >
@@ -144,7 +144,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth, hid
 
                 <div className="space-y-1.5 max-h-56 overflow-y-auto">
                   <Link
-                    href={`/${locale}`}
+                    href={`/${locale}/exams?q=${encodeURIComponent(searchQuery)}`}
                     onClick={() => setSearchQuery('')}
                     className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs transition-colors"
                   >

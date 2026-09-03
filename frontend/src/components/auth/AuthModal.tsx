@@ -30,23 +30,53 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   const { locale, isRtl } = useTranslation();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>(defaultTab);
+  const [activeTab, setActiveTab] = useState<'login' | 'register' | 'forgot'>(defaultTab);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [wilayaCode, setWilayaCode] = useState<number>(16);
   const [errorMsg, setErrorMsg] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setActiveTab(defaultTab);
       setErrorMsg('');
+      setForgotSuccess('');
     }
   }, [isOpen, defaultTab]);
 
   if (!isOpen) return null;
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setForgotSuccess('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setForgotSuccess(
+          locale === 'ar'
+            ? 'تم إرسال تعليمات ورابط إعادة التعيين بنجاح إلى بريدك الإلكتروني.'
+            : 'Un lien de réinitialisation a été envoyé à votre adresse email.'
+        );
+      } else {
+        setErrorMsg(data.error || (locale === 'ar' ? 'تعذر إرسال الرابط' : 'Échec de la demande'));
+      }
+    } catch {
+      setErrorMsg(locale === 'ar' ? 'حدث خطأ غير متوقع' : 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,6 +216,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
                 </div>
               </div>
 
+              <div className="flex items-center justify-between text-[11px] pt-0.5">
+                <span className="text-slate-400 font-normal">{locale === 'ar' ? 'حساب شخصي مؤمّن' : 'Compte sécurisé'}</span>
+                <button
+                  type="button"
+                  onClick={() => { setActiveTab('forgot'); setErrorMsg(''); }}
+                  className="text-gold-600 dark:text-gold-400 hover:underline font-bold"
+                >
+                  {locale === 'ar' ? 'نسيت كلمة المرور؟' : 'Mot de passe oublié ?'}
+                </button>
+              </div>
+
               <button
                 type="submit"
                 data-testid="login-submit-btn"
@@ -307,6 +348,74 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                 <span>{locale === 'ar' ? 'إنشاء الحساب' : 'Créer mon Compte'}</span>
               </button>
+            </form>
+          )}
+
+          {activeTab === 'forgot' && (
+            <form onSubmit={handleForgotSubmit} data-testid="forgot-password-form" className="space-y-3.5 font-arabic text-xs">
+              <div className="text-center space-y-1 pb-1">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+                  {locale === 'ar' ? 'استعادة كلمة المرور' : 'Réinitialisation du mot de passe'}
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-gray-400">
+                  {locale === 'ar'
+                    ? 'أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور فوراً.'
+                    : 'Entrez votre adresse email pour recevoir les instructions.'}
+                </p>
+              </div>
+
+              {forgotSuccess ? (
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs space-y-3 text-center">
+                  <p className="font-bold leading-relaxed">{forgotSuccess}</p>
+                  <button
+                    type="button"
+                    onClick={() => { setActiveTab('login'); setForgotSuccess(''); }}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-colors shadow-sm"
+                  >
+                    {locale === 'ar' ? 'العودة لتسجيل الدخول' : 'Retour à la connexion'}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-slate-700 dark:text-gray-300 mb-1 font-semibold">
+                      {locale === 'ar' ? 'البريد الإلكتروني المسجل' : 'Adresse Email'}
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        data-testid="forgot-email-input"
+                        type="email"
+                        required
+                        placeholder="votre.email@exemple.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-lime-500/20 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    data-testid="forgot-submit-btn"
+                    className="w-full py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all mt-2 disabled:opacity-60"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                    <span>{locale === 'ar' ? 'إرسال رابط الاستعادة' : 'Envoyer le lien'}</span>
+                  </button>
+
+                  <div className="text-center pt-2">
+                    <button
+                      type="button"
+                      onClick={() => { setActiveTab('login'); setErrorMsg(''); }}
+                      className="text-[11px] text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:underline font-bold"
+                    >
+                      {locale === 'ar' ? '← العودة لتسجيل الدخول' : '← Retour à la connexion'}
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
           )}
         </motion.div>

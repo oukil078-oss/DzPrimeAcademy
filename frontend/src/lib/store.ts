@@ -123,11 +123,17 @@ export function useAuthStore() {
     setUser(null);
   }, []);
 
-  const upgradeToGolden = useCallback(async () => {
-    const res = await fetch('/api/account/upgrade', { method: 'POST', credentials: 'include' });
-    if (res.ok) {
-      const data = await res.json();
-      setUser(data.user);
+  const upgradeToGolden = useCallback(async (): Promise<{ success: boolean; user?: any; error?: string }> => {
+    try {
+      const res = await fetch('/api/account/upgrade', { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.user) {
+        setUser(data.user);
+        return { success: true, user: data.user };
+      }
+      return { success: false, error: data.error || 'فشل الترقية' };
+    } catch (e: any) {
+      return { success: false, error: e?.message || 'خطأ في الاتصال' };
     }
   }, []);
 

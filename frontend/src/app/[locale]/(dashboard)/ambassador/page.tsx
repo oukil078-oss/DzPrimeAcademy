@@ -1014,7 +1014,7 @@ export default function AmbassadorDashboardPage() {
                   </div>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed font-arabic bg-black/20 p-3 rounded-2xl border border-white/5">
-                  "{rev.comment}"
+                  &ldquo;{rev.comment}&rdquo;
                 </p>
               </div>
             ))}

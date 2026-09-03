@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Check, Sparkles, X, ShieldCheck } from 'lucide-react';
+import { Crown, Check, Sparkles, X, ShieldCheck, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
+import { useAuthModal } from '@/lib/authModalContext';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -14,23 +15,38 @@ interface UpgradeModalProps {
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) => {
   const { t, locale } = useTranslation();
-  const { upgradeToGolden } = useAuthStore();
+  const { currentUser, upgradeToGolden } = useAuthStore();
+  const { openAuth } = useAuthModal();
   const [activationCode, setActivationCode] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleActivate = () => {
-    upgradeToGolden();
-    setIsSuccess(true);
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ['#D4AF37', '#F5D061', '#38BDF8', '#FFFFFF'],
-    });
-    setTimeout(() => {
-      setIsSuccess(false);
+  const handleActivate = async () => {
+    if (!currentUser) {
       onClose();
-    }, 2000);
+      openAuth('login');
+      return;
+    }
+    setLoading(true);
+    setErrorMsg('');
+    const res = await upgradeToGolden();
+    setLoading(false);
+    if (res?.success) {
+      setIsSuccess(true);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#D4AF37', '#F5D061', '#38BDF8', '#FFFFFF'],
+      });
+      setTimeout(() => {
+        setIsSuccess(false);
+        onClose();
+      }, 2000);
+    } else {
+      setErrorMsg(res?.error || (locale === 'ar' ? 'فشل تفعيل العضوية' : 'Échec de la mise à niveau'));
+    }
   };
 
   if (!isOpen) return null;
@@ -110,11 +126,20 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
               className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/40 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 font-mono text-center"
             />
 
+            {errorMsg && (
+              <p className="text-xs text-rose-500 font-bold text-center font-arabic bg-rose-500/10 py-2 px-3 rounded-xl border border-rose-500/20">
+                {errorMsg}
+              </p>
+            )}
+
             <button
               onClick={handleActivate}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs font-arabic flex items-center justify-center gap-2 shadow-gold-glow hover:shadow-gold-glow-lg transition-all active:scale-[0.98]"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs font-arabic flex items-center justify-center gap-2 shadow-gold-glow hover:shadow-gold-glow-lg transition-all active:scale-[0.98] disabled:opacity-60"
             >
-              {isSuccess ? (
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isSuccess ? (
                 <>
                   <ShieldCheck className="w-4 h-4 text-navy-950" />
                   <span>✓ {t('common.success')}</span>

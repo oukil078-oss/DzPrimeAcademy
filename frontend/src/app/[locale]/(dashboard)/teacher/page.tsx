@@ -32,6 +32,10 @@ import {
   Layers,
   ArrowUpRight,
   CheckCircle2,
+  FileText,
+  Download,
+  UploadCloud,
+  X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -96,6 +100,44 @@ export default function TeacherStudioPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [passwordError, setPasswordError] = useState('');
+
+  // Drive Pedagogical Resources State
+  const [driveFiles, setDriveFiles] = useState([
+    {
+      id: 'df-1',
+      titleAr: 'سلسلة تمارين رقم 01 - الجداء السلمي والمستقيم في الفضاء',
+      titleFr: 'Série TD N°01 - Produit scalaire & Droites',
+      module: 'Mathématiques',
+      category: 'TD',
+      fileSize: '2.4 MB',
+      createdAt: '2026-09-01',
+      downloads: 142,
+    },
+    {
+      id: 'df-2',
+      titleAr: 'ملخص القوانين والوحدات الأساسية - ميكانيك نيوتن',
+      titleFr: 'Formulaire de Révision - Mécanique de Newton',
+      module: 'Physique',
+      category: 'RÉSUMÉ',
+      fileSize: '1.8 MB',
+      createdAt: '2026-08-28',
+      downloads: 289,
+    },
+    {
+      id: 'df-3',
+      titleAr: 'امتحان تجريبي مقترح مع الحل النموذجي المفصل',
+      titleFr: 'Sujet d\'Examen Blanc & Corrigé Détaillé',
+      module: 'Sciences',
+      category: 'EXAM',
+      fileSize: '4.1 MB',
+      createdAt: '2026-08-22',
+      downloads: 415,
+    },
+  ]);
+  const [showAddDriveModal, setShowAddDriveModal] = useState(false);
+  const [newFileTitle, setNewFileTitle] = useState('');
+  const [newFileModule, setNewFileModule] = useState('');
+  const [newFileCategory, setNewFileCategory] = useState<'TD' | 'RÉSUMÉ' | 'EXAM' | 'COURS'>('TD');
 
   useEffect(() => {
     const applyHash = () => {
@@ -730,27 +772,181 @@ export default function TeacherStudioPage() {
       {/* ================= 6. DRIVE TAB ================= */}
       {tab === 'drive' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 dark:border-gray-800">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <FolderOpen className="w-5 h-5 text-gold-500" />
-              <span>{locale === 'ar' ? 'المطبوعات وسلاسل التمارين (Drive)' : 'Supports de Cours & Séries'}</span>
-            </h3>
-            <span className="text-xs text-slate-400 font-mono">PDF & Slides</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200/60 dark:border-gray-800">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <FolderOpen className="w-5 h-5 text-gold-500" />
+                <span>{locale === 'ar' ? 'المطبوعات وسلاسل التمارين (Drive)' : 'Supports de Cours & Séries'}</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                {locale === 'ar'
+                  ? `إجمالي الملفات المشاركة مع طلبتك: ${driveFiles.length} ملف`
+                  : `${driveFiles.length} documents partagés avec vos étudiants`}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowAddDriveModal(true)}
+              data-testid="add-drive-file-btn"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-gold-500 to-amber-500 hover:from-gold-400 hover:to-amber-400 text-navy-950 font-black text-xs flex items-center gap-2 shadow-md shadow-gold-500/20 active:scale-95 transition-all w-fit"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>{locale === 'ar' ? 'رفع مطبوعة أو ملخص جديد' : 'Ajouter un Document'}</span>
+            </button>
           </div>
 
-          <div className="p-8 rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 text-center space-y-3 shadow-sm">
-            <div className="w-14 h-14 rounded-2xl bg-gold-500/20 text-gold-500 flex items-center justify-center mx-auto">
-              <FolderOpen className="w-7 h-7" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              {locale === 'ar' ? 'مركز رفع وتخزين المطبوعات لطلبتك' : 'Espace de Partage Pédagogique'}
-            </h4>
-            <p className="text-xs text-slate-500 dark:text-gray-400 max-w-md mx-auto">
-              {locale === 'ar'
-                ? 'الملفات المرفوعة ترتبط تلقائياً بمقاييسك وبنك امتحانات DZ PRIME Academy.'
-                : 'Vos séries de TD et résumés sont automatiquement synchronisés avec les fiches de vos étudiants.'}
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {driveFiles.map((file) => (
+              <div
+                key={file.id}
+                data-testid={`drive-file-${file.id}`}
+                className="p-4 rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 shadow-sm hover:border-gold-500/50 hover:shadow-md transition-all flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gold-500/15 border border-gold-500/30 text-gold-600 dark:text-gold-400 flex items-center justify-center">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-bold">
+                      {file.category}
+                    </span>
+                  </div>
+
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
+                    {locale === 'ar' ? file.titleAr : file.titleFr || file.titleAr}
+                  </h4>
+                  <p className="text-[11px] text-gold-600 dark:text-gold-400 font-semibold mt-1.5">{file.module}</p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                  <span>{file.fileSize} &bull; {file.createdAt}</span>
+
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href="#download"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        alert(locale === 'ar' ? `بدء تنزيل: ${file.titleAr}` : `Téléchargement de: ${file.titleFr || file.titleAr}`);
+                      }}
+                      className="p-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-gold-500 hover:text-navy-950 text-slate-600 dark:text-slate-300 transition-colors"
+                      title={locale === 'ar' ? 'تحميل' : 'Télécharger'}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => setDriveFiles(driveFiles.filter((f) => f.id !== file.id))}
+                      className="p-1.5 rounded-xl hover:bg-rose-500/10 text-slate-400 hover:text-rose-500 transition-colors"
+                      title={locale === 'ar' ? 'حذف' : 'Supprimer'}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+
+          {/* Add Drive File Modal */}
+          {showAddDriveModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/30 p-6 space-y-4 shadow-2xl text-slate-900 dark:text-white">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="font-black text-sm sm:text-base flex items-center gap-2">
+                    <UploadCloud className="w-5 h-5 text-gold-500" />
+                    <span>{locale === 'ar' ? 'رفع مطبوعة أو ملخص جديد' : 'Nouveau Document Pédagogique'}</span>
+                  </h3>
+                  <button
+                    onClick={() => setShowAddDriveModal(false)}
+                    className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newFileTitle.trim()) return;
+                    const newEntry = {
+                      id: `df-${Date.now()}`,
+                      titleAr: newFileTitle.trim(),
+                      titleFr: newFileTitle.trim(),
+                      module: newFileModule.trim() || (locale === 'ar' ? 'مقياس عام' : 'Module Général'),
+                      category: newFileCategory,
+                      fileSize: '1.5 MB',
+                      createdAt: new Date().toISOString().slice(0, 10),
+                      downloads: 0,
+                    };
+                    setDriveFiles([newEntry, ...driveFiles]);
+                    setNewFileTitle('');
+                    setNewFileModule('');
+                    setShowAddDriveModal(false);
+                  }}
+                  className="space-y-3 font-arabic text-xs"
+                >
+                  <div>
+                    <label className="block text-slate-700 dark:text-gray-300 mb-1 font-semibold">
+                      {locale === 'ar' ? 'عنوان السلسلة أو المطبوعة' : 'Titre du document'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newFileTitle}
+                      onChange={(e) => setNewFileTitle(e.target.value)}
+                      placeholder={locale === 'ar' ? 'مثال: سلسلة تمارين رقم 02 - التحليل' : 'Ex: Série TD N°02 - Analyse'}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-gold-500/20 text-slate-900 dark:text-white focus:outline-none focus:border-gold-400"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-slate-700 dark:text-gray-300 mb-1 font-semibold">
+                        {locale === 'ar' ? 'المقياس / المادة' : 'Module'}
+                      </label>
+                      <input
+                        type="text"
+                        value={newFileModule}
+                        onChange={(e) => setNewFileModule(e.target.value)}
+                        placeholder="Math, Physique..."
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-gold-500/20 text-slate-900 dark:text-white focus:outline-none focus:border-gold-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-700 dark:text-gray-300 mb-1 font-semibold">
+                        {locale === 'ar' ? 'نوع الوثيقة' : 'Catégorie'}
+                      </label>
+                      <select
+                        value={newFileCategory}
+                        onChange={(e) => setNewFileCategory(e.target.value as any)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-200 dark:border-gold-500/20 text-slate-900 dark:text-white focus:outline-none"
+                      >
+                        <option value="TD">TD / تمارين</option>
+                        <option value="RÉSUMÉ">ملخص / Résumé</option>
+                        <option value="EXAM">امتحان / Examen</option>
+                        <option value="COURS">درس / Cours</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl border-2 border-dashed border-slate-300 dark:border-gold-500/30 text-center space-y-1.5 hover:bg-gold-500/5 transition-colors cursor-pointer">
+                    <UploadCloud className="w-7 h-7 text-gold-500 mx-auto" />
+                    <p className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      {locale === 'ar' ? 'اسحب ملف PDF أو اضغط للاختيار' : 'Glissez votre fichier PDF ici'}
+                    </p>
+                    <p className="text-[10px] text-slate-400">PDF, PPTX, DOCX (Max 25MB)</p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-gold-500/20 active:scale-95 transition-all mt-2"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>{locale === 'ar' ? 'نشر الملف لجميع الطلبة' : 'Publier le document'}</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

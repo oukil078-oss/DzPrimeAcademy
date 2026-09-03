@@ -55,8 +55,8 @@ export function setSessionCookie(response: NextResponse, sessionToken: string) {
 }
 
 export function clearAuthCookies(response: NextResponse) {
-  response.cookies.set(TOKEN_COOKIE, '', { path: '/', maxAge: 0 });
-  response.cookies.set(SESSION_COOKIE, '', { path: '/', maxAge: 0 });
+  response.cookies.set(TOKEN_COOKIE, '', { path: '/', maxAge: 0, expires: new Date(0) });
+  response.cookies.set(SESSION_COOKIE, '', { path: '/', maxAge: 0, expires: new Date(0) });
 }
 
 const SAFE_USER_SELECT = {
