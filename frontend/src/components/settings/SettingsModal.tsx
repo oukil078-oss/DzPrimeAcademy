@@ -61,13 +61,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
     name: '',
+    avatar: '',
     phone: '',
     wilayaCode: 16,
     institutionName: '',
     specialty: '',
+    jobTitle: '',
+    bio: '',
+    whatsapp: '',
+    telegramHandle: '',
+    linkedin: '',
+    facebook: '',
+    instagram: '',
+    youtube: '',
+    website: '',
+    github: '',
     ccpAccount: '',
     ccpCle: '',
-    telegramHandle: '',
     promoCode: '',
   });
   const [profileSaving, setProfileSaving] = useState(false);
@@ -90,13 +100,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
       if (currentUser) {
         setProfileForm({
           name: currentUser.name || '',
+          avatar: currentUser.avatar || '',
           phone: currentUser.phone || '',
           wilayaCode: currentUser.wilayaCode || 16,
           institutionName: currentUser.institutionName || '',
           specialty: currentUser.specialty || '',
+          jobTitle: (currentUser as any).jobTitle || '',
+          bio: (currentUser as any).bio || '',
+          whatsapp: (currentUser as any).whatsapp || '',
+          telegramHandle: (currentUser as any).telegram || '',
+          linkedin: (currentUser as any).linkedin || '',
+          facebook: (currentUser as any).facebook || '',
+          instagram: (currentUser as any).instagram || '',
+          youtube: (currentUser as any).youtube || '',
+          website: (currentUser as any).website || '',
+          github: (currentUser as any).github || '',
           ccpAccount: '',
           ccpCle: '',
-          telegramHandle: '',
           promoCode: '',
         });
         // Fetch extended profile if teacher or ambassador
@@ -332,6 +352,29 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                     </div>
                   )}
 
+                  {/* Avatar & Photo */}
+                  <div className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/10">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-lime-400 to-emerald-500 text-slate-950 flex items-center justify-center font-black text-xl shadow-md shrink-0 overflow-hidden">
+                      {profileForm.avatar ? (
+                        <img src={profileForm.avatar} alt={profileForm.name} className="w-full h-full object-cover" />
+                      ) : (
+                        profileForm.name ? profileForm.name.charAt(0).toUpperCase() : 'U'
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <label className="block text-slate-500 dark:text-gray-400 mb-1 font-semibold text-[11px]">
+                        {locale === 'ar' ? 'رابط الصورة الشخصية (Avatar URL)' : 'Photo de profil (URL)'}
+                      </label>
+                      <input
+                        dir="ltr"
+                        value={profileForm.avatar}
+                        onChange={(e) => setProfileForm({ ...profileForm, avatar: e.target.value })}
+                        placeholder="https://..."
+                        className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400 font-mono"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-slate-500 dark:text-gray-400 mb-1 font-semibold text-[11px]">
                       {locale === 'ar' ? 'الاسم الكامل' : 'Nom complet'}
@@ -460,6 +503,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                           {locale === 'ar' ? 'معرف تليغرام (للتواصل والتوجيه)' : 'Identifiant Telegram (sans @)'}
                         </label>
                         <input
+                          dir="ltr"
                           value={profileForm.telegramHandle}
                           onChange={(e) => setProfileForm({ ...profileForm, telegramHandle: e.target.value })}
                           placeholder="username"
@@ -468,6 +512,131 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, d
                       </div>
                     </div>
                   )}
+
+                  {/* Job Title / Exact Role */}
+                  <div>
+                    <label className="block text-slate-500 dark:text-gray-400 mb-1 font-semibold text-[11px]">
+                      {locale === 'ar' ? 'المسمى الوظيفي أو الصفة (يظهر في البطاقة والملف الشخصي العام)' : 'Titre de fonction / Spécialité (affiché sur le profil)'}
+                    </label>
+                    <input
+                      value={profileForm.jobTitle}
+                      onChange={(e) => setProfileForm({ ...profileForm, jobTitle: e.target.value })}
+                      placeholder={locale === 'ar' ? 'مثال: Chargée des Ressources Humaines أو أستاذ معتمد' : 'Ex: Chargée des Ressources Humaines'}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:outline-none focus:border-lime-400"
+                    />
+                  </div>
+
+                  {/* Bio */}
+                  <div>
+                    <label className="block text-slate-500 dark:text-gray-400 mb-1 font-semibold text-[11px]">
+                      {locale === 'ar' ? 'النبذة التعريفية (Bio) - تظهر عند مسح رمز QR' : 'Biographie (Bio) - visible au scan QR'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={profileForm.bio}
+                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                      placeholder={locale === 'ar' ? 'اكتب نبذة عنك وعن اهتماماتك أو مسؤولياتك...' : 'Parlez de vous...'}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 focus:outline-none focus:border-lime-400 text-xs"
+                    />
+                  </div>
+
+                  {/* Social Medias & Contact Channels */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 space-y-3">
+                    <div className="flex items-center gap-1.5 text-lime-500 font-bold text-xs">
+                      <Sparkles className="w-4 h-4" />
+                      <span>{locale === 'ar' ? 'حسابات التواصل الاجتماعي وروابط الاتصال المباشر' : 'Réseaux Sociaux & Contact'}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[11px]">
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">WhatsApp (رقم الهاتف)</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.whatsapp}
+                          onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
+                          placeholder="0555 12 34 56"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">Telegram (@معرف تليغرام)</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.telegramHandle}
+                          onChange={(e) => setProfileForm({ ...profileForm, telegramHandle: e.target.value })}
+                          placeholder="username"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 font-mono text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">LinkedIn</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.linkedin}
+                          onChange={(e) => setProfileForm({ ...profileForm, linkedin: e.target.value })}
+                          placeholder="linkedin.com/in/username"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">Facebook</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.facebook}
+                          onChange={(e) => setProfileForm({ ...profileForm, facebook: e.target.value })}
+                          placeholder="facebook.com/profile"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">Instagram</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.instagram}
+                          onChange={(e) => setProfileForm({ ...profileForm, instagram: e.target.value })}
+                          placeholder="instagram.com/username"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">YouTube</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.youtube}
+                          onChange={(e) => setProfileForm({ ...profileForm, youtube: e.target.value })}
+                          placeholder="youtube.com/@channel"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">GitHub (حساب أو رابط)</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.github}
+                          onChange={(e) => setProfileForm({ ...profileForm, github: e.target.value })}
+                          placeholder="github.com/username"
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-500 dark:text-gray-400 mb-0.5">{locale === 'ar' ? 'الموقع الشخصي أو الرابط' : 'Site web ou lien'}</label>
+                        <input
+                          dir="ltr"
+                          value={profileForm.website}
+                          onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
+                          placeholder="https://..."
+                          className="w-full px-3 py-1.5 rounded-xl bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs focus:outline-none focus:border-lime-400"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="pt-2 flex justify-end">
                     <button

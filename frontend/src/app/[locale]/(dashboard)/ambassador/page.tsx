@@ -1024,7 +1024,28 @@ export default function AmbassadorDashboardPage() {
 
       {/* ================= 6. PROFILE & SECURITY SETTINGS TAB ================= */}
       {activeTab === 'profile' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Ambassador Card Presentation */}
+          <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-6 shadow-xl flex flex-col items-center space-y-4">
+            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-gold-400" />
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  {locale === 'ar' ? 'بطاقة الاعتماد الرقمية للسفير' : 'Carte d\'Identité Numérique de l\'Ambassadeur'}
+                </h3>
+              </div>
+              <Link
+                href={`/${locale}/profile/${currentUser?.studentCardId || currentUser?.id}`}
+                className="px-3.5 py-1.5 rounded-xl bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 text-xs font-bold flex items-center gap-1.5 transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>{locale === 'ar' ? 'معاينة الملف الشخصي العام' : 'Profil Public'}</span>
+              </Link>
+            </div>
+            <MembershipCard user={currentUser || undefined} allowExport={true} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Form */}
           <div className="rounded-3xl bg-[#090E1F] border border-white/10 p-6 space-y-4 shadow-xl">
             <div className="flex items-center gap-2">
@@ -1221,6 +1242,7 @@ export default function AmbassadorDashboardPage() {
             </form>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

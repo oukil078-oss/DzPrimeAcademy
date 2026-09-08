@@ -23,9 +23,11 @@ import {
   Layers,
   Zap,
   Trophy,
+  UserCheck,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
+import { DzPrimeLogo } from '@/components/shared/DzPrimeLogo';
 import { SidebarCardWidget } from '@/components/card/SidebarCardWidget';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 
@@ -100,20 +102,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     <div className="flex flex-col h-full justify-between p-4 sm:p-5 select-none font-arabic overflow-y-auto no-scrollbar" data-testid="app-sidebar-content">
       <div>
         {/* Brand Header */}
-        <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6 px-2 pt-1">
-          <Link href={`/${locale}`} onClick={onMobileClose} className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-lime-400 via-emerald-400 to-teal-400 dark:from-lime-500 dark:via-lime-400 dark:to-emerald-300 p-0.5 shadow-md flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#121829] dark:bg-[#070D1F] rounded-[14px] flex items-center justify-center">
-                <GraduationCap className="w-5 h-5 text-lime-400" />
-              </div>
-            </div>
-            <div className="flex flex-col text-left font-sans leading-tight">
-              <div className="flex items-center gap-1">
-                <span className="text-base sm:text-lg font-black tracking-tight text-white font-sans">DZ PRIME</span>
-                <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
-              </div>
-              <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">ACADEMY 2026</span>
-            </div>
+        <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6 px-1 pt-1">
+          <Link href={`/${locale}`} onClick={onMobileClose} className="flex items-center gap-2 group">
+            <DzPrimeLogo size={36} showText={true} variant="dark" />
           </Link>
 
           {onMobileClose && (
@@ -153,6 +144,27 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
               </Link>
             );
           })}
+
+          {currentUser && (
+            <Link
+              href={`/${locale}/profile/${currentUser.studentCardId || currentUser.id}`}
+              onClick={onMobileClose}
+              data-testid="sidebar-nav-profile"
+              className={`group relative flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-[13px] font-bold transition-all duration-200 ${
+                pathname.includes(`/profile/${currentUser.studentCardId || currentUser.id}`)
+                  ? 'bg-gradient-to-r from-gold-500 to-amber-500 text-navy-950 shadow-md font-black'
+                  : 'text-gold-400 hover:text-gold-300 hover:bg-gold-500/10'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <UserCheck className="w-4 h-4 shrink-0" />
+                <span>{locale === 'ar' ? 'ملفي الشخصي والبطاقة' : 'Mon Profil & Badge'}</span>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-gold-500/20 text-gold-300 border border-gold-500/30">
+                PRO
+              </span>
+            </Link>
+          )}
 
           <button
             onClick={() => setSettingsOpen(true)}

@@ -160,12 +160,21 @@ export default function VerifyCardPage({
             <span>{t('verify.seal')}</span>
           </div>
 
-          <Link
-            href={`/${locale}`}
-            className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-gold-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
-          >
-            <span>{t('verify.backHome')}</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/${locale}/profile/${card.cardId}`}
+              className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-xs font-black flex items-center gap-1.5 transition-all shadow-gold-glow"
+            >
+              <span>{locale === 'ar' ? 'عرض الملف الشخصي العام' : 'Voir Profil Public'}</span>
+            </Link>
+
+            <Link
+              href={`/${locale}`}
+              className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-800 dark:text-gold-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            >
+              <span>{t('verify.backHome')}</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -25,9 +25,11 @@ import { CoursesTab } from '@/components/admin/CoursesTab';
 import { BundlesTab } from '@/components/admin/BundlesTab';
 import { AdminCardTab } from '@/components/admin/AdminCardTab';
 import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab';
+import { StaffTab } from '@/components/admin/StaffTab';
 
 type AdminTab =
   | 'financial'
+  | 'staff'
   | 'teachers'
   | 'students'
   | 'sessions'
@@ -49,6 +51,7 @@ export default function AdminCommandCenterPage() {
       if (
         [
           'financial',
+          'staff',
           'teachers',
           'students',
           'sessions',
@@ -69,8 +72,9 @@ export default function AdminCommandCenterPage() {
 
   const tabs: { id: AdminTab; icon: any; labelAr: string; labelFr: string }[] = [
     { id: 'financial', icon: Landmark, labelAr: 'المركز المالي', labelFr: 'Centre Financier' },
-    { id: 'teachers', icon: Users, labelAr: 'الأساتذة والمستحقات', labelFr: 'Enseignants & Paie' },
-    { id: 'students', icon: GraduationCap, labelAr: 'الطلبة والبطاقات', labelFr: 'Étudiants & Cartes' },
+    { id: 'staff', icon: Users, labelAr: 'فريق الإدارة والتوظيف (HR)', labelFr: 'Personnel & RH' },
+    { id: 'teachers', icon: GraduationCap, labelAr: 'الأساتذة والمستحقات', labelFr: 'Enseignants & Paie' },
+    { id: 'students', icon: Users, labelAr: 'الطلبة والبطاقات', labelFr: 'Étudiants & Cartes' },
     { id: 'sessions', icon: Video, labelAr: 'الحصص الوطنية', labelFr: 'Sessions Nationales' },
     { id: 'ambassadors', icon: Award, labelAr: 'شبكة 58 ولاية', labelFr: 'Réseau Ambassadeurs' },
     { id: 'courses', icon: Layers, labelAr: 'المقررات', labelFr: 'Modules' },
@@ -157,6 +161,7 @@ export default function AdminCommandCenterPage() {
             transition={{ duration: 0.18 }}
           >
             {activeTab === 'financial' && <FinancialOverviewTab locale={locale} payrollLiability={payrollLiability} />}
+            {activeTab === 'staff' && <StaffTab locale={locale} />}
             {activeTab === 'teachers' && <FacultyPayrollTab locale={locale} onLiabilityChange={setPayrollLiability} />}
             {activeTab === 'students' && <StudentsTab locale={locale} />}
             {activeTab === 'sessions' && <SessionsTab locale={locale} />}

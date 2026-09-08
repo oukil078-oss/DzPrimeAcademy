@@ -21,9 +21,12 @@ import {
   Zap,
   ChevronRight,
   Users,
+  Settings,
 } from 'lucide-react';
 import { LanguageSwitcher } from '../shared/LanguageSwitcher';
 import { ThemeToggle } from '../shared/ThemeToggle';
+import { DzPrimeLogo } from '../shared/DzPrimeLogo';
+import { SettingsModal } from '../settings/SettingsModal';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { isStaff, isGoldenMember } from '@/lib/rbac';
@@ -41,6 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth, hid
   const pathname = usePathname();
 
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const isGold = isGoldenMember(currentUser);
@@ -195,19 +199,49 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth, hid
 
             {/* Profile Avatar / Login */}
             {currentUser ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* 1. Public Profile link with avatar */}
                 <Link
-                  href={getDashboardLink()}
-                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-2xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300 dark:border-gray-700 text-slate-800 dark:text-gray-200 transition-all group"
+                  href={`/${locale}/profile/${currentUser.studentCardId || currentUser.id}`}
+                  title={locale === 'ar' ? 'معاينة ملفي الشخصي وبطاقتي الرقمية' : 'Mon profil et carte'}
+                  className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-2xl bg-slate-100 dark:bg-navy-850 hover:bg-gold-500/15 dark:hover:bg-gold-500/20 border border-slate-300 dark:border-gray-700 hover:border-gold-500/50 text-slate-800 dark:text-gray-200 transition-all group"
                 >
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-lime-400 to-emerald-500 dark:from-gold-500 dark:to-amber-400 text-slate-950 font-bold flex items-center justify-center text-xs shadow-sm">
-                    {currentUser.name.charAt(0)}
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-gold-500 to-amber-400 text-slate-950 font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
+                    {currentUser.avatar ? (
+                      <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+                    ) : (
+                      currentUser.name.charAt(0)
+                    )}
                   </div>
-                  <span className="hidden sm:inline text-xs font-bold font-arabic">
-                    {currentUser.name.split(' ')[0]}
-                  </span>
+                  <div className="hidden sm:flex flex-col text-left leading-tight">
+                    <span className="text-xs font-bold font-arabic truncate max-w-[110px]">
+                      {currentUser.name.split(' ')[0]}
+                    </span>
+                    <span className="text-[9px] text-gold-600 dark:text-gold-400 font-bold">
+                      {locale === 'ar' ? 'ملفي الشخصي' : 'Profil'}
+                    </span>
+                  </div>
                 </Link>
 
+                {/* 2. Dashboard link */}
+                <Link
+                  href={getDashboardLink()}
+                  title={locale === 'ar' ? 'لوحة التحكم' : 'Tableau de bord'}
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-slate-100 dark:bg-navy-850 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-300 dark:border-gray-700 text-slate-800 dark:text-gray-200 text-xs font-bold transition-all"
+                >
+                  <span>{locale === 'ar' ? 'لوحة التحكم' : 'Dashboard'}</span>
+                </Link>
+
+                {/* 3. Settings / Edit Profile Button */}
+                <button
+                  onClick={() => setSettingsOpen(true)}
+                  title={locale === 'ar' ? 'تعديل الملف الشخصي والإعدادات' : 'Modifier le profil'}
+                  className="p-2 rounded-xl bg-slate-100 dark:bg-navy-850 hover:bg-gold-500/20 hover:text-gold-400 text-slate-500 dark:text-gray-400 border border-slate-300 dark:border-gray-700 transition-all"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+
+                {/* 4. Logout Button */}
                 <button
                   onClick={signOut}
                   title={t('nav.logout')}
@@ -232,6 +266,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onOpenAuth, hid
 
       {/* Upgrade Modal */}
       <UpgradeModal isOpen={upgradeModalOpen} onClose={() => setUpgradeModalOpen(false)} />
+
+      {/* Settings Modal (for viewing and editing entire profile) */}
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} defaultTab="profile" />
     </>
   );
 };

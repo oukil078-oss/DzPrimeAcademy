@@ -14,6 +14,7 @@ import {
   Building2,
   Lock,
 } from 'lucide-react';
+import { AdminMembershipCard } from '@/components/card/AdminMembershipCard';
 import { MembershipCard } from '@/components/card/MembershipCard';
 import { useAuthStore } from '@/lib/store';
 import { Locale } from '@/types';
@@ -65,7 +66,7 @@ export const AdminCardTab: React.FC<AdminCardTabProps> = ({ locale }) => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Card Preview */}
         <div className="lg:col-span-7 flex flex-col items-center justify-center p-4 sm:p-8 rounded-3xl bg-white/[0.02] border border-white/10 space-y-4">
-          <MembershipCard
+          <AdminMembershipCard
             user={currentUser}
             allowExport={true}
           />

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   CheckCircle2,
   Plus,
@@ -22,6 +23,7 @@ import {
   KeyRound,
   AlertCircle,
   Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDZD } from '@/lib/format';
@@ -606,6 +608,17 @@ export const FacultyPayrollTab: React.FC<FacultyPayrollTabProps> = ({ locale, on
                         <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">
                           ✓ {locale === 'ar' ? 'مستوفى' : 'Réglé'}
                         </span>
+                      )}
+
+                      {t.user?.studentCardId && (
+                        <Link
+                          href={`/${locale}/profile/${t.user.studentCardId}`}
+                          target="_blank"
+                          title={locale === 'ar' ? 'عرض الملف العام ورمز QR' : 'Voir profil public'}
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gold-400 hover:text-gold-300 border border-white/10 transition-all"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
                       )}
 
                       <button

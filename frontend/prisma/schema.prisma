@@ -79,6 +79,18 @@ model User {
   name            String
   avatar          String?
   role            Role       @default(STUDENT_FREE)
+  jobTitle        String?
+  adminRole       String?
+  bio             String?
+  facebook        String?
+  instagram       String?
+  linkedin        String?
+  telegram        String?
+  youtube         String?
+  whatsapp        String?
+  website         String?
+  twitter         String?
+  github          String?
   phone           String?
   wilayaCode      Int?
   wilayaName      String?

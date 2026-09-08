@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Award,
   Tag,
@@ -21,6 +22,7 @@ import {
   AlertCircle,
   Loader2,
   Send,
+  ExternalLink,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDZD } from '@/lib/format';
@@ -573,14 +575,27 @@ export const AmbassadorsTab: React.FC<AmbassadorsTabProps> = ({ locale }) => {
                   </span>
                 </td>
                 <td className="py-3.5 px-4 text-center">
-                  <button
-                    data-testid={`delete-ambassador-${a.id}`}
-                    title={locale === 'ar' ? 'حذف السفير' : 'Supprimer'}
-                    onClick={() => handleDelete(a.id, a.user?.name || '')}
-                    className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 transition-all"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center justify-center gap-1.5">
+                    {a.user?.studentCardId && (
+                      <Link
+                        href={`/${locale}/profile/${a.user.studentCardId}`}
+                        target="_blank"
+                        title={locale === 'ar' ? 'عرض الملف العام ورمز QR' : 'Voir profil public'}
+                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gold-400 hover:text-gold-300 border border-white/10 transition-all"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    )}
+
+                    <button
+                      data-testid={`delete-ambassador-${a.id}`}
+                      title={locale === 'ar' ? 'حذف السفير' : 'Supprimer'}
+                      onClick={() => handleDelete(a.id, a.user?.name || '')}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

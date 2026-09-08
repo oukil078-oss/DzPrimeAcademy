@@ -137,19 +137,28 @@ async function runSeed(): Promise<void> {
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (adminEmail && adminPassword) {
-    const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail.toLowerCase() } });
-    if (!existingAdmin) {
+    const zakaryaEmail = 'zakaryaoukil2003@gmail.com';
+    const existingZakarya = await prisma.user.findUnique({ where: { email: zakaryaEmail } });
+    if (!existingZakarya) {
       const passwordHash = await hashPassword(adminPassword);
       await prisma.user.create({
         data: {
-          email: adminEmail.toLowerCase(),
-          name: 'مدير المنصة',
+          email: zakaryaEmail,
+          name: 'Zakarya Oukil',
           role: 'OWNER',
+          jobTitle: 'Super Admin & Chief Technology Officer (CTO)',
           passwordHash,
+          phone: '0668718784',
           wilayaCode: 16,
-          wilayaName: 'Alger',
+          wilayaName: 'الجزائر العاصمة',
           institutionName: 'DZ Prime Academy HQ',
           studentCardId: 'DZ-OWN-16-0001',
+          bio: 'مؤسس والمدير العام والمسؤول التقني الأول (CTO) لمنصة DZ Prime Academy. مهندس ومطور برمجيات، شغوف بتطوير التعليم والتكنولوجيا المالية في الجزائر.',
+          github: 'https://github.com/oukil078-oss',
+          linkedin: 'https://linkedin.com/in/zakarya-oukil',
+          whatsapp: '+213668718784',
+          telegram: 'oukil078',
+          website: 'https://dzprime.academy',
           isVerified: true,
         },
       });

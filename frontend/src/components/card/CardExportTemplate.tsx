@@ -23,6 +23,9 @@ export const CardExportTemplate: React.FC<CardExportTemplateProps> = ({
   verifiedLabel,
   notVerifiedLabel,
 }) => {
+  const isStudent = card.role === 'STUDENT_FREE' || card.role === 'STUDENT_PAID';
+  const logoVariant = isStudent ? 'amber' : 'blue';
+
   if (side === 'front') {
     return (
       <div
@@ -33,12 +36,12 @@ export const CardExportTemplate: React.FC<CardExportTemplateProps> = ({
         <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full bg-sky-400/10 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex items-center justify-between w-full">
-          <DzPrimeLogo size={44} showText={true} />
+        <div className="relative z-10 flex items-center justify-between w-full" style={{ direction: 'ltr' }}>
           <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/50 text-[#F2D272] text-sm font-semibold">
             <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
             <span>{card.isVerified ? verifiedLabel : notVerifiedLabel}</span>
           </div>
+          <DzPrimeLogo size={44} showText={true} variant={logoVariant} />
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center my-auto px-2">
@@ -106,7 +109,7 @@ export const CardExportTemplate: React.FC<CardExportTemplateProps> = ({
       </div>
 
       <div className="w-[42%] h-full bg-[#070B16] p-5 flex flex-col items-center justify-between text-center border-l border-[#D4AF37]/40">
-        <DzPrimeLogo size={28} showText={false} withGlow={false} />
+        <DzPrimeLogo size={28} showText={false} withGlow={false} variant={logoVariant} />
         <div className="p-2 rounded-2xl bg-[#D4AF37] flex items-center justify-center">
           {qrCodeDataUrl && <img src={qrCodeDataUrl} alt="Card QR" className="w-28 h-28 rounded-lg object-contain" />}
         </div>

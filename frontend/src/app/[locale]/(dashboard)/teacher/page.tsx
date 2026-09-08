@@ -952,7 +952,28 @@ export default function TeacherStudioPage() {
 
       {/* ================= 7. PROFILE & CCP TAB ================= */}
       {tab === 'profile' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Teacher Card Presentation */}
+          <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-6 shadow-sm flex flex-col items-center space-y-4">
+            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Award className="w-5 h-5 text-gold-500" />
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                  {locale === 'ar' ? 'بطاقة الاعتماد الرقمية للأستاذ' : 'Carte d\'Identité Numérique Enseignant'}
+                </h3>
+              </div>
+              <Link
+                href={`/${locale}/profile/${currentUser?.studentCardId || currentUser?.id}`}
+                className="px-3.5 py-1.5 rounded-xl bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-700 dark:text-gold-300 text-xs font-bold flex items-center gap-1.5 transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>{locale === 'ar' ? 'معاينة الملف الشخصي العام' : 'Profil Public'}</span>
+              </Link>
+            </div>
+            <MembershipCard user={currentUser || undefined} allowExport={true} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* CCP & University Profile */}
           <div className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-6 space-y-4 shadow-sm">
             <div className="flex items-center gap-2">
@@ -1114,6 +1135,7 @@ export default function TeacherStudioPage() {
             </form>
           </div>
         </div>
+      </div>
       )}
 
       {/* Course Modal */}

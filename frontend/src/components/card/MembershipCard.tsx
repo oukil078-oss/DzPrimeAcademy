@@ -11,13 +11,31 @@ import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { CardExportTemplate, CARD_EXPORT_WIDTH, CARD_EXPORT_HEIGHT } from './CardExportTemplate';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
+import { AdminMembershipCard } from './AdminMembershipCard';
+
 interface MembershipCardProps {
   user?: User | null;
   cardData?: MembershipCardData;
   allowExport?: boolean;
 }
 
-export const MembershipCard: React.FC<MembershipCardProps> = ({
+export const MembershipCard: React.FC<MembershipCardProps> = (props) => {
+  const targetRole = props.user?.role || props.cardData?.role;
+  const isAdminOrEmployee =
+    targetRole === 'OWNER' ||
+    targetRole === 'ADMIN' ||
+    targetRole === 'MODERATOR' ||
+    Boolean(props.user?.adminRole) ||
+    Boolean(props.cardData?.adminRole);
+
+  if (isAdminOrEmployee) {
+    return <AdminMembershipCard {...props} />;
+  }
+
+  return <StandardMembershipCard {...props} />;
+};
+
+const StandardMembershipCard: React.FC<MembershipCardProps> = ({
   user,
   cardData: customCardData,
   allowExport = true,
@@ -79,12 +97,12 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
     email: user?.email || 'info@dzprime.academy',
   };
 
-  // Generate dynamic QR Code for the card back
+  // Generate dynamic QR Code for the card back (points to public profile)
   useEffect(() => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://dzprime.academy';
-    const verifyUrl = `${origin}/verify/${card.cardId}`;
+    const profileUrl = `${origin}/${locale}/profile/${card.cardId}`;
     
-    QRCode.toDataURL(verifyUrl, {
+    QRCode.toDataURL(profileUrl, {
       margin: 1,
       width: 240,
       color: {
@@ -94,7 +112,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
     })
       .then((url) => setQrCodeDataUrl(url))
       .catch((err) => console.error('QR code generation error', err));
-  }, [card.cardId]);
+  }, [card.cardId, locale]);
 
   // Captures the actual rendered card design (front or back) as a high-res PNG
   const exportCardAsPng = async () => {
@@ -143,6 +161,9 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
     }
   };
 
+  const isTeacherOrAmbassador = card.role === 'TEACHER' || card.role === 'AMBASSADOR';
+  const cardLogoVariant = isTeacherOrAmbassador ? 'blue' : 'amber';
+
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-md mx-auto select-none px-1">
       {/* 3D Perspective Card Container */}
@@ -165,13 +186,13 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
             <div className="absolute -top-24 -left-24 w-48 h-48 rounded-full bg-gold-400/10 blur-2xl pointer-events-none" />
             <div className="absolute -bottom-24 -right-24 w-48 h-48 rounded-full bg-dzBlue-neon/10 blur-2xl pointer-events-none" />
 
-            {/* Top Bar: Brand & Verification Pill */}
-            <div className="relative z-10 flex items-center justify-between w-full">
-              <DzPrimeLogo size={30} showText={true} />
+            {/* Top Bar: Verification Pill on Left, Brand Logo on Right */}
+            <div className="relative z-10 flex items-center justify-between w-full" style={{ direction: 'ltr' }}>
               <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-gold-500/15 border border-gold-400/40 text-gold-300 text-[10px] sm:text-xs font-semibold backdrop-blur-md">
                 <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gold-400" />
                 <span>{card.isVerified ? t('card.verifiedBadge') : t('card.notVerified')}</span>
               </div>
+              <DzPrimeLogo size={32} showText={true} variant={cardLogoVariant} />
             </div>
 
             {/* Center: Crest, Member Name, & Role */}
@@ -263,26 +284,32 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
 
             {/* Right Half: Obsidian Half with QR Code */}
             <div className="w-[42%] sm:w-[40%] h-full bg-[#070B16] p-2 sm:p-3 flex flex-col items-center justify-between text-center relative border-l border-gold-400/40">
-              <DzPrimeLogo size={20} showText={false} withGlow={false} />
+              <DzPrimeLogo size={22} showText={false} withGlow={false} variant={cardLogoVariant} />
 
-              <div className="p-1 rounded-xl bg-gold-400 shadow-inner flex items-center justify-center">
+              <a
+                href={`/${locale}/profile/${card.cardId}`}
+                target="_blank"
+                rel="noreferrer"
+                title={locale === 'ar' ? 'عرض الملف الشخصي' : 'Voir le profil'}
+                className="p-1 rounded-xl bg-gold-400 hover:bg-gold-300 transition-colors shadow-inner flex items-center justify-center cursor-pointer group/qr"
+              >
                 {qrCodeDataUrl ? (
                   <img
                     src={qrCodeDataUrl}
                     alt="Card QR"
-                    className="w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-lg object-contain"
+                    className="w-16 h-16 xs:w-18 xs:h-18 sm:w-20 sm:h-20 rounded-lg object-contain group-hover/qr:scale-105 transition-transform"
                   />
                 ) : (
                   <div className="w-16 h-16 bg-gold-500 animate-pulse rounded-lg" />
                 )}
-              </div>
+              </a>
 
               <div className="flex flex-col items-center">
                 <span className="text-[7px] sm:text-[8px] text-gold-300 font-mono tracking-wider font-bold truncate max-w-full">
                   {card.cardId}
                 </span>
                 <span className="text-[6px] sm:text-[7px] text-gray-400 mt-0.5">
-                  SCAN TO VERIFY
+                  SCAN FOR PROFILE
                 </span>
               </div>
             </div>
@@ -347,13 +374,13 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
         )}
 
         <a
-          href={`/${locale}/verify/${card.cardId}`}
+          href={`/${locale}/profile/${card.cardId}`}
           target="_blank"
           rel="noreferrer"
           className="px-3.5 sm:px-4 py-2 rounded-xl bg-dzBlue-dark hover:bg-dzBlue border border-dzBlue-neon/40 text-dzBlue-neon text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm touch-target justify-center"
         >
           <ExternalLink className="w-3.5 h-3.5" />
-          <span>{t('card.verifyCard')}</span>
+          <span>{locale === 'ar' ? 'معاينة الملف العام' : 'Voir Profil Public'}</span>
         </a>
       </div>
 

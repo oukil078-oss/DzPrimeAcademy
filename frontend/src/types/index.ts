@@ -27,6 +27,18 @@ export interface User {
   name: string;
   avatar?: string;
   role: Role;
+  jobTitle?: string;
+  adminRole?: string;
+  bio?: string;
+  facebook?: string;
+  instagram?: string;
+  linkedin?: string;
+  telegram?: string;
+  youtube?: string;
+  whatsapp?: string;
+  website?: string;
+  twitter?: string;
+  github?: string;
   phone?: string;
   wilayaCode?: number;
   wilayaName?: string;
@@ -225,6 +237,8 @@ export interface MembershipCardData {
   roleTitleAr: string;
   roleTitleFr: string;
   roleTitleEn: string;
+  jobTitle?: string;
+  adminRole?: string;
   institutionName: string;
   wilayaCode: number;
   wilayaName: string;
@@ -234,6 +248,7 @@ export interface MembershipCardData {
   qrPayload: string;
   phone?: string;
   email?: string;
+  bio?: string;
 }
 
 // Card Verification

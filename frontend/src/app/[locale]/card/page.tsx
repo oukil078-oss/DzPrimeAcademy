@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { MembershipCard } from '@/components/card/MembershipCard';
+import { AdminMembershipCard } from '@/components/card/AdminMembershipCard';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { INSTITUTIONS, WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
@@ -165,7 +166,11 @@ export default function CardStudioPage() {
 
         {/* Right Preview */}
         <div className="lg:col-span-7 flex flex-col items-center">
-          <MembershipCard user={currentUser || undefined} allowExport={true} />
+          {currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR' || Boolean(currentUser.adminRole)) ? (
+            <AdminMembershipCard user={currentUser} allowExport={true} />
+          ) : (
+            <MembershipCard user={currentUser || undefined} allowExport={true} />
+          )}
         </div>
       </div>
     </div>
