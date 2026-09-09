@@ -101,17 +101,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check hierarchy: HR Manager cannot create Super Admin or fellow HR Manager
+    // Check hierarchy: Only Super Admin (Level 100) can create Super Admin or General Admin
     const targetRoleLevel =
       adminRole === 'SUPER_ADMIN' || role === 'OWNER'
         ? 100
+        : adminRole === 'GENERAL_ADMIN'
+        ? 95
         : adminRole === 'HR_MANAGER'
         ? 85
+        : adminRole === 'COMMERCIAL'
+        ? 80
         : adminRole === 'HR_EMPLOYEE'
         ? 75
         : 65;
 
     const actorLevel = getUserHierarchyLevel(actor);
+
+    // Only Super Admin (Level 100) can assign General Admin or Super Admin
+    if (targetRoleLevel >= 95 && actorLevel < 100) {
+      return NextResponse.json(
+        { error: 'فقط المسؤول الأعلى (Super Admin) يمكنه تعيين أو إضافة مدير عام (Admin Général)' },
+        { status: 403 }
+      );
+    }
 
     if (actorLevel < 100 && targetRoleLevel >= actorLevel) {
       return NextResponse.json(
@@ -125,7 +137,11 @@ export async function POST(request: NextRequest) {
     const finalRole: Role = role === 'OWNER' && actorIsSuper ? 'OWNER' : 'ADMIN';
 
     const cardPrefix =
-      adminRole === 'HR_MANAGER' || adminRole === 'HR_EMPLOYEE'
+      adminRole === 'GENERAL_ADMIN'
+        ? 'GEN'
+        : adminRole === 'COMMERCIAL'
+        ? 'COM'
+        : adminRole === 'HR_MANAGER' || adminRole === 'HR_EMPLOYEE'
         ? 'HR'
         : adminRole === 'FINANCE'
         ? 'FIN'

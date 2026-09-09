@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
-import { requireRole } from '@/lib/auth';
+import { requireCommercialOrAdmin } from '@/lib/auth';
 
 export async function GET() {
   await ensureSeeded();
@@ -10,17 +10,14 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireRole(request, ['TEACHER', 'OWNER', 'ADMIN', 'MODERATOR']);
+  const authResult = await requireCommercialOrAdmin(request);
   if ('error' in authResult) return authResult.error;
-  const { user } = authResult;
 
   await ensureSeeded();
   const body = await request.json();
 
-  const isTeacher = user.role === 'TEACHER';
-
-  let teacherId: string | null = isTeacher ? user.id : body.teacherId || null;
-  const teacherName = isTeacher ? user.name : body.teacherName;
+  let teacherId: string | null = body.teacherId || null;
+  const teacherName = body.teacherName || 'أستاذ معتمد DZ Prime';
   if (!teacherId && teacherName) {
     const matchedTeacher = await prisma.user.findFirst({ where: { name: teacherName, role: 'TEACHER' } });
     if (matchedTeacher) teacherId = matchedTeacher.id;

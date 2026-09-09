@@ -46,6 +46,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { AmbassadorDirectory } from '@/components/ambassadors/AmbassadorDirectory';
 import { MembershipCard } from '@/components/card/MembershipCard';
+import SocialFeed from '@/components/community/SocialFeed';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { isAmbassador, isTeacher } from '@/lib/rbac';
@@ -53,7 +54,7 @@ import { RECENT_POSTS, AMBASSADORS, CERTIFIED_TEACHERS, WILAYAS, getLocalizedWil
 import { Post, PostType, PostComment, AmbassadorProfile, Locale } from '@/types';
 import { formatDZD } from '@/lib/format';
 
-type AmbassadorTab = 'overview' | 'workshops' | 'reviews' | 'network' | 'profile';
+type AmbassadorTab = 'overview' | 'workshops' | 'community' | 'reviews' | 'network' | 'profile';
 
 export default function AmbassadorDashboardPage() {
   const { t, locale, isRtl } = useTranslation();
@@ -354,6 +355,7 @@ export default function AmbassadorDashboardPage() {
 
   const navTabs = [
     { id: 'overview', labelAr: 'نظرة عامة والأداء', labelFr: 'Overview', icon: Activity },
+    { id: 'community', labelAr: 'منشوراتي وفيديوهاتي', labelFr: 'Vidéos & Posts', icon: Sparkles },
     { id: 'workshops', labelAr: 'الحصص والورشات', labelFr: 'Workshops', icon: Video },
     { id: 'network', labelAr: 'شبكة 58 ولاية', labelFr: 'Réseau 58', icon: Users },
     { id: 'reviews', labelAr: 'تقييمات الطلبة', labelFr: 'Avis & Notes', icon: Star },
@@ -1243,6 +1245,16 @@ export default function AmbassadorDashboardPage() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* ================= 7. AMBASSADOR COMMUNITY & VIDEO POSTS ================= */}
+      {activeTab === 'community' && (
+        <div className="space-y-6">
+          <SocialFeed
+            authorFilterId={currentUser?.id}
+            emptyMessage="لم تقم بنشر أي منشورات أو فيديوهات عن ولايتك بعد. اضغط على الزر الذهبي لنشر أول نشاط أو فيديو!"
+          />
+        </div>
       )}
     </div>
   );

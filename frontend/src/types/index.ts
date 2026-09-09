@@ -171,8 +171,10 @@ export interface Rating {
 
 export interface PostComment {
   id: string;
+  postId?: string;
   authorId: string;
   authorName: string;
+  authorAvatar?: string;
   authorRole: Role;
   content: string;
   isVerifiedTeacher?: boolean;
@@ -195,9 +197,16 @@ export interface Post {
   isApproved: boolean;
   authorId: string;
   authorName: string;
+  authorAvatar?: string;
   authorRole: Role;
   assignedTeacherId?: string;
   assignedTeacherName?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  linkUrl?: string;
+  isPrivate?: boolean;
+  likesCount?: number;
+  likedBy?: string[];
   comments?: PostComment[];
   createdAt: string;
 }

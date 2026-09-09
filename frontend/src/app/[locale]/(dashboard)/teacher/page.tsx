@@ -44,38 +44,17 @@ import { usePlatformStore } from '@/lib/platformStore';
 import { formatDZD } from '@/lib/format';
 import { TeacherRosterPanel } from '@/components/dashboard/TeacherRosterPanel';
 import { MembershipCard } from '@/components/card/MembershipCard';
+import SocialFeed from '@/components/community/SocialFeed';
 import { WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 
-type TeacherTab = 'studio' | 'courses' | 'sessions' | 'roster' | 'drive' | 'profile';
+type TeacherTab = 'studio' | 'courses' | 'sessions' | 'roster' | 'drive' | 'profile' | 'community';
 
 export default function TeacherStudioPage() {
   const { locale, isRtl } = useTranslation();
   const { currentUser, updateProfile } = useAuthStore();
-  const { courses, sessions, addCourse, addSession, removeCourse } = usePlatformStore();
+  const { courses, sessions } = usePlatformStore();
   const [tab, setTab] = useState<TeacherTab>('studio');
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-
-  // Course Form
-  const [showCourseForm, setShowCourseForm] = useState(false);
-  const [courseForm, setCourseForm] = useState({
-    titleAr: '',
-    titleFr: '',
-    category: 'UNIVERSITY_LMD' as const,
-    priceDzd: 3000,
-    lessonsCount: 10,
-  });
-
-  // Session Form
-  const [showSessionForm, setShowSessionForm] = useState(false);
-  const [sessionForm, setSessionForm] = useState({
-    title: '',
-    scheduledAt: '',
-    durationMinutes: 60,
-    platform: 'GOOGLE_MEET' as const,
-    category: 'UNIVERSITY_LMD' as const,
-  });
-  const [sessionFormError, setSessionFormError] = useState('');
-  const minDateTime = new Date().toISOString().slice(0, 16);
 
   // Profile & Teacher Settings Form
   const [profileForm, setProfileForm] = useState({
@@ -142,7 +121,7 @@ export default function TeacherStudioPage() {
   useEffect(() => {
     const applyHash = () => {
       const hash = window.location.hash.replace('#', '') as TeacherTab;
-      if (['studio', 'courses', 'sessions', 'roster', 'drive', 'profile'].includes(hash)) setTab(hash);
+      if (['studio', 'community', 'courses', 'sessions', 'roster', 'drive', 'profile'].includes(hash)) setTab(hash);
     };
     applyHash();
     window.addEventListener('hashchange', applyHash);
@@ -179,39 +158,6 @@ export default function TeacherStudioPage() {
 
   const myCourses = courses.filter((c) => c.teacherName === currentUser?.name || c.teacherId === currentUser?.id);
   const mySessions = sessions.filter((s) => s.teacherName === currentUser?.name || s.teacherId === currentUser?.id);
-
-  const handleAddCourse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await addCourse({
-      ...courseForm,
-      teacherId: currentUser?.id || null,
-      teacherName: currentUser?.name || 'Enseignant',
-      isLive: true,
-      colorTheme: 'gold',
-    });
-    setCourseForm({ titleAr: '', titleFr: '', category: 'UNIVERSITY_LMD', priceDzd: 3000, lessonsCount: 10 });
-    setShowCourseForm(false);
-  };
-
-  const handleAddSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSessionFormError('');
-    if (!sessionForm.title || !sessionForm.scheduledAt) return;
-    const result = await addSession({
-      ...sessionForm,
-      scheduledAt: new Date(sessionForm.scheduledAt).toISOString(),
-      teacherId: currentUser?.id || null,
-      teacherName: currentUser?.name || 'Enseignant',
-      meetUrl: null,
-      wilayaCode: null,
-    });
-    if (result.success) {
-      setSessionForm({ title: '', scheduledAt: '', durationMinutes: 60, platform: 'GOOGLE_MEET', category: 'UNIVERSITY_LMD' });
-      setShowSessionForm(false);
-    } else {
-      setSessionFormError(result.error || (locale === 'ar' ? 'فشل جدولة الحصة' : 'Échec de la planification'));
-    }
-  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,6 +227,7 @@ export default function TeacherStudioPage() {
 
   const tabs: { id: TeacherTab; icon: any; labelAr: string; labelFr: string }[] = [
     { id: 'studio', icon: Sparkles, labelAr: 'استوديو التدريس (Bento)', labelFr: 'Studio Bento' },
+    { id: 'community', icon: Video, labelAr: 'فيديوهاتي ومنشوراتي', labelFr: 'Mes Vidéos & Posts' },
     { id: 'courses', icon: BookOpen, labelAr: 'مقرراتي ومقاييسي', labelFr: 'Mes Modules' },
     { id: 'sessions', icon: Video, labelAr: 'الحصص المباشرة', labelFr: 'Sessions Live' },
     { id: 'roster', icon: Users2, labelAr: 'قائمة الطلبة والحضور', labelFr: 'Liste & Présence' },
@@ -421,13 +368,9 @@ export default function TeacherStudioPage() {
                 </h3>
                 <span className="text-xs text-slate-400 font-mono">LIVE MEET SESSIONS</span>
               </div>
-              <button
-                onClick={() => setShowSessionForm(true)}
-                className="w-8 h-8 rounded-full bg-slate-900 dark:bg-gold-500 text-white dark:text-navy-950 flex items-center justify-center shadow-sm hover:scale-105 transition-transform"
-                title="Schedule Session"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-600 dark:text-gold-300 text-[10px] font-bold">
+                {locale === 'ar' ? 'جدولة الإدارة المركزية' : 'Programmé Admin'}
+              </span>
             </div>
 
             {/* Calendar Mini Header */}
@@ -446,7 +389,7 @@ export default function TeacherStudioPage() {
             <div className="space-y-4 relative pl-6 border-l-2 border-slate-200 dark:border-gray-800 ml-3">
               {mySessions.length === 0 ? (
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 text-xs text-slate-500 text-center font-arabic">
-                  {locale === 'ar' ? 'لا توجد حصص مجدولة اليوم. انقر على + لإضافة حصة مباشرة.' : 'Aucune session aujourd\'hui.'}
+                  {locale === 'ar' ? 'لا توجد حصص مجدولة اليوم. يتم جدولة الحصص الوطنية وتوزيعها عبر الإدارة المركزية والمسؤولة التجارية.' : 'Aucune session aujourd\'hui. Les sessions sont gérées par l\'administration.'}
                 </div>
               ) : (
                 mySessions.map((ses, idx) => (
@@ -498,20 +441,16 @@ export default function TeacherStudioPage() {
                   </h3>
                   <span className="text-xs text-slate-400 font-mono">CCP PAYOUT LEDGER</span>
                 </div>
-                <button
-                  onClick={() => setShowCourseForm(true)}
-                  className="px-3 py-1.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all flex items-center gap-1 shadow-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{locale === 'ar' ? 'إضافة مقياس' : 'Ajouter Module'}</span>
-                </button>
+                <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-600 dark:text-gold-300 text-[10px] font-bold">
+                  {locale === 'ar' ? 'إدارة المقاييس المركزية' : 'Gestion Admin'}
+                </span>
               </div>
 
               {/* Table List */}
               <div className="space-y-2.5">
                 {myCourses.length === 0 ? (
                   <div className="p-6 rounded-2xl bg-slate-50 dark:bg-navy-950 text-center text-xs text-slate-500 font-arabic">
-                    {locale === 'ar' ? 'لم تقم بإنشاء مقاييس بعد. انقر على "إضافة مقياس".' : 'Aucun module créé pour le moment.'}
+                    {locale === 'ar' ? 'لا توجد مقاييس مسندة بعد. يتم إسناد المقاييس وتعيين الأساتذة عبر الإدارة التجارية المركزية.' : 'Aucun module assigné pour le moment. Les modules sont attribués par l\'administration.'}
                   </div>
                 ) : (
                   myCourses.map((c) => (
@@ -649,77 +588,92 @@ export default function TeacherStudioPage() {
       {/* ================= 3. COURSES TAB ================= */}
       {tab === 'courses' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 dark:border-gray-800">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-gold-500" />
-              <span>{locale === 'ar' ? 'مقرراتي ومقاييسي التعليمية' : 'Mes Modules & Cours'}</span>
-            </h3>
-            <button
-              onClick={() => setShowCourseForm(true)}
-              className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{locale === 'ar' ? 'إضافة مقياس جديد' : 'Créer un Module'}</span>
-            </button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-amber-200/60 dark:border-gray-800 gap-3">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-gold-500" />
+                <span>{locale === 'ar' ? 'مقرراتي ومقاييسي التعليمية المسندة' : 'Mes Modules & Cours Assignés'}</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                {locale === 'ar'
+                  ? 'المقررات الأكاديمية المسندة لتدريسها من قبل الإدارة المركزية والمصلحة التجارية'
+                  : 'Modules académiques officiels assignés par la Direction Commerciale'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-gold-700 dark:text-gold-300 text-xs font-bold w-fit">
+              <ShieldCheck className="w-4 h-4 text-gold-500 shrink-0" />
+              <span>{locale === 'ar' ? 'إدارة ونشر الدورات والمقررات محصورة بالإدارة المركزية والمصلحة التجارية' : 'Gestion centralisée par la Direction Commerciale'}</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {myCourses.map((c) => (
-              <div
-                key={c.id}
-                className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 space-y-3 shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-700 dark:text-gold-400 text-[10px] font-bold">
-                      {c.category}
+          {myCourses.length === 0 ? (
+            <div className="p-8 text-center rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 text-slate-500 dark:text-gray-400 space-y-2">
+              <BookOpen className="w-8 h-8 text-gold-500/50 mx-auto" />
+              <p className="text-xs font-bold">
+                {locale === 'ar'
+                  ? 'لا توجد مقررات مسندة لحسابك حالياً. تقوم المصلحة التجارية (Chargée Commerciale) أو الإدارة بإسناد المقررات وحزم الامتحانات.'
+                  : 'Aucun module assigné pour le moment. La Direction Commerciale gère l\'assignation des cours.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {myCourses.map((c) => (
+                <div
+                  key={c.id}
+                  className="rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/20 p-5 space-y-3 shadow-sm flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-700 dark:text-gold-400 text-[10px] font-bold">
+                        {c.category}
+                      </span>
+                      <span className="text-xs font-mono font-black text-slate-900 dark:text-white">
+                        {formatDZD(c.priceDzd)}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
+                      {locale === 'ar' ? c.titleAr : c.titleFr}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
+                      {c.lessonsCount} {locale === 'ar' ? 'درس تفاعلي مع المطبوعات والامتحانات' : 'Leçons interactives'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-gray-800">
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{locale === 'ar' ? 'مقرر نشط معتمد' : 'Module Agréé'}</span>
                     </span>
-                    <span className="text-xs font-mono font-black text-slate-900 dark:text-white">
-                      {formatDZD(c.priceDzd)}
+                    <span className="text-[10px] text-gold-600 dark:text-gold-400 font-bold">
+                      {locale === 'ar' ? 'المصلحة التجارية' : 'Direction Commerciale'}
                     </span>
                   </div>
-                  <h4 className="text-sm font-black text-slate-900 dark:text-white mt-2">
-                    {locale === 'ar' ? c.titleAr : c.titleFr}
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-gray-400 mt-1">
-                    {c.lessonsCount} {locale === 'ar' ? 'درس تفاعلي مع المطبوعات والامتحانات' : 'Leçons interactives'}
-                  </p>
                 </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-gray-800">
-                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Active Live</span>
-                  </span>
-                  <button
-                    onClick={() => removeCourse(c.id)}
-                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-500/10 transition-colors"
-                    title="Remove"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* ================= 4. SESSIONS TAB ================= */}
       {tab === 'sessions' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-2 border-b border-amber-200/60 dark:border-gray-800">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-              <Video className="w-5 h-5 text-gold-500" />
-              <span>{locale === 'ar' ? 'جدول الحصص المباشرة' : 'Sessions en Direct'}</span>
-            </h3>
-            <button
-              onClick={() => setShowSessionForm(true)}
-              className="px-4 py-2 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs transition-all flex items-center gap-1.5 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{locale === 'ar' ? 'جدولة حصة جديدة' : 'Planifier Session'}</span>
-            </button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-amber-200/60 dark:border-gray-800 gap-3">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Video className="w-5 h-5 text-gold-500" />
+                <span>{locale === 'ar' ? 'جدول الحصص المباشرة والماستركلاس' : 'Sessions en Direct & Masterclasses'}</span>
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                {locale === 'ar'
+                  ? 'مواعيد البث المباشر المعتمدة والمجدولة لك من قبل الإدارة'
+                  : 'Calendrier des séances en direct planifiées par l\'Administration'}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-gold-500/10 border border-gold-500/30 text-gold-700 dark:text-gold-300 text-xs font-bold w-fit">
+              <ShieldCheck className="w-4 h-4 text-gold-500 shrink-0" />
+              <span>{locale === 'ar' ? 'جدولة وتثبيت الحصص الوطنية تتم حصرياً عبر الإدارة والمصلحة التجارية' : 'Planification assurée par la Direction Commerciale'}</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1138,121 +1092,16 @@ export default function TeacherStudioPage() {
       </div>
       )}
 
-      {/* Course Modal */}
-      {showCourseForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/30 p-6 space-y-4 shadow-2xl text-slate-900 dark:text-white">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-gray-800">
-              <h3 className="font-black text-base">{locale === 'ar' ? 'إضافة مقياس تعليمي جديد' : 'Créer un Module'}</h3>
-              <button onClick={() => setShowCourseForm(false)} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
-            </div>
-            <form onSubmit={handleAddCourse} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عنوان المقياس (بالعربية)' : 'Titre (Arabe)'}</label>
-                <input
-                  type="text"
-                  required
-                  value={courseForm.titleAr}
-                  onChange={(e) => setCourseForm({ ...courseForm, titleAr: e.target.value })}
-                  placeholder="مثال: مادة الفيزياء النووية"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-arabic"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عنوان المقياس (بالفرنسية)' : 'Titre (Français)'}</label>
-                <input
-                  type="text"
-                  required
-                  value={courseForm.titleFr}
-                  onChange={(e) => setCourseForm({ ...courseForm, titleFr: e.target.value })}
-                  placeholder="Ex: Physique Nucléaire"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'السعر (دج)' : 'Prix (DZD)'}</label>
-                  <input
-                    type="number"
-                    value={courseForm.priceDzd}
-                    onChange={(e) => setCourseForm({ ...courseForm, priceDzd: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عدد الدروس' : 'Leçons'}</label>
-                  <input
-                    type="number"
-                    value={courseForm.lessonsCount}
-                    onChange={(e) => setCourseForm({ ...courseForm, lessonsCount: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs mt-2"
-              >
-                {locale === 'ar' ? 'حفظ ونشر المقياس' : 'Publier le module'}
-              </button>
-            </form>
-          </div>
+      {/* ================= 8. COMMUNITY & VIDEO POSTING TAB ================= */}
+      {tab === 'community' && (
+        <div className="space-y-6">
+          <SocialFeed
+            authorFilterId={currentUser?.id}
+            emptyMessage="لم تقم بنشر أي فيديوهات أو مقالات بعد. اضغط على الزر الذهبي أعلاه لنشر أول فيديو أو درس لك!"
+          />
         </div>
       )}
 
-      {/* Session Modal */}
-      {showSessionForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0D1429] border border-amber-200/60 dark:border-gold-500/30 p-6 space-y-4 shadow-2xl text-slate-900 dark:text-white">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-gray-800">
-              <h3 className="font-black text-base">{locale === 'ar' ? 'جدولة حصة بث مباشر جديدة' : 'Planifier Session Live'}</h3>
-              <button onClick={() => setShowSessionForm(false)} className="text-slate-400 hover:text-slate-600 text-xs">✕</button>
-            </div>
-            <form onSubmit={handleAddSession} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'عنوان الحصة' : 'Titre de la session'}</label>
-                <input
-                  type="text"
-                  required
-                  value={sessionForm.title}
-                  onChange={(e) => setSessionForm({ ...sessionForm, title: e.target.value })}
-                  placeholder="مثال: مراجعة شاملة لتمارين الوحدة 1"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-arabic"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'تاريخ وتوقيت الحصة' : 'Date & Heure'}</label>
-                  <input
-                    type="datetime-local"
-                    min={minDateTime}
-                    required
-                    value={sessionForm.scheduledAt}
-                    onChange={(e) => setSessionForm({ ...sessionForm, scheduledAt: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold block mb-1">{locale === 'ar' ? 'المدة (دقيقة)' : 'Durée (min)'}</label>
-                  <input
-                    type="number"
-                    value={sessionForm.durationMinutes}
-                    onChange={(e) => setSessionForm({ ...sessionForm, durationMinutes: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-gray-800 text-xs font-mono"
-                  />
-                </div>
-              </div>
-              {sessionFormError && <div className="text-xs text-rose-500">{sessionFormError}</div>}
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 font-black text-xs mt-2"
-              >
-                {locale === 'ar' ? 'جدولة وتثبيت الموعد' : 'Planifier la session'}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

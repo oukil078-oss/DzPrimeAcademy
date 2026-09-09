@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
-import { requireRole } from '@/lib/auth';
+import { requireCommercialOrAdmin } from '@/lib/auth';
 
 export async function GET() {
   await ensureSeeded();
@@ -18,25 +18,30 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const authResult = await requireRole(request, ['TEACHER', 'OWNER', 'ADMIN', 'MODERATOR']);
+  const authResult = await requireCommercialOrAdmin(request);
   if ('error' in authResult) return authResult.error;
-  const { user } = authResult;
 
   await ensureSeeded();
   const body = await request.json();
-  const isTeacher = user.role === 'TEACHER';
 
   const scheduledDate = new Date(body.scheduledAt);
   if (isNaN(scheduledDate.getTime()) || scheduledDate < new Date()) {
     return NextResponse.json({ error: 'لا يمكن جدولة حصة في تاريخ ماضٍ' }, { status: 400 });
   }
 
+  let teacherId = body.teacherId || null;
+  const teacherName = body.teacherName || 'أستاذ معتمد DZ Prime';
+  if (!teacherId && teacherName) {
+    const matchedTeacher = await prisma.user.findFirst({ where: { name: teacherName, role: 'TEACHER' } });
+    if (matchedTeacher) teacherId = matchedTeacher.id;
+  }
+
   const session = await prisma.liveSession.create({
     data: {
       title: body.title,
       courseId: body.courseId || null,
-      teacherId: isTeacher ? user.id : body.teacherId || null,
-      teacherName: isTeacher ? user.name : body.teacherName,
+      teacherId,
+      teacherName,
       scheduledAt: scheduledDate,
       durationMinutes: body.durationMinutes ?? 60,
       platform: body.platform || 'GOOGLE_MEET',

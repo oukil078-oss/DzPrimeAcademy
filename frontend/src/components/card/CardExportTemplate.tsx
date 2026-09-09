@@ -41,7 +41,10 @@ export const CardExportTemplate: React.FC<CardExportTemplateProps> = ({
             <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
             <span>{card.isVerified ? verifiedLabel : notVerifiedLabel}</span>
           </div>
-          <DzPrimeLogo size={44} showText={true} variant={logoVariant} />
+          <div className="flex items-center gap-2">
+            <img src="/images/dzprime-gold-emblem.png" alt="DZ Prime" className="w-12 h-12 object-contain" />
+            <span className="text-base font-black text-gold-300 font-sans tracking-wide">DZ PRIME ACADEMY</span>
+          </div>
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center my-auto px-2">
@@ -109,7 +112,7 @@ export const CardExportTemplate: React.FC<CardExportTemplateProps> = ({
       </div>
 
       <div className="w-[42%] h-full bg-[#070B16] p-5 flex flex-col items-center justify-between text-center border-l border-[#D4AF37]/40">
-        <DzPrimeLogo size={28} showText={false} withGlow={false} variant={logoVariant} />
+        <img src="/images/dzprime-gold-emblem.png" alt="DZ Prime" className="w-16 h-16 object-contain" />
         <div className="p-2 rounded-2xl bg-[#D4AF37] flex items-center justify-center">
           {qrCodeDataUrl && <img src={qrCodeDataUrl} alt="Card QR" className="w-28 h-28 rounded-lg object-contain" />}
         </div>

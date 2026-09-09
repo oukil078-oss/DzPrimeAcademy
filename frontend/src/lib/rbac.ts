@@ -12,7 +12,9 @@ export const ROLE_HIERARCHY: Record<Role, number> = {
 
 export type AdminRoleType =
   | 'SUPER_ADMIN'
+  | 'GENERAL_ADMIN'
   | 'HR_MANAGER'
+  | 'COMMERCIAL'
   | 'HR_EMPLOYEE'
   | 'FINANCE'
   | 'ADMIN'
@@ -21,7 +23,9 @@ export type AdminRoleType =
 export function getUserHierarchyLevel(user?: { role: Role; adminRole?: string | null } | null): number {
   if (!user) return 0;
   if (user.role === 'OWNER' || user.adminRole === 'SUPER_ADMIN') return 100;
+  if (user.adminRole === 'GENERAL_ADMIN') return 95;
   if (user.adminRole === 'HR_MANAGER') return 85;
+  if (user.adminRole === 'COMMERCIAL') return 80;
   if (user.adminRole === 'HR_EMPLOYEE') return 75;
   if (user.adminRole === 'FINANCE') return 65;
   if (user.role === 'ADMIN') return 65;
@@ -37,14 +41,34 @@ export function isSuperAdmin(user?: { role: Role; adminRole?: string | null } | 
   return user.role === 'OWNER' || user.adminRole === 'SUPER_ADMIN';
 }
 
+export function isGeneralAdmin(user?: { role: Role; adminRole?: string | null } | null): boolean {
+  if (!user) return false;
+  return isSuperAdmin(user) || user.adminRole === 'GENERAL_ADMIN';
+}
+
 export function isHRManager(user?: { role: Role; adminRole?: string | null } | null): boolean {
   if (!user) return false;
-  return isSuperAdmin(user) || user.adminRole === 'HR_MANAGER';
+  return isGeneralAdmin(user) || user.adminRole === 'HR_MANAGER';
 }
 
 export function isHRPerson(user?: { role: Role; adminRole?: string | null } | null): boolean {
   if (!user) return false;
-  return isSuperAdmin(user) || user.adminRole === 'HR_MANAGER' || user.adminRole === 'HR_EMPLOYEE';
+  return isGeneralAdmin(user) || user.adminRole === 'HR_MANAGER' || user.adminRole === 'HR_EMPLOYEE';
+}
+
+export function isCommercial(user?: { role: Role; adminRole?: string | null } | null): boolean {
+  if (!user) return false;
+  return isGeneralAdmin(user) || user.adminRole === 'COMMERCIAL' || (user.role === 'ADMIN' && !user.adminRole);
+}
+
+export function canManageDawaratAndOffers(user?: { role: Role; adminRole?: string | null } | null): boolean {
+  if (!user) return false;
+  // Super Admin, General Admin (Level 95), or Commercial Officer (Level 80) can manage Dawarat, Offers, and Promotions
+  return isGeneralAdmin(user) || user.adminRole === 'COMMERCIAL' || (user.role === 'ADMIN' && !user.adminRole);
+}
+
+export function canManagePromotions(user?: { role: Role; adminRole?: string | null } | null): boolean {
+  return canManageDawaratAndOffers(user);
 }
 
 export function canManageUser(
@@ -57,10 +81,17 @@ export function canManageUser(
   const actorLevel = getUserHierarchyLevel(actor);
   const targetLevel = getUserHierarchyLevel(target);
 
-  // Super Admin can manage anyone
+  // Super Admin (Level 100) can manage anyone
   if (actorLevel === 100) return true;
 
-  // HR Manager can manage anyone with level < 85 (HR Employees, Finance, Other admins, Ambassadors, Teachers, Students)
+  // General Admin (Level 95) can handle everything the superadmin can, EXCEPT:
+  // - He CANNOT add/edit/remove Superadmins (Level 100)
+  // - He CANNOT add/edit/remove other General Admins (Level 95)
+  if (actorLevel >= 95) {
+    return targetLevel < 95;
+  }
+
+  // HR Manager can manage anyone with level < 85
   if (actorLevel >= 85) {
     return targetLevel < 85;
   }

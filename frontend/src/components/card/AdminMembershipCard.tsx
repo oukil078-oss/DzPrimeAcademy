@@ -33,11 +33,21 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
   const exportBackRef = useRef<HTMLDivElement>(null);
 
   const rawRole = user?.role || customCardData?.role || 'ADMIN';
+  const isZakarya =
+    user?.name?.toLowerCase().includes('zakar') ||
+    user?.email?.toLowerCase().includes('zakar') ||
+    customCardData?.holderName?.toLowerCase().includes('zakar') ||
+    user?.email === 'zakaryaoukil2003@gmail.com';
+
   const roleDisplayAr =
     customCardData?.jobTitle ||
     user?.jobTitle ||
-    (rawRole === 'OWNER'
-      ? 'المدير العام (المؤسس)'
+    (rawRole === 'OWNER' || isZakarya
+      ? 'Chief Technology Officer (CTO) & Co-Founder'
+      : user?.adminRole === 'GENERAL_ADMIN'
+      ? 'Admin Général (المدير العام التنفيذي)'
+      : user?.adminRole === 'COMMERCIAL'
+      ? 'Chargée Commerciale (المسؤولة التجارية وإدارة الدورات والعروض)'
       : user?.adminRole === 'HR_MANAGER'
       ? 'Chargée des Ressources Humaines (مسؤولة الموارد البشرية)'
       : user?.adminRole === 'HR_EMPLOYEE'
@@ -47,13 +57,29 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
       : 'إدارة المنصة المركزية');
 
   const card: MembershipCardData = customCardData || {
-    cardId: user?.studentCardId || 'DZ-ADM-16-0001',
-    holderName: user?.name || 'زكار عبد القادر / Zakar',
-    holderNameAr: user?.name || 'زكار عبد القادر',
+    cardId: user?.studentCardId || 'DZ-OWN-16-0001',
+    holderName: user?.name || (isZakarya || rawRole === 'OWNER' ? 'Zakarya Oukil' : 'إدارة المنصة المركزية'),
+    holderNameAr: user?.name || (isZakarya || rawRole === 'OWNER' ? 'زكرياء أوكيل (Zakarya Oukil)' : 'إدارة المنصة المركزية'),
     role: rawRole,
     roleTitleAr: roleDisplayAr,
-    roleTitleFr: user?.jobTitle || (rawRole === 'OWNER' ? 'Directeur Général' : 'Administration'),
-    roleTitleEn: user?.jobTitle || (rawRole === 'OWNER' ? 'General Manager' : 'Administration Staff'),
+    roleTitleFr:
+      user?.jobTitle ||
+      (rawRole === 'OWNER' || isZakarya
+        ? 'Directeur Technique & Co-Fondateur (CTO)'
+        : user?.adminRole === 'GENERAL_ADMIN'
+        ? 'Directeur Général (Admin Général)'
+        : user?.adminRole === 'COMMERCIAL'
+        ? 'Chargée Commerciale & Offres'
+        : 'Administration'),
+    roleTitleEn:
+      user?.jobTitle ||
+      (rawRole === 'OWNER' || isZakarya
+        ? 'Chief Technology Officer (CTO) & Co-Founder'
+        : user?.adminRole === 'GENERAL_ADMIN'
+        ? 'General Manager (Admin Général)'
+        : user?.adminRole === 'COMMERCIAL'
+        ? 'Chief Commercial Officer'
+        : 'Administration Staff'),
     jobTitle: user?.jobTitle || roleDisplayAr,
     institutionName: user?.institutionName || 'DZ Prime Academy HQ',
     wilayaCode: user?.wilayaCode || 16,
@@ -61,9 +87,9 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
     issueDate: '2024/2025',
     expiryDate: '2026/09/30',
     isVerified: user?.isVerified ?? true,
-    qrPayload: `https://dzprime.academy/${locale}/profile/${user?.studentCardId || 'DZ-ADM-16-0001'}`,
-    phone: user?.phone || '+213 661 23 45 67',
-    email: user?.email || 'admin@dzprime.academy',
+    qrPayload: `https://dzprime.academy/${locale}/profile/${user?.studentCardId || 'DZ-OWN-16-0001'}`,
+    phone: user?.phone || '+213 668 71 87 84',
+    email: user?.email || 'zakaryaoukil2003@gmail.com',
     bio: user?.bio,
   };
 
@@ -133,18 +159,18 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto select-none px-1 font-arabic" data-testid="admin-membership-card">
       {/* 3D Perspective Card Container */}
       <div
-        className="w-full h-[250px] xs:h-[280px] sm:h-[310px] cursor-pointer group card-flip-scene"
+        className="w-full h-[265px] xs:h-[295px] sm:h-[330px] cursor-pointer group card-flip-scene"
         onClick={() => setIsFlipped(!isFlipped)}
       >
         <motion.div
-          className="card-flip-inner transition-all duration-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+          className="card-flip-inner transition-all duration-700 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.7, ease: 'easeInOut' }}
         >
           {/* ================= 1:1 FRONT FACE ================= */}
           <div
             ref={frontCardRef}
-            className="card-face w-full h-full rounded-3xl border border-[#D4AF37]/50 bg-[#07090E] shadow-[0_0_30px_rgba(212,175,55,0.25)] relative overflow-hidden flex flex-col justify-between p-4 sm:p-6 text-white"
+            className="card-face w-full h-full rounded-3xl border border-[#D4AF37]/50 bg-[#07090E] shadow-[0_0_35px_rgba(212,175,55,0.3)] relative overflow-hidden flex flex-col justify-between p-4 sm:p-6 text-white"
           >
             {/* Background Texture & Stardust Sparkle Pattern */}
             <div
@@ -225,14 +251,14 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
               />
             </svg>
 
-            {/* Top Right: DZ PRIME ACADEMY Emblem */}
-            <div className="absolute top-3 sm:top-4 right-4 sm:right-6 z-10 flex flex-col items-center pointer-events-none">
-              <DzPrimeLogo size={42} showText={true} withGlow={true} variant="blue" />
-            </div>
-
-            {/* Center Right: Official Gold-Bordered Rectangular Slot */}
-            <div className="absolute top-1/2 -translate-y-1/2 right-4 sm:right-6 z-10 pointer-events-none">
-              <div className="w-36 sm:w-52 h-8 sm:h-10 rounded-xl border border-[#D4AF37]/80 bg-[#070B16]/70 backdrop-blur-md shadow-[0_0_15px_rgba(212,175,55,0.15)] flex items-center justify-center px-3">
+            {/* Right Side Column: Golden 3D Emblem and Slot (matching reference image) */}
+            <div className="absolute top-3 sm:top-5 right-3 sm:right-7 z-10 flex flex-col items-center gap-2 sm:gap-3 pointer-events-none">
+              <img
+                src="/images/dzprime-gold-emblem.png"
+                alt="DZ Prime Academy"
+                className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 object-contain drop-shadow-[0_0_24px_rgba(212,175,55,0.95)] filter brightness-110"
+              />
+              <div className="w-36 sm:w-52 h-8 sm:h-10 rounded-xl sm:rounded-2xl border border-[#D4AF37]/90 bg-[#070B16]/80 backdrop-blur-md shadow-[0_0_15px_rgba(212,175,55,0.25)] flex items-center justify-center px-3">
                 <span className="font-mono text-[10px] sm:text-xs text-[#F2D272] tracking-widest font-bold">
                   {card.cardId}
                 </span>
@@ -241,7 +267,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
 
             {/* Bottom Left: Official Member Plaque */}
             <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 z-10 pointer-events-none">
-              <div className="flex flex-col items-start px-3 sm:px-3.5 py-1.5 rounded-tr-2xl rounded-bl-xl bg-gradient-to-r from-[#F5D061] via-[#D4AF37] to-[#AA771C] text-[#070B16] shadow-lg">
+              <div className="flex flex-col items-start px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-tr-2xl rounded-bl-xl bg-gradient-to-r from-[#F5D061] via-[#D4AF37] to-[#AA771C] text-[#070B16] shadow-xl">
                 <span className="text-xs sm:text-sm font-black font-arabic tracking-wide leading-tight">
                   عضو رسمي
                 </span>
@@ -250,17 +276,12 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
                 </span>
               </div>
             </div>
-
-            {/* Bottom Right: VIP Badge Marker */}
-            <div className="absolute bottom-3 sm:bottom-4 right-4 sm:right-6 z-10 text-[9px] sm:text-[10px] text-gray-400 font-mono pointer-events-none">
-              DZ PRIME VIP
-            </div>
           </div>
 
           {/* ================= 1:1 BACK FACE ================= */}
           <div
             ref={backCardRef}
-            className="card-face card-face-back w-full h-full rounded-3xl border border-[#D4AF37]/50 bg-[#06080F] shadow-[0_0_30px_rgba(212,175,55,0.25)] relative overflow-hidden flex flex-col justify-between p-3.5 sm:p-5 text-white"
+            className="card-face card-face-back w-full h-full rounded-3xl border border-[#D4AF37]/50 bg-[#06080F] shadow-[0_0_35px_rgba(212,175,55,0.3)] relative overflow-hidden flex flex-col justify-between p-3.5 sm:p-5 text-white"
           >
             {/* Mirroring Wave Ribbon along the left */}
             <svg
@@ -289,14 +310,20 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
             </svg>
 
             {/* Upper Center: DZ Prime Logo on left, QR Code box on right */}
-            <div className="relative z-10 flex items-center justify-around w-full my-auto px-2 sm:px-6">
-              {/* Left Emblem */}
-              <div className="flex flex-col items-center text-center pl-6 sm:pl-10">
-                <DzPrimeLogo size={40} showText={true} withGlow={true} variant="blue" />
+            <div className="relative z-10 flex items-center justify-around w-full my-auto px-1 sm:px-4">
+              {/* Left Emblem: Significantly Bigger, Bolder 3D Golden Emblem with Orbit Ring */}
+              <div className="flex flex-col items-center justify-center text-center pl-1 sm:pl-3 relative">
+                {/* Thin golden circular orbit ring around emblem matching reference card */}
+                <div className="absolute inset-0 m-auto w-32 h-32 xs:w-36 xs:h-36 sm:w-44 sm:h-44 rounded-full border border-[#D4AF37]/40 pointer-events-none" />
+                <img
+                  src="/images/dzprime-gold-emblem.png"
+                  alt="DZ Prime Academy Golden Emblem"
+                  className="w-28 h-28 xs:w-32 xs:h-32 sm:w-40 sm:h-40 object-contain drop-shadow-[0_0_32px_rgba(212,175,55,1)] filter brightness-115 contrast-115 transform hover:scale-105 transition-transform relative z-10"
+                />
               </div>
 
               {/* Vertical Subtle Separator */}
-              <div className="h-20 w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/40 to-transparent mx-2" />
+              <div className="h-24 sm:h-28 w-[1px] bg-gradient-to-b from-transparent via-[#D4AF37]/50 to-transparent mx-2" />
 
               {/* Right: Square Gold-Bordered QR Code Box */}
               <Link
@@ -305,7 +332,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
                 className="flex flex-col items-center group/qr cursor-pointer hover:scale-105 transition-transform"
                 title={locale === 'ar' ? 'الانتقال إلى الملف الشخصي' : 'Voir le profil'}
               >
-                <div className="p-2 rounded-2xl border-2 border-[#D4AF37] bg-[#05070D] shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center group-hover/qr:border-[#FFF0A0] transition-colors">
+                <div className="p-2 sm:p-2.5 rounded-2xl border-2 border-[#D4AF37] bg-[#05070D] shadow-[0_0_20px_rgba(212,175,55,0.25)] flex items-center justify-center group-hover/qr:border-[#FFF0A0] transition-colors">
                   {qrCodeDataUrl ? (
                     <img
                       src={qrCodeDataUrl}
@@ -327,29 +354,29 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {/* Member Name */}
                 <div className="flex items-center gap-2 pr-2 border-r border-[#D4AF37]/30">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 flex items-center justify-center shrink-0 text-[#F2D272]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#D4AF37] bg-[#D4AF37]/15 flex items-center justify-center shrink-0 text-[#F2D272]">
                     <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                   <div className="min-w-0">
                     <div className="text-[7px] sm:text-[8px] text-gray-400 uppercase tracking-widest font-sans">
                       MEMBER NAME / اسم العضو
                     </div>
-                    <div className="text-xs sm:text-sm font-extrabold text-white truncate drop-shadow-sm font-arabic">
+                    <div className="text-xs sm:text-sm font-extrabold text-white drop-shadow-sm font-arabic break-words leading-tight">
                       {card.holderName}
                     </div>
                   </div>
                 </div>
 
-                {/* Member Role */}
+                {/* Member Role (Shows Fully Without Truncation) */}
                 <div className="flex items-center gap-2 pl-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 flex items-center justify-center shrink-0 text-[#F2D272]">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-[#D4AF37] bg-[#D4AF37]/15 flex items-center justify-center shrink-0 text-[#F2D272]">
                     <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="text-[7px] sm:text-[8px] text-gray-400 uppercase tracking-widest font-sans">
                       MEMBER ROLE / الصفة
                     </div>
-                    <div className="text-xs sm:text-sm font-extrabold text-[#F2D272] truncate drop-shadow-sm font-arabic">
+                    <div className="text-[10px] sm:text-xs font-black text-[#F2D272] drop-shadow-sm font-arabic leading-snug break-words">
                       {card.jobTitle || card.roleTitleAr}
                     </div>
                   </div>
@@ -373,11 +400,9 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
             <path d="M 20 0 C 130 30, 175 160, 310 360 L 280 360 C 160 170, 115 50, 5 0 Z" fill="#FFFFFF" />
             <path d="M 40 0 C 145 25, 195 150, 360 360 L 330 360 C 180 160, 130 40, 15 0 Z" fill="#C59838" />
           </svg>
-          <div className="absolute top-6 right-8 z-10 flex flex-col items-center">
-            <DzPrimeLogo size={54} showText={true} variant="blue" />
-          </div>
-          <div className="absolute top-1/2 -translate-y-1/2 right-8 z-10">
-            <div className="w-64 h-12 rounded-xl border border-[#D4AF37] bg-[#070B16] flex items-center justify-center font-mono text-sm text-[#F2D272] font-bold">
+          <div className="absolute top-6 right-8 z-10 flex flex-col items-center gap-3">
+            <img src="/images/dzprime-gold-emblem.png" alt="DZ Prime" className="w-24 h-24 object-contain" />
+            <div className="w-56 h-11 rounded-2xl border border-[#D4AF37] bg-[#070B16] flex items-center justify-center font-mono text-sm text-[#F2D272] font-bold">
               {card.cardId}
             </div>
           </div>
@@ -386,9 +411,6 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
               <div className="text-base font-black">عضو رسمي</div>
               <div className="text-[10px] font-extrabold uppercase tracking-widest font-sans">OFFICIAL MEMBER</div>
             </div>
-          </div>
-          <div className="absolute bottom-6 right-8 z-10 text-xs text-gray-400 font-mono">
-            DZ PRIME VIP
           </div>
         </div>
 
@@ -399,7 +421,10 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
             <path d="M 0 60 C 110 130, 150 180, 60 360 L 45 360 Z" fill="#C59838" />
           </svg>
           <div className="relative z-10 flex items-center justify-around w-full my-auto px-6">
-            <DzPrimeLogo size={52} showText={true} variant="blue" />
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 m-auto w-44 h-44 rounded-full border border-[#D4AF37]/50 pointer-events-none" />
+              <img src="/images/dzprime-gold-emblem.png" alt="DZ Prime" className="w-36 h-36 object-contain relative z-10" />
+            </div>
             <div className="h-28 w-[1px] bg-[#D4AF37]/40" />
             <div className="p-3 rounded-2xl border-2 border-[#D4AF37] bg-black flex items-center justify-center">
               {qrCodeDataUrl && <img src={qrCodeDataUrl} alt="QR" className="w-28 h-28 object-contain" />}
@@ -420,9 +445,9 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
                 <div className="w-10 h-10 rounded-full border border-[#D4AF37] bg-[#D4AF37]/20 flex items-center justify-center text-[#F2D272]">
                   <Shield className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="text-[9px] text-gray-400 uppercase">MEMBER ROLE / الصفة</div>
-                  <div className="text-base font-black text-[#F2D272]">{card.jobTitle || card.roleTitleAr}</div>
+                  <div className="text-sm font-black text-[#F2D272] leading-tight break-words">{card.jobTitle || card.roleTitleAr}</div>
                 </div>
               </div>
             </div>

@@ -186,3 +186,43 @@ export async function requireRole(
 export async function requireAdmin(request: NextRequest) {
   return requireRole(request, ADMIN_ROLES);
 }
+
+export async function requireCommercialOrAdmin(
+  request: NextRequest
+): Promise<{ user: NonNullable<SafeUser> } | { error: NextResponse }> {
+  const authResult = await requireAuth(request);
+  if ('error' in authResult) return authResult;
+  const { user } = authResult;
+  const isSuper = user.role === 'OWNER' || user.adminRole === 'SUPER_ADMIN';
+  const isGenAdmin = user.adminRole === 'GENERAL_ADMIN';
+  const isCommercial = user.adminRole === 'COMMERCIAL';
+  const isGeneralAdmin = user.role === 'ADMIN' && (!user.adminRole || user.adminRole === 'COMMERCIAL' || user.adminRole === 'GENERAL_ADMIN');
+
+  if (isSuper || isGenAdmin || isCommercial || isGeneralAdmin) {
+    return { user };
+  }
+  return {
+    error: NextResponse.json(
+      { error: 'إدارة الدورات، العروض والترويج محصورة حصرياً بالإدارة والمصلحة التجارية (Chargée Commerciale / Admin Général)' },
+      { status: 403 }
+    ),
+  };
+}
+
+export async function requireOwnerOnly(
+  request: NextRequest
+): Promise<{ user: NonNullable<SafeUser> } | { error: NextResponse }> {
+  const authResult = await requireAuth(request);
+  if ('error' in authResult) return authResult;
+  const { user } = authResult;
+  if (user.role === 'OWNER' || user.adminRole === 'SUPER_ADMIN') {
+    return { user };
+  }
+  return {
+    error: NextResponse.json(
+      { error: 'هذا الإجراء محصور حصرياً بالمسؤول الأعلى (Super Admin)' },
+      { status: 403 }
+    ),
+  };
+}
+

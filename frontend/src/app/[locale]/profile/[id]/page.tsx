@@ -35,6 +35,7 @@ import {
 import { MembershipCard } from '@/components/card/MembershipCard';
 import { DzPrimeLogo } from '@/components/shared/DzPrimeLogo';
 import { SettingsModal } from '@/components/settings/SettingsModal';
+import SocialFeed from '@/components/community/SocialFeed';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { User, Role } from '@/types';
@@ -180,16 +181,27 @@ export default function PublicProfilePage({
   const isStudent = user.role === 'STUDENT_FREE' || user.role === 'STUDENT_PAID';
   const isAdminOrStaff = user.role === 'OWNER' || user.role === 'ADMIN' || user.role === 'MODERATOR' || Boolean(user.adminRole);
 
+  const isZakarya =
+    user.email === 'zakaryaoukil2003@gmail.com' ||
+    user.studentCardId === 'DZ-OWN-16-0001' ||
+    (user.name && user.name.toLowerCase().includes('zakar'));
+
   const roleTitle =
     user.jobTitle ||
-    (isTeacher
+    (isZakarya
+      ? (locale === 'ar' ? 'المسؤول التقني الأول والشريك المؤسس (CTO & Co-Founder)' : 'Chief Technology Officer (CTO) & Co-Founder')
+      : user.adminRole === 'GENERAL_ADMIN'
+      ? (locale === 'ar' ? 'Admin Général (المدير العام التنفيذي)' : 'Directeur Général (Admin Général)')
+      : user.adminRole === 'COMMERCIAL'
+      ? (locale === 'ar' ? 'Chargée Commerciale (المسؤولة التجارية)' : 'Chargée Commerciale & Offres')
+      : isTeacher
       ? (locale === 'ar' ? 'أستاذ معتمد بالمنصة' : 'Enseignant Agréé')
       : isAmbassador
       ? (locale === 'ar' ? 'سفير معتمد' : 'Ambassadeur Officiel')
       : user.role === 'STUDENT_PAID'
       ? (locale === 'ar' ? 'طالب (عضوية ذهبية)' : 'Étudiant (Membre Gold)')
       : user.role === 'OWNER'
-      ? (locale === 'ar' ? 'المدير العام للمنصة' : 'Directeur Général')
+      ? (locale === 'ar' ? 'المسؤول التقني الأول والشريك المؤسس (CTO)' : 'Chief Technology Officer (CTO)')
       : (locale === 'ar' ? 'طالب مسجل' : 'Étudiant'));
 
   const cleanPhone = (user.phone || '').replace(/[^0-9+]/g, '');
@@ -616,7 +628,13 @@ export default function PublicProfilePage({
                     <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/5">
                       <span className="text-gray-400">{locale === 'ar' ? 'الإدارة المركزية:' : 'Direction:'}</span>
                       <span className="font-bold text-white">
-                        {user.adminRole === 'HR_MANAGER' || user.adminRole === 'HR_EMPLOYEE'
+                        {isZakarya || user.role === 'OWNER'
+                          ? (locale === 'ar' ? 'المديرية التقنية والهندسة الرقمية (CTO)' : 'Direction Technique & CTO Office')
+                          : user.adminRole === 'GENERAL_ADMIN'
+                          ? (locale === 'ar' ? 'الإدارة العامة والتنفيذية' : 'Direction Générale Exécutive')
+                          : user.adminRole === 'COMMERCIAL'
+                          ? (locale === 'ar' ? 'المديرية التجارية وإدارة العروض والدورات' : 'Direction Commerciale & Offres')
+                          : user.adminRole === 'HR_MANAGER' || user.adminRole === 'HR_EMPLOYEE'
                           ? (locale === 'ar' ? 'مديرية الموارد البشرية والتوظيف' : 'Direction des Ressources Humaines')
                           : user.adminRole === 'FINANCE'
                           ? (locale === 'ar' ? 'المديرية المالية والمحاسبة' : 'Direction Financière')
@@ -627,7 +645,15 @@ export default function PublicProfilePage({
                     <div className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/5">
                       <span className="text-gray-400">{locale === 'ar' ? 'مستوى الصلاحية:' : 'Niveau de gouvernance:'}</span>
                       <span className="font-mono text-lime-400 font-bold">
-                        {user.role === 'OWNER' ? 'SUPER ADMIN (Level 100)' : user.adminRole === 'HR_MANAGER' ? 'HR MANAGER (Level 85)' : 'ADMIN STAFF (Authorized)'}
+                        {user.role === 'OWNER' || isZakarya
+                          ? 'SUPER ADMIN & CTO (Level 100)'
+                          : user.adminRole === 'GENERAL_ADMIN'
+                          ? 'ADMIN GÉNÉRAL (Level 95)'
+                          : user.adminRole === 'HR_MANAGER'
+                          ? 'HR MANAGER (Level 85)'
+                          : user.adminRole === 'COMMERCIAL'
+                          ? 'CHARGÉE COMMERCIALE (Level 80)'
+                          : 'ADMIN STAFF (Authorized)'}
                       </span>
                     </div>
                   </div>
@@ -680,6 +706,31 @@ export default function PublicProfilePage({
             )}
           </div>
         </div>
+
+        {/* ================= SOCIAL FEED: VIDEOS & POSTS ================= */}
+        {(isTeacher || isAmbassador || isAdminOrStaff) && (
+          <div className="mt-12 pt-10 border-t border-white/10 space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-black text-white flex items-center gap-2.5">
+                <Video className="w-5 h-5 text-gold-400" />
+                <span>
+                  {locale === 'ar'
+                    ? `فيديوهات ومنشورات: ${user.name || ''}`
+                    : `Publications & Vidéos de ${user.name || ''}`}
+                </span>
+              </h3>
+            </div>
+            <SocialFeed
+              authorFilterId={user.id}
+              showHeader={false}
+              emptyMessage={
+                locale === 'ar'
+                  ? 'لا توجد منشورات أو فيديوهات منشورة حالياً من هذا العضو.'
+                  : 'Aucune publication pour le moment.'
+              }
+            />
+          </div>
+        )}
       </div>
 
       <SettingsModal

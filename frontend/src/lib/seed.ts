@@ -146,19 +146,74 @@ async function runSeed(): Promise<void> {
           email: zakaryaEmail,
           name: 'Zakarya Oukil',
           role: 'OWNER',
-          jobTitle: 'Super Admin & Chief Technology Officer (CTO)',
+          jobTitle: 'Chief Technology Officer (CTO) & Co-Founder',
           passwordHash,
           phone: '0668718784',
           wilayaCode: 16,
           wilayaName: 'الجزائر العاصمة',
           institutionName: 'DZ Prime Academy HQ',
           studentCardId: 'DZ-OWN-16-0001',
-          bio: 'مؤسس والمدير العام والمسؤول التقني الأول (CTO) لمنصة DZ Prime Academy. مهندس ومطور برمجيات، شغوف بتطوير التعليم والتكنولوجيا المالية في الجزائر.',
+          bio: 'المسؤول التقني الأول (CTO) والشريك المؤسس لمنصة DZ Prime Academy. مهندس ومطور برمجيات، يقود البنية التحتية السحابية والأنظمة الأكاديمية والمالية.',
           github: 'https://github.com/oukil078-oss',
           linkedin: 'https://linkedin.com/in/zakarya-oukil',
           whatsapp: '+213668718784',
           telegram: 'oukil078',
           website: 'https://dzprime.academy',
+          isVerified: true,
+        },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email: zakaryaEmail },
+        data: {
+          jobTitle: 'Chief Technology Officer (CTO) & Co-Founder',
+        },
+      });
+    }
+
+    const genAdminEmail = 'general.admin@dzprime.academy';
+    const existingGenAdmin = await prisma.user.findUnique({ where: { email: genAdminEmail } });
+    if (!existingGenAdmin) {
+      const passwordHash = await hashPassword(adminPassword || 'AdminGeneral2026!');
+      await prisma.user.create({
+        data: {
+          email: genAdminEmail,
+          name: 'Dr. Karim Benali',
+          role: 'ADMIN',
+          adminRole: 'GENERAL_ADMIN',
+          jobTitle: 'Admin Général (المدير العام التنفيذي)',
+          passwordHash,
+          phone: '0555987654',
+          wilayaCode: 16,
+          wilayaName: 'الجزائر العاصمة',
+          institutionName: 'DZ Prime Academy HQ - Direction Générale',
+          studentCardId: 'DZ-GEN-16-0095',
+          bio: 'المدير العام التنفيذي لمنصة DZ Prime Academy. تنسيق العمليات الأكاديمية، إدارة الطاقم، الشراكات الوطنية، والإشراف التنفيذي على كافة مديريات المنصة.',
+          whatsapp: '+213555987654',
+          isVerified: true,
+        },
+      });
+    }
+
+    const commercialEmail = 'commercial@dzprime.academy';
+    const existingCommercial = await prisma.user.findUnique({ where: { email: commercialEmail } });
+    if (!existingCommercial) {
+      const passwordHash = await hashPassword(adminPassword || 'Commercial2026!');
+      await prisma.user.create({
+        data: {
+          email: commercialEmail,
+          name: 'Amina Mansouri',
+          role: 'ADMIN',
+          adminRole: 'COMMERCIAL',
+          jobTitle: 'Chargée Commerciale (المسؤولة التجارية وإدارة الدورات والعروض)',
+          passwordHash,
+          phone: '0550123456',
+          wilayaCode: 16,
+          wilayaName: 'الجزائر العاصمة',
+          institutionName: 'DZ Prime Academy HQ - Direction Commerciale',
+          studentCardId: 'DZ-COM-16-0080',
+          bio: 'المسؤولة التجارية الرسمية لمنصة DZ Prime Academy. مسؤولة عن إدارة حزم العروض، التسعير، الدورات التفاعلية، حملات التخفيضات والشراكات الوطنية للبكالوريا والجامعة.',
+          whatsapp: '+213550123456',
           isVerified: true,
         },
       });

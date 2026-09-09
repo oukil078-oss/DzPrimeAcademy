@@ -100,14 +100,20 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link href={`/${locale}/community`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
+                  <span>{locale === 'ar' ? 'مجتمع الأكاديمية والفيديوهات' : 'Communauté & Vidéos'}</span>
+                </Link>
+              </li>
+              <li>
                 <Link href={`/${locale}/ambassadors`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
                   <span>{t('hierarchy.ambassadorsNetwork')}</span>
                 </Link>
               </li>
-              {currentUser && (
+              {currentUser && (currentUser.role === 'AMBASSADOR' || ['OWNER', 'SUPER_ADMIN', 'GENERAL_ADMIN', 'ADMIN', 'COMMERCIAL_DIRECTOR', 'COORDINATOR'].includes(currentUser.role)) && (
                 <li>
-                  <Link href={`/${locale}/leaderboard#hierarchy`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
+                  <Link href={`/${locale}/admin#staff`} className="hover:text-gold-600 dark:hover:text-gold-300 transition-colors flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400" />
                     <span>{t('hierarchy.title')}</span>
                   </Link>

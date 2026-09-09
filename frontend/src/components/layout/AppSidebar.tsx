@@ -52,8 +52,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   const { currentUser } = useAuthStore();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const role = currentUser?.role;
-  const isAdminRole = role === 'OWNER' || role === 'ADMIN' || role === 'MODERATOR';
+  const role = currentUser?.role as string | undefined;
+  const isAdminRole = role === 'OWNER' || role === 'SUPER_ADMIN' || role === 'GENERAL_ADMIN' || role === 'ADMIN' || role === 'MODERATOR' || role === 'COMMERCIAL_DIRECTOR';
   const isTeacherRole = role === 'TEACHER';
   const isAmbassadorRole = role === 'AMBASSADOR';
 
@@ -64,12 +64,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     { id: 'teachers', label: locale === 'ar' ? 'الأساتذة والمستحقات' : 'Enseignants & Paie', href: `/${locale}/admin#teachers`, icon: Users, isActive: false },
     { id: 'students', label: locale === 'ar' ? 'الطلبة وتفعيل البطاقات' : 'Étudiants & Cartes', href: `/${locale}/admin#students`, icon: GraduationCap, isActive: false },
     { id: 'sessions', label: locale === 'ar' ? 'الحصص والمحاضرات الوطنية' : 'Sessions Nationales', href: `/${locale}/admin#sessions`, icon: Video, isActive: false },
+    { id: 'community', label: locale === 'ar' ? 'مجتمع الأكاديمية والمدونة' : 'Communauté & Médias', href: `/${locale}/community`, icon: Sparkles, isActive: isOn('community') || isOn('leaderboard'), badge: 'Feed' },
     { id: 'ambassadors', label: locale === 'ar' ? 'شبكة السفراء (58 ولاية)' : 'Réseau Ambassadeurs', href: `/${locale}/admin#ambassadors`, icon: Award, isActive: false },
     { id: 'courses', label: locale === 'ar' ? 'دليل المقاييس والحزم' : 'Modules & Packs', href: `/${locale}/admin#courses`, icon: Layers, isActive: false },
   ];
 
   const teacherItems: NavItem[] = [
     { id: 'studio', label: locale === 'ar' ? 'استوديو التدريس' : 'Studio Enseignant', href: `/${locale}/teacher`, icon: Sparkles, isActive: isOn('teacher') && !pathname.includes('#') },
+    { id: 'community', label: locale === 'ar' ? 'نشر الفيديوهات والمجتمع' : 'Vidéos & Communauté', href: `/${locale}/community`, icon: Video, isActive: isOn('community') || isOn('leaderboard'), badge: 'Feed' },
     { id: 'courses', label: locale === 'ar' ? 'مقرراتي ومقاييسي' : 'Mes Modules', href: `/${locale}/teacher#courses`, icon: BookOpen, isActive: false },
     { id: 'sessions', label: locale === 'ar' ? 'الحصص المباشرة والجدول' : 'Sessions en Direct', href: `/${locale}/teacher#sessions`, icon: Video, isActive: false },
     { id: 'roster', label: locale === 'ar' ? 'قائمة الطلبة والحضور' : 'Liste & Présence', href: `/${locale}/teacher#roster`, icon: ClipboardList, isActive: false },
@@ -79,6 +81,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
 
   const studentItems: NavItem[] = [
     { id: 'dashboard', label: locale === 'ar' ? 'لوحة دراستي' : 'Mon Tableau de Bord', href: `/${locale}/student`, icon: GraduationCap, isActive: isOn('student') },
+    { id: 'community', label: locale === 'ar' ? 'مجتمع الأكاديمية والفيديوهات' : 'Communauté & Vidéos', href: `/${locale}/community`, icon: Sparkles, isActive: isOn('community') || isOn('leaderboard'), badge: 'جديد' },
     { id: 'dawarat', label: locale === 'ar' ? 'دورات الامتياز (Live)' : 'Dawarat Excellence (Live)', href: `/${locale}/dawarat`, icon: Video, isActive: isOn('dawarat'), badge: 'Live' },
     { id: 'exams', label: locale === 'ar' ? 'بنك الامتحانات السريع' : "Banque d'Examens", href: `/${locale}/exams`, icon: Zap, isActive: isOn('exams') },
     { id: 'ambassadors', label: locale === 'ar' ? 'سفراء 58 ولاية' : 'Ambassadeurs (58 wilayas)', href: `/${locale}/ambassadors`, icon: Award, isActive: isOn('ambassadors') },
@@ -86,6 +89,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
 
   const ambassadorItems: NavItem[] = [
     { id: 'dashboard', label: locale === 'ar' ? 'لوحة تحكم السفير' : 'Espace Ambassadeur', href: `/${locale}/ambassador`, icon: Award, isActive: isOn('ambassador') && !isOn('ambassadors') && !pathname.includes('#') },
+    { id: 'community', label: locale === 'ar' ? 'فيديوهات ومنشورات الولاية' : 'Vidéos & Communauté', href: `/${locale}/community`, icon: Video, isActive: isOn('community') || isOn('leaderboard'), badge: 'Feed' },
     { id: 'network', label: locale === 'ar' ? 'شبكة السفراء (58 ولاية)' : 'Réseau (58 wilayas)', href: `/${locale}/ambassadors`, icon: Users, isActive: isOn('ambassadors') },
     { id: 'profile', label: locale === 'ar' ? 'الملف الأكاديمي والأمان' : 'Profil & Sécurité', href: `/${locale}/ambassador#profile`, icon: ShieldCheck, isActive: false },
   ];

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
 import { getUserFromRequest } from '@/lib/auth';
-import { canManageUser } from '@/lib/rbac';
+import { canManageUser, getUserHierarchyLevel } from '@/lib/rbac';
 
 export async function DELETE(
   request: NextRequest,
@@ -78,6 +78,13 @@ export async function PUT(
 
   const body = await request.json();
   const { jobTitle, adminRole, phone, wilayaCode, wilayaName, bio } = body;
+
+  if (adminRole === 'GENERAL_ADMIN' && getUserHierarchyLevel(actor) < 100) {
+    return NextResponse.json(
+      { error: 'فقط المسؤول الأعلى (Super Admin) يمكنه تعيين أو ترقية موظف إلى مدير عام (Admin Général)' },
+      { status: 403 }
+    );
+  }
 
   const updated = await prisma.user.update({
     where: { id },

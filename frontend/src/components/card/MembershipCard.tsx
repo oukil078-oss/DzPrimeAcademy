@@ -192,7 +192,10 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
                 <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gold-400" />
                 <span>{card.isVerified ? t('card.verifiedBadge') : t('card.notVerified')}</span>
               </div>
-              <DzPrimeLogo size={32} showText={true} variant={cardLogoVariant} />
+              <div className="flex items-center gap-1.5">
+                <img src="/images/dzprime-gold-emblem.png" alt="DZ Prime" className="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.7)]" />
+                <span className="text-xs sm:text-sm font-black text-gold-300 font-sans tracking-wide">DZ PRIME</span>
+              </div>
             </div>
 
             {/* Center: Crest, Member Name, & Role */}
@@ -219,23 +222,14 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
                 <span className="text-[8px] sm:text-[9px] text-gold-400/80 uppercase font-semibold tracking-wider">
                   {t('card.cardId')}
                 </span>
-                <span className="font-mono text-[10px] sm:text-xs font-bold text-gold-200 tracking-wider">
+                <span className="font-mono text-xs sm:text-sm font-bold text-white tracking-wider">
                   {card.cardId}
                 </span>
               </div>
 
-              <div className="flex flex-col items-center">
-                <span className="text-[8px] sm:text-[10px] text-gold-400 uppercase tracking-widest font-bold">
-                  MEMBERSHIP
-                </span>
-                <span className="text-[9px] sm:text-[11px] text-gold-300 font-arabic font-bold">
-                  عضوية
-                </span>
-              </div>
-
-              <div className="flex flex-col text-right">
+              <div className="flex flex-col items-end">
                 <span className="text-[8px] sm:text-[9px] text-gold-400/80 uppercase font-semibold tracking-wider">
-                  {t('card.validUntil')}
+                  {t('card.validThru')}
                 </span>
                 <span className="text-[10px] sm:text-xs font-semibold text-gray-200">
                   {card.expiryDate}
@@ -255,7 +249,7 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
                 <h3 className="text-xs sm:text-sm font-extrabold font-arabic text-navy-950 truncate">
                   {card.holderName}
                 </h3>
-                <p className="text-[10px] sm:text-xs font-bold text-navy-900/90 font-arabic flex items-center gap-1 mt-0.5 truncate">
+                <p className="text-[10px] sm:text-xs font-bold text-navy-900/90 font-arabic flex items-center gap-1 mt-0.5 leading-tight break-words">
                   <span className="w-1.5 h-1.5 rounded-full bg-navy-950 shrink-0" />
                   <span>{card.roleTitleAr}</span>
                 </p>
@@ -284,7 +278,7 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
 
             {/* Right Half: Obsidian Half with QR Code */}
             <div className="w-[42%] sm:w-[40%] h-full bg-[#070B16] p-2 sm:p-3 flex flex-col items-center justify-between text-center relative border-l border-gold-400/40">
-              <DzPrimeLogo size={22} showText={false} withGlow={false} variant={cardLogoVariant} />
+              <img src="/images/dzprime-gold-emblem.png" alt="DZ Prime Emblem" className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-[0_0_24px_rgba(212,175,55,1)] filter brightness-115 contrast-110" />
 
               <a
                 href={`/${locale}/profile/${card.cardId}`}

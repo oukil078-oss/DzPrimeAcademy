@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { requireCommercialOrAdmin } from '@/lib/auth';
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authResult = await requireAdmin(request);
+  const authResult = await requireCommercialOrAdmin(request);
   if ('error' in authResult) return authResult.error;
 
   const { id } = await params;
@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authResult = await requireAdmin(request);
+  const authResult = await requireCommercialOrAdmin(request);
   if ('error' in authResult) return authResult.error;
 
   const { id } = await params;

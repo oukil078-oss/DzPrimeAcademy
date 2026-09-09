@@ -27,6 +27,7 @@ import {
 import { useAuthStore } from '@/lib/store';
 import { WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 import { isSuperAdmin, isHRManager, getUserHierarchyLevel, canManageUser } from '@/lib/rbac';
+import { HierarchyChart } from '@/components/dashboard/HierarchyChart';
 import { Locale, User } from '@/types';
 
 interface StaffTabProps {
@@ -169,7 +170,9 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
     const matchesRole =
       roleFilter === 'ALL' ||
       (roleFilter === 'SUPER_ADMIN' && (s.role === 'OWNER' || s.adminRole === 'SUPER_ADMIN')) ||
+      (roleFilter === 'GENERAL_ADMIN' && s.adminRole === 'GENERAL_ADMIN') ||
       (roleFilter === 'HR' && (s.adminRole === 'HR_MANAGER' || s.adminRole === 'HR_EMPLOYEE')) ||
+      (roleFilter === 'COMMERCIAL' && s.adminRole === 'COMMERCIAL') ||
       (roleFilter === 'FINANCE' && s.adminRole === 'FINANCE') ||
       (roleFilter === 'ADMIN' && (s.role === 'ADMIN' && !s.adminRole));
 
@@ -212,7 +215,7 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
         <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
           <span className="text-gray-400">{locale === 'ar' ? 'إجمالي الطاقم:' : 'Total Staff:'}</span>
           <p className="text-xl font-black text-white font-mono">{staffList.length}</p>
@@ -221,6 +224,12 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
           <span className="text-gray-400">{locale === 'ar' ? 'فريق الموارد البشرية (HR):' : 'Équipe RH:'}</span>
           <p className="text-xl font-black text-gold-400 font-mono">
             {staffList.filter((s) => s.adminRole === 'HR_MANAGER' || s.adminRole === 'HR_EMPLOYEE').length}
+          </p>
+        </div>
+        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
+          <span className="text-gray-400">{locale === 'ar' ? 'المصلحة التجارية:' : 'Commercial & Offres:'}</span>
+          <p className="text-xl font-black text-amber-400 font-mono">
+            {staffList.filter((s) => s.adminRole === 'COMMERCIAL').length}
           </p>
         </div>
         <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1">
@@ -253,8 +262,10 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
           {[
             { id: 'ALL', labelAr: 'الكل', labelFr: 'Tous' },
-            { id: 'SUPER_ADMIN', labelAr: 'المدير العام', labelFr: 'Super Admin' },
+            { id: 'SUPER_ADMIN', labelAr: 'المسؤول الأعلى', labelFr: 'Super Admin' },
+            { id: 'GENERAL_ADMIN', labelAr: 'المدير العام الإداري', labelFr: 'Admin Général' },
             { id: 'HR', labelAr: 'الموارد البشرية (HR)', labelFr: 'Ressources Humaines' },
+            { id: 'COMMERCIAL', labelAr: 'المصلحة التجارية (Commercial)', labelFr: 'Commercial' },
             { id: 'FINANCE', labelAr: 'المالية', labelFr: 'Finances' },
           ].map((f) => (
             <button
@@ -288,6 +299,8 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
             const canDelete = currentUser ? canManageUser(currentUser, staff) : false;
 
             const isHR = staff.adminRole === 'HR_MANAGER' || staff.adminRole === 'HR_EMPLOYEE';
+            const isCommercial = staff.adminRole === 'COMMERCIAL';
+            const isGenAdmin = staff.adminRole === 'GENERAL_ADMIN';
             const isFin = staff.adminRole === 'FINANCE';
             const isSuper = staff.role === 'OWNER' || staff.adminRole === 'SUPER_ADMIN';
 
@@ -308,7 +321,7 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
                         {staff.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
                       </h3>
                       <p className="text-xs text-gold-300 font-bold mt-0.5">
-                        {staff.jobTitle || (isSuper ? 'المدير العام' : isHR ? 'مسؤول الموارد البشرية' : 'مسؤول إداري')}
+                        {staff.jobTitle || (isSuper ? 'المدير العام (المؤسس)' : isGenAdmin ? 'Admin Général (المدير العام الإداري)' : isHR ? 'مسؤول الموارد البشرية' : isCommercial ? 'Chargée Commerciale' : 'مسؤول إداري')}
                       </p>
                     </div>
                   </div>
@@ -317,8 +330,12 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
                     className={`px-2.5 py-1 rounded-xl text-[10px] font-mono font-black shrink-0 ${
                       isSuper
                         ? 'bg-gold-500/20 text-gold-300 border border-gold-400/50'
+                        : isGenAdmin
+                        ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/50'
                         : isHR
                         ? 'bg-sky-500/20 text-sky-300 border border-sky-400/50'
+                        : isCommercial
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-400/50'
                         : isFin
                         ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/50'
                         : 'bg-white/10 text-gray-300 border border-white/10'
@@ -477,19 +494,27 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
                   onChange={(e) => {
                     const r = e.target.value;
                     let defaultTitle = 'Chargée des Ressources Humaines';
+                    if (r === 'GENERAL_ADMIN') defaultTitle = 'Admin Général (المدير العام التنفيذي)';
+                    if (r === 'COMMERCIAL') defaultTitle = 'Chargée Commerciale';
                     if (r === 'HR_EMPLOYEE') defaultTitle = 'Collaborateur RH & Recrutement';
                     if (r === 'FINANCE') defaultTitle = 'Responsable Financier';
-                    if (r === 'SUPER_ADMIN') defaultTitle = 'Directeur Général';
+                    if (r === 'SUPER_ADMIN') defaultTitle = 'Directeur Général (المؤسس)';
                     if (r === 'ADMIN') defaultTitle = 'Administrateur';
                     setForm({ ...form, adminRole: r, jobTitle: defaultTitle });
                   }}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#0F162B] border border-white/10 text-white font-bold focus:outline-none focus:border-gold-400"
                 >
                   {actorIsSuper && (
-                    <option value="SUPER_ADMIN">👑 Super Admin (Level 100 - صلاحية كاملة)</option>
+                    <>
+                      <option value="SUPER_ADMIN">👑 Super Admin (Level 100 - صلاحية كاملة ومؤسس)</option>
+                      <option value="GENERAL_ADMIN">⚡ Admin Général / المدير العام (Level 95 - صلاحية تنفيذية كاملة)</option>
+                    </>
                   )}
                   <option value="HR_MANAGER">
                     👩‍💼 Chargée RH / Responsable RH (Level 85 - مسؤولة الموارد البشرية وإدارة الأساتذة والسفراء والطلبة)
+                  </option>
+                  <option value="COMMERCIAL">
+                    💼 Chargée Commerciale / Responsable Commercial (Level 80 - مسؤولة الدورات، الحزم والعروض الترويجية)
                   </option>
                   <option value="HR_EMPLOYEE">
                     🤝 Employé RH / Collaborateur RH (Level 75 - إدارة وإضافة الأساتذة والطلبة والسفراء)
@@ -586,6 +611,11 @@ export const StaffTab: React.FC<StaffTabProps> = ({ locale }) => {
           </div>
         </div>
       )}
+
+      {/* Leadership & Governance Hierarchy Section for Admins and Staff */}
+      <div className="pt-8 border-t border-white/10 space-y-4">
+        <HierarchyChart />
+      </div>
     </div>
   );
 };

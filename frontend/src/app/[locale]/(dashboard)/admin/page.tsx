@@ -75,10 +75,10 @@ export default function AdminCommandCenterPage() {
     { id: 'staff', icon: Users, labelAr: 'فريق الإدارة والتوظيف (HR)', labelFr: 'Personnel & RH' },
     { id: 'teachers', icon: GraduationCap, labelAr: 'الأساتذة والمستحقات', labelFr: 'Enseignants & Paie' },
     { id: 'students', icon: Users, labelAr: 'الطلبة والبطاقات', labelFr: 'Étudiants & Cartes' },
-    { id: 'sessions', icon: Video, labelAr: 'الحصص الوطنية', labelFr: 'Sessions Nationales' },
+    { id: 'sessions', icon: Video, labelAr: 'الحصص الوطنية المباشرة', labelFr: 'Sessions Live Nationales' },
     { id: 'ambassadors', icon: Award, labelAr: 'شبكة 58 ولاية', labelFr: 'Réseau Ambassadeurs' },
-    { id: 'courses', icon: Layers, labelAr: 'المقررات', labelFr: 'Modules' },
-    { id: 'bundles', icon: Package, labelAr: 'حزم الامتحانات', labelFr: 'Packs Examens' },
+    { id: 'courses', icon: Layers, labelAr: 'الدورات والمقررات (Dawarat)', labelFr: 'Dawarat & Modules' },
+    { id: 'bundles', icon: Package, labelAr: 'العروض والتخفيضات (Offers & Promos)', labelFr: 'Offres & Promos' },
     { id: 'card', icon: CreditCard, labelAr: 'بطاقة الإدارة', labelFr: 'Carte Administration' },
     { id: 'settings', icon: Sliders, labelAr: 'إعدادات النظام', labelFr: 'Paramètres Système' },
   ];
@@ -87,6 +87,39 @@ export default function AdminCommandCenterPage() {
     setActiveTab(id);
     window.history.replaceState(null, '', `#${id}`);
   };
+
+  const getAdminRoleBadge = () => {
+    if (currentUser?.adminRole === 'COMMERCIAL') {
+      return {
+        label: 'CHARGÉE COMMERCIALE (Level 80)',
+        color: 'bg-amber-500/20 border-amber-400/50 text-amber-300',
+      };
+    }
+    if (currentUser?.adminRole === 'HR_MANAGER') {
+      return {
+        label: 'HR MANAGER (Level 85)',
+        color: 'bg-purple-500/20 border-purple-400/50 text-purple-300',
+      };
+    }
+    if (currentUser?.adminRole === 'FINANCE') {
+      return {
+        label: 'FINANCE DIRECTOR (Level 65)',
+        color: 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300',
+      };
+    }
+    if (currentUser?.role === 'OWNER') {
+      return {
+        label: 'SUPER ADMIN (Level 100)',
+        color: 'bg-gold-500/20 border-gold-400/50 text-gold-300',
+      };
+    }
+    return {
+      label: 'ADMINISTRATION HQ',
+      color: 'bg-blue-500/20 border-blue-400/50 text-blue-300',
+    };
+  };
+
+  const adminBadge = getAdminRoleBadge();
 
   return (
     <div className="min-h-screen bg-[#05070D] text-white font-arabic" data-testid="admin-command-center">
@@ -99,8 +132,8 @@ export default function AdminCommandCenterPage() {
                 <ShieldCheck className="w-6 h-6 sm:w-7 sm:h-7 text-gold-400" />
                 <span>{locale === 'ar' ? 'مركز القيادة المالية والإدارية' : 'Centre de Commandement Admin'}</span>
               </h1>
-              <span className="px-3 py-0.5 rounded-full bg-gold-500/20 border border-gold-400/40 text-gold-300 text-xs font-mono font-bold">
-                SUPER ADMIN
+              <span className={`px-3 py-0.5 rounded-full border text-xs font-mono font-bold ${adminBadge.color}`}>
+                {adminBadge.label}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-gray-400 font-medium">

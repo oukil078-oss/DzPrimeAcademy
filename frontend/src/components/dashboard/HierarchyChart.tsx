@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
   Crown,
@@ -20,11 +21,49 @@ import {
   Globe2,
   Target,
   ArrowDown,
+  ShieldAlert,
+  ShieldCheck,
+  Cpu
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useAuthStore } from '@/lib/store';
 
 export const HierarchyChart: React.FC = () => {
   const { t, locale } = useTranslation();
+  const { currentUser } = useAuthStore();
+
+  // Strict User Restriction: Completely remove from all users except admin, administrative staff, and ambassadors
+  const canViewHierarchy =
+    currentUser &&
+    (currentUser.role === 'AMBASSADOR' ||
+      [
+        'OWNER',
+        'SUPER_ADMIN',
+        'GENERAL_ADMIN',
+        'ADMIN',
+        'COMMERCIAL_DIRECTOR',
+        'COORDINATOR',
+        'FINANCIAL_DIRECTOR',
+        'ACADEMIC_DIRECTOR',
+        'COMMUNITY_MANAGER',
+        'TECH_SUPPORT'
+      ].includes(currentUser.role));
+
+  if (!canViewHierarchy) {
+    return (
+      <div className="w-full rounded-3xl border border-slate-800 bg-slate-900/80 p-8 sm:p-12 text-center text-slate-400 space-y-4 backdrop-blur-xl shadow-2xl font-arabic">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg sm:text-xl font-black text-white">
+          منطقة محصورة: الهيكل القيادي والتنظيمي
+        </h3>
+        <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+          هذا القسم مخصص حصراً للإدارة العليا، المدير العام، الطاقم الإداري المركزي، وسفراء الولايات المعتمدين لـ DZ Prime Academy.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full rounded-3xl border border-gold-500/30 dark:border-gold-500/40 bg-gradient-to-b from-[#060B18] via-[#091124] to-[#040711] p-4 sm:p-8 md:p-10 shadow-2xl text-white relative overflow-hidden transition-all duration-300 font-arabic select-none">
@@ -32,69 +71,86 @@ export const HierarchyChart: React.FC = () => {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[350px] sm:w-[700px] h-[350px] bg-gold-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      {/* ================= TOP HEADER BRANDING & CEO / BOARD ================= */}
+      {/* ================= TOP HEADER BRANDING & EXECUTIVE LEADERSHIP ================= */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pb-8 border-b border-gold-500/25">
         {/* Left Col: Brand Emblem & Title */}
-        <div className="lg:col-span-5 text-center lg:text-start flex flex-col items-center lg:items-start gap-3">
+        <div className="lg:col-span-4 text-center lg:text-start flex flex-col items-center lg:items-start gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-gold-600 via-gold-400 to-amber-200 p-0.5 shadow-gold-glow flex items-center justify-center shrink-0">
-              <div className="w-full h-full bg-[#070C1E] rounded-[14px] flex items-center justify-center p-2">
-                <Crown className="w-7 h-7 text-gold-400" />
-              </div>
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden shadow-gold-glow border border-gold-400/60 flex items-center justify-center shrink-0 bg-[#070C1E]">
+              <Image
+                src="/images/dzprime-gold-emblem.png"
+                alt="DZ Prime Gold Emblem"
+                fill
+                className="object-contain p-1 drop-shadow-[0_0_12px_rgba(212,175,55,0.8)]"
+              />
             </div>
             <div>
               <span className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-gold-400 uppercase">
                 DZ PRIME ACADEMY
               </span>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-transparent bg-gradient-to-r from-white via-gold-200 to-gold-400 bg-clip-text">
-                {t('hierarchy.title')}
+              <h2 className="text-xl sm:text-2xl font-black text-transparent bg-gradient-to-r from-white via-gold-200 to-gold-400 bg-clip-text">
+                الهيكل القيادي والتنظيمي
               </h2>
             </div>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed max-w-md">
-            {t('hierarchy.subtitle')}
+            الحوكمة الإدارية العليا وشبكة التنسيق الوطني والسفراء المعتمدين عبر 58 ولاية.
           </p>
         </div>
 
-        {/* Right Col: Level 1 (Founder/CEO) & Level 2 (National Board) */}
-        <div className="lg:col-span-7 flex flex-col sm:flex-row items-center justify-center lg:justify-end gap-3 sm:gap-4">
+        {/* Right Col: Level 1 (Founder/CEO), CTO & Co-Founder, Admin Général */}
+        <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Box 1: Founder & CEO */}
           <motion.div
             whileHover={{ scale: 1.02, y: -2 }}
-            className="w-full sm:w-56 p-4 rounded-2xl border-2 border-gold-500/80 bg-gradient-to-b from-[#0D1836] to-[#080E20] shadow-lg shadow-gold-500/10 flex flex-col items-center text-center"
+            className="p-3.5 rounded-2xl border border-gold-500/70 bg-gradient-to-b from-[#0D1836] to-[#080E20] shadow-lg flex flex-col items-center text-center"
           >
-            <div className="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 flex items-center justify-center text-gold-400 mb-2 shadow-sm">
-              <Crown className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-gold-500/20 border border-gold-400/40 flex items-center justify-center text-gold-400 mb-1.5 shadow-sm">
+              <Crown className="w-4 h-4" />
             </div>
+            <span className="text-[10px] font-mono text-gold-400 font-bold">LEVEL 100</span>
             <h4 className="text-xs sm:text-sm font-black text-gold-200">
-              {t('hierarchy.ceo')}
+              President & CEO (المؤسس)
             </h4>
             <p className="text-[10px] text-slate-300 mt-1 leading-snug">
-              {t('hierarchy.ceoDesc')}
+              الرئاسة والتوجيه الاستراتيجي والقرارات المصيرية للأكاديمية.
             </p>
           </motion.div>
 
-          {/* Golden Arrow */}
-          <div className="hidden sm:flex text-gold-400">
-            <span className="text-lg">←</span>
-          </div>
-          <div className="sm:hidden text-gold-400">
-            <ArrowDown className="w-4 h-4" />
-          </div>
-
-          {/* Box 2: National Board of Directors */}
+          {/* Box 2: Chief Technology Officer (Zakarya Oukil) */}
           <motion.div
             whileHover={{ scale: 1.02, y: -2 }}
-            className="w-full sm:w-60 p-4 rounded-2xl border border-gold-500/50 bg-gradient-to-b from-[#0D1836] to-[#080E20] shadow-lg flex flex-col items-center text-center"
+            className="p-3.5 rounded-2xl border-2 border-amber-400 bg-gradient-to-b from-[#14234b] to-[#080E20] shadow-xl shadow-amber-500/20 flex flex-col items-center text-center relative"
           >
-            <div className="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-400/40 flex items-center justify-center text-gold-400 mb-2 shadow-sm">
-              <Users className="w-5 h-5" />
+            <div className="absolute -top-2 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-black text-[9px] shadow">
+              Zakarya Oukil
             </div>
-            <h4 className="text-xs sm:text-sm font-black text-gold-200">
-              {t('hierarchy.board')}
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-amber-300 mb-1.5 mt-1 shadow-sm">
+              <Cpu className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-mono text-amber-300 font-bold">LEVEL 100</span>
+            <h4 className="text-xs sm:text-sm font-black text-white">
+              CTO & Co-Founder
+            </h4>
+            <p className="text-[10px] text-amber-200/90 mt-1 leading-snug">
+              رئاسة قطاع التكنولوجيا وتطوير المنصة والبنية الرقمية.
+            </p>
+          </motion.div>
+
+          {/* Box 3: Admin Général (Level 95) */}
+          <motion.div
+            whileHover={{ scale: 1.02, y: -2 }}
+            className="p-3.5 rounded-2xl border border-purple-500/60 bg-gradient-to-b from-[#170e30] to-[#080E20] shadow-lg flex flex-col items-center text-center"
+          >
+            <div className="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300 mb-1.5 shadow-sm">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <span className="text-[10px] font-mono text-purple-300 font-bold">LEVEL 95</span>
+            <h4 className="text-xs sm:text-sm font-black text-purple-200">
+              Admin Général (المدير العام)
             </h4>
             <p className="text-[10px] text-slate-300 mt-1 leading-snug">
-              {t('hierarchy.boardDesc')}
+              الإشراف التنفيذي الشامل وإدارة كافة فروع وعمليات المنظومة.
             </p>
           </motion.div>
         </div>
