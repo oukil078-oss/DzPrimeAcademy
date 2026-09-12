@@ -24,12 +24,14 @@ import {
   Zap,
   Trophy,
   UserCheck,
+  Crown,
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { DzPrimeLogo } from '@/components/shared/DzPrimeLogo';
 import { SidebarCardWidget } from '@/components/card/SidebarCardWidget';
 import { SettingsModal } from '@/components/settings/SettingsModal';
+import { ContactActionModal } from '@/components/shared/ContactActionModal';
 
 interface AppSidebarProps {
   isMobileOpen?: boolean;
@@ -51,6 +53,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   const pathname = usePathname();
   const { currentUser } = useAuthStore();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
   const role = currentUser?.role as string | undefined;
   const isAdminRole = role === 'OWNER' || role === 'SUPER_ADMIN' || role === 'GENERAL_ADMIN' || role === 'ADMIN' || role === 'MODERATOR' || role === 'COMMERCIAL_DIRECTOR';
@@ -171,6 +174,43 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
             </Link>
           )}
 
+          {/* Student VIP Upgrade Card */}
+          {currentUser && currentUser.role === 'STUDENT_FREE' && (
+            <div className="pt-3 pb-1">
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(true)}
+                data-testid="sidebar-upgrade-vip-btn"
+                className="w-full relative group overflow-hidden rounded-2xl p-3 bg-gradient-to-r from-amber-500/20 via-gold-500/25 to-amber-600/20 border border-gold-400/50 hover:border-gold-400 shadow-lg shadow-gold-500/10 hover:shadow-gold-500/20 transition-all text-right rtl:text-right ltr:text-left active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-gold-400/20 border border-gold-400/40 flex items-center justify-center text-amber-300">
+                      <Crown className="w-3.5 h-3.5 animate-pulse" />
+                    </span>
+                    <span className="text-xs font-black text-amber-300 font-arabic">
+                      {locale === 'ar' ? 'العضوية الذهبية VIP' : 'Adhésion VIP Gold'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 font-mono">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-300 font-normal leading-relaxed mb-2 font-arabic">
+                  {locale === 'ar'
+                    ? 'وصول غير محدود لجميع الدورات والامتحانات والبطاقة الرقمية'
+                    : 'Accès illimité à tous les examens et cours'}
+                </p>
+                <div className="flex items-center justify-between text-[11px] font-black text-amber-300 pt-1.5 border-t border-gold-500/20">
+                  <span>{locale === 'ar' ? '⚡ ترقية حسابي الآن' : '⚡ Activer le VIP'}</span>
+                  <span className="font-mono text-white text-[10px] bg-white/10 px-2 py-0.5 rounded-full">
+                    3,500 DZD
+                  </span>
+                </div>
+              </button>
+            </div>
+          )}
+
           <button
             onClick={() => setSettingsOpen(true)}
             data-testid="sidebar-nav-settings"
@@ -235,8 +275,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
     <>
       <aside
         data-testid="app-sidebar-desktop"
-        className={`hidden lg:flex flex-col w-[270px] xl:w-[290px] h-screen sticky top-0 shrink-0 bg-[#0E1526] dark:bg-[#070C1B] border-r ${
-          isRtl ? 'border-l border-r-0' : 'border-r'
+        className={`hidden lg:flex flex-col w-[270px] xl:w-[290px] h-screen sticky top-0 shrink-0 bg-[#0E1526] dark:bg-[#070C1B] ${
+          isRtl ? 'border-l border-r-0' : 'border-r border-l-0'
         } border-slate-800/80 z-30 shadow-xl`}
       >
         {sidebarContent}
@@ -257,7 +297,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
               animate={{ x: 0 }}
               exit={{ x: isRtl ? '100%' : '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 240 }}
-              className={`relative w-[300px] max-w-[85vw] h-full bg-[#0E1526] text-white shadow-2xl z-10 flex flex-col ${isRtl ? 'mr-auto' : 'ml-auto'}`}
+              className={`relative w-[300px] max-w-[85vw] h-full bg-[#0E1526] text-white shadow-2xl z-10 flex flex-col ${
+                isRtl ? 'mr-0 ml-auto' : 'ml-0 mr-auto'
+              }`}
             >
               {sidebarContent}
             </motion.div>
@@ -266,6 +308,25 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
       </AnimatePresence>
 
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {upgradeModalOpen && currentUser && (
+        <ContactActionModal
+          isOpen={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          operation={{
+            type: 'VIP_MEMBERSHIP_UPGRADE',
+            title: locale === 'ar' ? 'ترقية العضوية الذهبية VIP' : 'Adhésion VIP Gold',
+            amountDzd: 3500,
+            details: 'DZ Prime Academy 2026 VIP Access',
+            user: {
+              name: currentUser.name,
+              email: currentUser.email,
+              phone: currentUser.phone || undefined,
+              wilayaName: currentUser.wilayaName || undefined,
+            },
+          }}
+        />
+      )}
     </>
   );
 };

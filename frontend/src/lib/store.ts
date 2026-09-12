@@ -137,6 +137,11 @@ export function useAuthStore() {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (e) {}
     setUser(null);
+    if (typeof window !== 'undefined') {
+      const match = window.location.pathname.match(/^\/(ar|fr|en)/);
+      const currentLocale = match ? match[1] : 'ar';
+      window.location.href = `/${currentLocale}`;
+    }
   }, []);
 
   const upgradeToGolden = useCallback(async (): Promise<{ success: boolean; user?: any; error?: string }> => {

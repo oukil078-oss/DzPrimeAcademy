@@ -85,7 +85,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
 
   return (
     <AuthModalProvider value={{ openAuth: (tab) => setAuthModal({ open: true, tab }) }}>
-      <div className={`flex min-h-screen w-full bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white transition-colors ${isRtl ? 'flex-row-reverse' : 'flex-row'}`} data-testid="app-dashboard-shell">
+      <div className="flex min-h-screen w-full bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white transition-colors" data-testid="app-dashboard-shell">
         <GoogleAuthCallback />
 
         {currentUser && !isNoSidebarPage && (

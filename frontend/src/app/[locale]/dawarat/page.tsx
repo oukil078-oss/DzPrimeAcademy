@@ -9,6 +9,7 @@ import { usePlatformStore, PlatformCourse } from '@/lib/platformStore';
 import { useAuthStore } from '@/lib/store';
 import { useAuthModal } from '@/lib/authModalContext';
 import { formatDZD } from '@/lib/format';
+import { ContactActionModal, ContactModalOperation } from '@/components/shared/ContactActionModal';
 
 const THEME_BG: Record<string, string> = {
   lime: 'from-lime-500/20 to-transparent text-lime-600 dark:text-lime-400',
@@ -40,6 +41,7 @@ export default function DawaratCatalogPage() {
   const [enrollingId, setEnrollingId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<PlatformCourse | null>(null);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [contactOperation, setContactOperation] = useState<ContactModalOperation | null>(null);
 
   useEffect(() => {
     if (lockedTrack) setFilter(lockedTrack);
@@ -58,7 +60,7 @@ export default function DawaratCatalogPage() {
     }
   }, [currentUser]);
 
-  const handleEnroll = async (c: PlatformCourse, e: React.MouseEvent) => {
+  const handleEnroll = (c: PlatformCourse, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!currentUser) {
       openAuth('login');
@@ -66,24 +68,20 @@ export default function DawaratCatalogPage() {
     }
     if (enrolledIds.includes(c.id)) return;
 
-    setEnrollingId(c.id);
-    try {
-      const res = await fetch('/api/enrollments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId: c.id }),
-      });
-      if (res.ok) {
-        setEnrolledIds((prev) => [...prev, c.id]);
-        setSuccessToast(
-          locale === 'ar' ? `تم تسجيلك بنجاح في: ${c.titleAr}` : `Inscription réussie à: ${c.titleFr || c.titleAr}`
-        );
-        setTimeout(() => setSuccessToast(null), 4000);
-      }
-    } catch {
-    } finally {
-      setEnrollingId(null);
-    }
+    setSelectedCourse(null);
+    setContactOperation({
+      type: 'COURSE_ENROLLMENT',
+      title: locale === 'ar' ? `دورة: ${c.titleAr}` : `Cours: ${c.titleFr || c.titleAr}`,
+      details: `Course ID: ${c.id} | Formateur: ${c.teacherName} | ${c.category}`,
+      amountDzd: c.priceDzd || 3500,
+      targetId: c.id,
+      user: {
+        name: currentUser.name,
+        email: currentUser.email,
+        phone: currentUser.phone || undefined,
+        wilayaName: currentUser.wilayaName || undefined,
+      },
+    });
   };
 
   const filtered = filter === 'ALL' ? courses : courses.filter((c) => c.category === filter);
@@ -310,6 +308,14 @@ export default function DawaratCatalogPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {contactOperation && (
+        <ContactActionModal
+          isOpen={Boolean(contactOperation)}
+          onClose={() => setContactOperation(null)}
+          operation={contactOperation}
+        />
       )}
     </div>
   );
