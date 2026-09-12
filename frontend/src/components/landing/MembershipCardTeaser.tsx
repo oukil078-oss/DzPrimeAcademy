@@ -1,14 +1,13 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import { ShieldCheck, QrCode, Mail, Phone, Globe } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { useAuthModal } from '@/lib/authModalContext';
-import { MagneticButton } from './MagneticButton';
+import { ContactActionModal } from '../shared/ContactActionModal';
 
 export const MembershipCardTeaser: React.FC = () => {
   const { locale } = useTranslation();
-  const { openAuth } = useAuthModal();
+  const [cardModalOpen, setCardModalOpen] = useState(false);
 
   const copy = {
     ar: {
@@ -39,13 +38,14 @@ export const MembershipCardTeaser: React.FC = () => {
           </span>
           <h2 className="mt-3 text-2xl sm:text-3xl font-black text-white">{c.title}</h2>
           <p className="mt-3 text-sm text-slate-300 leading-relaxed max-w-md">{c.body}</p>
-          <MagneticButton
-            onClick={() => openAuth('register')}
+          <button
+            type="button"
+            onClick={() => setCardModalOpen(true)}
             data-testid="landing-membership-cta"
-            className="mt-6 px-6 py-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-sm"
+            className="mt-6 px-6 py-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 active:scale-95 text-slate-950 font-black text-sm shadow-[0_0_20px_-5px_rgba(163,230,53,0.4)] transition-all cursor-pointer inline-flex items-center justify-center"
           >
             {c.cta}
-          </MagneticButton>
+          </button>
         </div>
 
         <div className="w-full max-w-[300px] shrink-0">
@@ -57,13 +57,24 @@ export const MembershipCardTeaser: React.FC = () => {
             <p className="text-sm font-black text-white">DZ-PRIME-••••-2026</p>
             <p className="text-[10px] text-slate-400 mt-1">{locale === 'ar' ? 'بطاقة عضوية موثّقة' : 'Carte Vérifiée'}</p>
             <div className="mt-5 pt-4 border-t border-white/10 space-y-1.5 text-[10px] text-slate-400">
-              <div className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> dzprimeacademy@gmail.com</div>
-              <div className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> +213 656 970 922</div>
-              <div className="flex items-center gap-1.5"><Globe className="w-3 h-3" /> www.dzprimeacademy.com</div>
+              <div className="flex items-center gap-1.5"><Mail className="w-3 h-3" /> contact@dzprimeacademy.live</div>
+              <div className="flex items-center gap-1.5"><Phone className="w-3 h-3" /> +213 (0) 555 93 54 20</div>
+              <div className="flex items-center gap-1.5"><Globe className="w-3 h-3" /> dzprimeacademy.live</div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Card Activation Modal (WhatsApp & Telegram) */}
+      <ContactActionModal
+        isOpen={cardModalOpen}
+        onClose={() => setCardModalOpen(false)}
+        operation={{
+          type: 'VIP_MEMBERSHIP_UPGRADE',
+          title: locale === 'ar' ? 'تفعيل بطاقة العضوية الرقمية المشفّرة (VIP Card)' : 'Activation Carte de Membre Digitale VIP',
+          amountDzd: 2500,
+        }}
+      />
     </section>
   );
 };

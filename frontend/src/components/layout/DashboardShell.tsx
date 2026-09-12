@@ -84,29 +84,31 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
   const isNoSidebarPage = routeSegment === 'admin' || routeSegment === 'ambassador' || routeSegment === 'teacher';
 
   return (
-    <div className={`flex min-h-screen w-full bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white transition-colors ${isRtl ? 'flex-row-reverse' : 'flex-row'}`} data-testid="app-dashboard-shell">
-      <GoogleAuthCallback />
+    <AuthModalProvider value={{ openAuth: (tab) => setAuthModal({ open: true, tab }) }}>
+      <div className={`flex min-h-screen w-full bg-[#F4F6FA] dark:bg-[#040817] text-slate-900 dark:text-white transition-colors ${isRtl ? 'flex-row-reverse' : 'flex-row'}`} data-testid="app-dashboard-shell">
+        <GoogleAuthCallback />
 
-      {currentUser && !isNoSidebarPage && (
-        <AppSidebar
-          isMobileOpen={isMobileSidebarOpen}
-          onMobileClose={() => setIsMobileSidebarOpen(false)}
-        />
-      )}
+        {currentUser && !isNoSidebarPage && (
+          <AppSidebar
+            isMobileOpen={isMobileSidebarOpen}
+            onMobileClose={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        <Navbar
-          onToggleSidebar={() => setIsMobileSidebarOpen(true)}
-          onOpenAuth={(tab) => setAuthModal({ open: true, tab })}
-          hideSidebarToggle={isNoSidebarPage}
-        />
-        {currentUser && (currentUser.role === 'STUDENT_FREE' || currentUser.role === 'STUDENT_PAID') && <SessionReminderBanner />}
-        <main className="flex-1 w-full">{bodyContent}</main>
-        <Footer />
+        <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+          <Navbar
+            onToggleSidebar={() => setIsMobileSidebarOpen(true)}
+            onOpenAuth={(tab) => setAuthModal({ open: true, tab })}
+            hideSidebarToggle={isNoSidebarPage}
+          />
+          {currentUser && (currentUser.role === 'STUDENT_FREE' || currentUser.role === 'STUDENT_PAID') && <SessionReminderBanner />}
+          <main className="flex-1 w-full">{bodyContent}</main>
+          <Footer />
+        </div>
+
+        <FloatingBotWidget />
+        <AuthModal isOpen={authModal.open} defaultTab={authModal.tab} onClose={() => setAuthModal({ ...authModal, open: false })} />
       </div>
-
-      <FloatingBotWidget />
-      <AuthModal isOpen={authModal.open} defaultTab={authModal.tab} onClose={() => setAuthModal({ ...authModal, open: false })} />
-    </div>
+    </AuthModalProvider>
   );
 };

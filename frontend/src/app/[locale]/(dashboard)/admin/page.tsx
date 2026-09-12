@@ -12,6 +12,9 @@ import {
   Package,
   CreditCard,
   Sliders,
+  Bell,
+  ClipboardCheck,
+  Globe,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -26,8 +29,11 @@ import { BundlesTab } from '@/components/admin/BundlesTab';
 import { AdminCardTab } from '@/components/admin/AdminCardTab';
 import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab';
 import { StaffTab } from '@/components/admin/StaffTab';
+import { AdminOperationsTab } from '@/components/admin/AdminOperationsTab';
+import { LandingManagementTab } from '@/components/admin/LandingManagementTab';
 
 type AdminTab =
+  | 'operations'
   | 'financial'
   | 'staff'
   | 'teachers'
@@ -37,6 +43,7 @@ type AdminTab =
   | 'courses'
   | 'bundles'
   | 'card'
+  | 'landing'
   | 'settings';
 
 export default function AdminCommandCenterPage() {
@@ -44,12 +51,31 @@ export default function AdminCommandCenterPage() {
   const { currentUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState<AdminTab>('financial');
   const [payrollLiability, setPayrollLiability] = useState(1791000);
+  const [pendingOpsCount, setPendingOpsCount] = useState(0);
+
+  // Poll for pending operations count every 15s
+  useEffect(() => {
+    const fetchCount = () => {
+      fetch('/api/operations/count')
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && typeof data.count === 'number') {
+            setPendingOpsCount(data.count);
+          }
+        })
+        .catch(() => {});
+    };
+    fetchCount();
+    const timer = setInterval(fetchCount, 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const applyHash = () => {
       const hash = window.location.hash.replace('#', '') as AdminTab;
       if (
         [
+          'operations',
           'financial',
           'staff',
           'teachers',
@@ -59,6 +85,7 @@ export default function AdminCommandCenterPage() {
           'courses',
           'bundles',
           'card',
+          'landing',
           'settings',
         ].includes(hash)
       ) {
@@ -70,7 +97,14 @@ export default function AdminCommandCenterPage() {
     return () => window.removeEventListener('hashchange', applyHash);
   }, []);
 
-  const tabs: { id: AdminTab; icon: any; labelAr: string; labelFr: string }[] = [
+  const tabs: { id: AdminTab; icon: any; labelAr: string; labelFr: string; badge?: string }[] = [
+    {
+      id: 'operations',
+      icon: ClipboardCheck,
+      labelAr: 'طلبات التفعيل والمدفوعات',
+      labelFr: 'Opérations & Paiements',
+      badge: pendingOpsCount > 0 ? String(pendingOpsCount) : undefined,
+    },
     { id: 'financial', icon: Landmark, labelAr: 'المركز المالي', labelFr: 'Centre Financier' },
     { id: 'staff', icon: Users, labelAr: 'فريق الإدارة والتوظيف (HR)', labelFr: 'Personnel & RH' },
     { id: 'teachers', icon: GraduationCap, labelAr: 'الأساتذة والمستحقات', labelFr: 'Enseignants & Paie' },
@@ -80,6 +114,7 @@ export default function AdminCommandCenterPage() {
     { id: 'courses', icon: Layers, labelAr: 'الدورات والمقررات (Dawarat)', labelFr: 'Dawarat & Modules' },
     { id: 'bundles', icon: Package, labelAr: 'العروض والتخفيضات (Offers & Promos)', labelFr: 'Offres & Promos' },
     { id: 'card', icon: CreditCard, labelAr: 'بطاقة الإدارة', labelFr: 'Carte Administration' },
+    { id: 'landing', icon: Globe, labelAr: 'إدارة الواجهة الرئيسية (Landing Page)', labelFr: 'Gestion Landing Page' },
     { id: 'settings', icon: Sliders, labelAr: 'إعدادات النظام', labelFr: 'Paramètres Système' },
   ];
 
@@ -144,6 +179,21 @@ export default function AdminCommandCenterPage() {
           </div>
 
           <div className="flex items-center gap-3 self-start sm:self-auto">
+            {/* Notification Bell Button */}
+            <button
+              onClick={() => handleTabClick('operations')}
+              data-testid="admin-notif-bell-btn"
+              className="relative p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-gray-300 hover:text-white transition-all flex items-center justify-center"
+              title={locale === 'ar' ? 'طلبات التفعيل والمدفوعات الجديدة' : 'Nouvelles opérations & paiements'}
+            >
+              <Bell className="w-4 h-4" />
+              {pendingOpsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 rounded-full bg-gradient-to-r from-amber-400 to-rose-500 text-slate-950 text-[10px] font-black flex items-center justify-center shadow-lg shadow-rose-500/30 animate-pulse font-mono">
+                  {pendingOpsCount}
+                </span>
+              )}
+            </button>
+
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-white/[0.04] border border-white/10 text-xs text-gray-300 font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{locale === 'ar' ? 'نظام البث والمدفوعات: متصل' : 'Système Live: Online'}</span>
@@ -179,6 +229,17 @@ export default function AdminCommandCenterPage() {
                 )}
                 <Icon className={`w-4 h-4 ${active ? 'text-navy-950' : 'text-gray-400'}`} />
                 <span>{locale === 'ar' ? tItem.labelAr : tItem.labelFr}</span>
+                {tItem.badge && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-black font-mono ${
+                      active
+                        ? 'bg-navy-950 text-gold-400'
+                        : 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
+                    }`}
+                  >
+                    {tItem.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -193,6 +254,7 @@ export default function AdminCommandCenterPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.18 }}
           >
+            {activeTab === 'operations' && <AdminOperationsTab locale={locale} />}
             {activeTab === 'financial' && <FinancialOverviewTab locale={locale} payrollLiability={payrollLiability} />}
             {activeTab === 'staff' && <StaffTab locale={locale} />}
             {activeTab === 'teachers' && <FacultyPayrollTab locale={locale} onLiabilityChange={setPayrollLiability} />}
@@ -202,6 +264,7 @@ export default function AdminCommandCenterPage() {
             {activeTab === 'courses' && <CoursesTab locale={locale} />}
             {activeTab === 'bundles' && <BundlesTab locale={locale} />}
             {activeTab === 'card' && <AdminCardTab locale={locale} />}
+            {activeTab === 'landing' && <LandingManagementTab locale={locale} />}
             {activeTab === 'settings' && <AdminSettingsTab locale={locale} />}
           </motion.div>
         </AnimatePresence>

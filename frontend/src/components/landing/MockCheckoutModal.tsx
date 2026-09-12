@@ -7,6 +7,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { useAuthModal } from '@/lib/authModalContext';
 import { formatDZD } from '@/lib/format';
+import { ContactActionModal } from '@/components/shared/ContactActionModal';
 
 interface MockCheckoutModalProps {
   bundle: any;
@@ -18,6 +19,7 @@ export const MockCheckoutModal: React.FC<MockCheckoutModalProps> = ({ bundle, on
   const { currentUser } = useAuthStore();
   const { openAuth } = useAuthModal();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [contactModalOpen, setContactModalOpen] = useState(false);
 
   // Promo Code State
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -58,21 +60,8 @@ export const MockCheckoutModal: React.FC<MockCheckoutModalProps> = ({ bundle, on
     }
   };
 
-  const handleConfirm = async () => {
-    setStatus('loading');
-    try {
-      const res = await fetch(`/api/bundles/${bundle.id}/purchase`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          appliedPromoCode: appliedPromo?.code || null,
-          finalAmountDzd: effectivePrice,
-        }),
-      });
-      setStatus(res.ok ? 'success' : 'error');
-    } catch {
-      setStatus('error');
-    }
+  const handleConfirm = () => {
+    setContactModalOpen(true);
   };
 
   return (
@@ -191,36 +180,42 @@ export const MockCheckoutModal: React.FC<MockCheckoutModalProps> = ({ bundle, on
               <LogIn className="w-4 h-4" />
               {locale === 'ar' ? 'سجّل مجاناً لإكمال الشراء' : "S'inscrire pour continuer"}
             </button>
-          ) : status === 'success' ? (
-            <div
-              data-testid="mock-checkout-success"
-              className="mt-5 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2.5 text-emerald-600 dark:text-emerald-300 text-xs font-bold"
-            >
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>
-                {locale === 'ar'
-                  ? 'تم تأكيد الشراء مع التخفيض (محاكاة) — راجع لوحتك الآن.'
-                  : 'Achat confirmé avec remise (simulation) — consultez votre tableau de bord.'}
-              </span>
-            </div>
           ) : (
             <button
               data-testid="mock-checkout-confirm-btn"
               onClick={handleConfirm}
-              disabled={status === 'loading'}
-              className="mt-5 w-full py-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 disabled:opacity-60 text-slate-950 font-black text-xs flex items-center justify-center gap-2"
+              className="mt-5 w-full py-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all"
             >
-              {status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {locale === 'ar' ? 'تأكيد الشراء (تجريبي)' : 'Confirmer (démo)'}
+              <Sparkles className="w-4 h-4" />
+              <span>{locale === 'ar' ? 'إتمام الشراء وتأكيد الدفع (واتساب / تيليغرام)' : 'Payer via WhatsApp / Telegram'}</span>
             </button>
-          )}
-          {status === 'error' && (
-            <p data-testid="mock-checkout-error" className="mt-2 text-[11px] text-rose-500 font-bold text-center">
-              {locale === 'ar' ? 'حدث خطأ، حاول مجدداً' : 'Une erreur est survenue'}
-            </p>
           )}
         </motion.div>
       </motion.div>
+
+      {contactModalOpen && (
+        <ContactActionModal
+          isOpen={contactModalOpen}
+          onClose={() => {
+            setContactModalOpen(false);
+            onClose();
+          }}
+          operation={{
+            type: 'BUNDLE_PURCHASE',
+            title,
+            amountDzd: effectivePrice,
+            details: `ID: ${bundle.id}${appliedPromo ? ` (Promo: ${appliedPromo.code} -${appliedPromo.discountPercent}%)` : ''}`,
+            targetId: bundle.id,
+            user: currentUser ? {
+              name: currentUser.name,
+              email: currentUser.email,
+              phone: currentUser.phone || undefined,
+              wilayaName: currentUser.wilayaName || undefined,
+            } : undefined,
+          }}
+        />
+      )}
     </AnimatePresence>
   );
 };
+

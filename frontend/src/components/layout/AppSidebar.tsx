@@ -60,6 +60,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   const isOn = (seg: string) => pathname.includes(`/${seg}`);
 
   const adminItems: NavItem[] = [
+    { id: 'operations', label: locale === 'ar' ? 'طلبات التفعيل والمدفوعات' : 'Opérations & Paiements', href: `/${locale}/admin#operations`, icon: ClipboardList, isActive: false, badge: 'Live' },
     { id: 'financial', label: locale === 'ar' ? 'المركز المالي والإداري' : 'Centre Financier', href: `/${locale}/admin#financial`, icon: Landmark, isActive: isOn('admin') },
     { id: 'teachers', label: locale === 'ar' ? 'الأساتذة والمستحقات' : 'Enseignants & Paie', href: `/${locale}/admin#teachers`, icon: Users, isActive: false },
     { id: 'students', label: locale === 'ar' ? 'الطلبة وتفعيل البطاقات' : 'Étudiants & Cartes', href: `/${locale}/admin#students`, icon: GraduationCap, isActive: false },

@@ -87,7 +87,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
     issueDate: '2024/2025',
     expiryDate: '2026/09/30',
     isVerified: user?.isVerified ?? true,
-    qrPayload: `https://dzprime.academy/${locale}/profile/${user?.studentCardId || 'DZ-OWN-16-0001'}`,
+    qrPayload: `https://dzprimeacademy.live/${locale}/profile/${user?.studentCardId || 'DZ-OWN-16-0001'}`,
     phone: user?.phone || '+213 668 71 87 84',
     email: user?.email || 'zakaryaoukil2003@gmail.com',
     bio: user?.bio,
@@ -95,7 +95,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
 
   // Generate QR Code pointing directly to the public profile
   useEffect(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://dzprime.academy';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://dzprimeacademy.live';
     const profileUrl = `${origin}/${locale}/profile/${card.cardId}`;
 
     QRCode.toDataURL(profileUrl, {

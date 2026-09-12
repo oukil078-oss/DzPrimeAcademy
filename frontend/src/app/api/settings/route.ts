@@ -28,6 +28,11 @@ export async function PUT(request: NextRequest) {
       edahabiaEnabled: body.edahabiaEnabled !== undefined ? Boolean(body.edahabiaEnabled) : undefined,
       ccpReceiptsEnabled: body.ccpReceiptsEnabled !== undefined ? Boolean(body.ccpReceiptsEnabled) : undefined,
       autoVerifyCards: body.autoVerifyCards !== undefined ? Boolean(body.autoVerifyCards) : undefined,
+      whatsappNumber: body.whatsappNumber !== undefined ? String(body.whatsappNumber) : undefined,
+      telegramUsername: body.telegramUsername !== undefined ? String(body.telegramUsername) : undefined,
+      ambassadorTelegram: body.ambassadorTelegram !== undefined ? String(body.ambassadorTelegram) : undefined,
+      linkedinUrl: body.linkedinUrl !== undefined ? String(body.linkedinUrl) : undefined,
+      landingConfig: body.landingConfig !== undefined ? body.landingConfig : undefined,
     },
     create: {
       id: 'singleton',
@@ -37,6 +42,11 @@ export async function PUT(request: NextRequest) {
       edahabiaEnabled: body.edahabiaEnabled !== undefined ? Boolean(body.edahabiaEnabled) : true,
       ccpReceiptsEnabled: body.ccpReceiptsEnabled !== undefined ? Boolean(body.ccpReceiptsEnabled) : true,
       autoVerifyCards: body.autoVerifyCards !== undefined ? Boolean(body.autoVerifyCards) : false,
+      whatsappNumber: body.whatsappNumber || 'https://wa.me/qr/5473INCXN3HJI1',
+      telegramUsername: body.telegramUsername || 'dzprime_academy',
+      ambassadorTelegram: body.ambassadorTelegram || 'MrK_ADMIN00',
+      linkedinUrl: body.linkedinUrl || 'https://www.linkedin.com/company/dzprimeacademy',
+      landingConfig: body.landingConfig || {},
     },
   });
 

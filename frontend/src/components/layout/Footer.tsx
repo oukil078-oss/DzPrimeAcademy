@@ -42,7 +42,7 @@ export const Footer: React.FC = () => {
     : 'bg-slate-100 dark:bg-[#040817] border-slate-200 dark:border-gold-500/30 text-slate-800 dark:text-white';
 
   const socialLinks = [
-    { name: 'Telegram', icon: Send, href: 'https://t.me/dzprimeacademy', color: 'hover:text-sky-500' },
+    { name: 'Telegram', icon: Send, href: 'https://t.me/dzprime_academy', color: 'hover:text-sky-500' },
     { name: 'Instagram', icon: Instagram, href: 'https://instagram.com/dzprimeacademy', color: 'hover:text-pink-500' },
     { name: 'Facebook', icon: Facebook, href: 'https://facebook.com/dzprimeacademy', color: 'hover:text-blue-600' },
     { name: 'TikTok', icon: Video, href: 'https://tiktok.com/@dzprimeacademy', color: 'hover:text-purple-500' },
@@ -155,11 +155,15 @@ export const Footer: React.FC = () => {
             <div className="space-y-2 text-xs text-slate-600 dark:text-gray-300">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400 shrink-0" />
-                <span dir="ltr" className="font-mono font-medium">+213 (0) 555 12 34 56</span>
+                <a href="tel:+213555935420" dir="ltr" className="font-mono font-medium hover:text-gold-500 transition-colors">
+                  +213 (0) 555 93 54 20
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400 shrink-0" />
-                <span className="font-mono">contact@dzprime.academy</span>
+                <a href="mailto:contact@dzprimeacademy.live" className="font-mono hover:text-gold-500 transition-colors">
+                  contact@dzprimeacademy.live
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-gold-600 dark:text-gold-400 shrink-0" />

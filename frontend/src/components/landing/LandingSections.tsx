@@ -1,15 +1,16 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import { Send, Award, Globe2, MapPinned } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthModal } from '@/lib/authModalContext';
 import { WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
-import { MagneticButton } from './MagneticButton';
+import { ContactActionModal } from '../shared/ContactActionModal';
 
 export const LandingSections: React.FC = () => {
   const { locale } = useTranslation();
   const { openAuth } = useAuthModal();
+  const [ambassadorModalOpen, setAmbassadorModalOpen] = useState(false);
 
   const wilayaNames = WILAYAS.map((w) => getLocalizedWilayaName(w, locale));
 
@@ -94,16 +95,15 @@ export const LandingSections: React.FC = () => {
               <Award className="w-3.5 h-3.5" />
               {c.ctaPrimary}
             </a>
-            <a
-              href="https://t.me/dzprimeacademy"
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => setAmbassadorModalOpen(true)}
               data-testid="landing-ambassador-contact-btn"
-              className="flex-1 w-full px-5 py-3 rounded-2xl border border-white/15 text-slate-700 dark:text-gray-200 font-black text-xs flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 w-full px-5 py-3 rounded-2xl border border-white/15 text-slate-700 dark:text-gray-200 font-black text-xs flex items-center justify-center gap-2 transition-colors hover:bg-white/10 active:scale-95 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              {c.ctaSecondary}
-            </a>
+              <span>{c.ctaSecondary}</span>
+            </button>
           </div>
         </div>
       </section>
@@ -114,15 +114,26 @@ export const LandingSections: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-gold-500/10 via-transparent to-lime-400/10 pointer-events-none" />
           <h2 className="relative z-10 text-2xl sm:text-4xl font-black text-white">{c.finalTitle}</h2>
           <p className="relative z-10 mt-3 text-sm text-slate-300 max-w-md mx-auto">{c.finalBody}</p>
-          <MagneticButton
+          <button
+            type="button"
             onClick={() => openAuth('register')}
             data-testid="landing-final-cta-btn"
-            className="relative z-10 mt-6 px-8 py-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-sm shadow-[0_0_25px_-5px_rgba(163,230,53,0.5)]"
+            className="relative z-20 mt-6 px-8 py-3.5 rounded-2xl bg-lime-400 hover:bg-lime-300 active:scale-95 text-slate-950 font-black text-sm shadow-[0_0_25px_-5px_rgba(163,230,53,0.5)] transition-all cursor-pointer inline-flex items-center justify-center"
           >
             {c.finalCta}
-          </MagneticButton>
+          </button>
         </div>
       </section>
+
+      {/* Ambassador Application Modal (Telegram ONLY) */}
+      <ContactActionModal
+        isOpen={ambassadorModalOpen}
+        onClose={() => setAmbassadorModalOpen(false)}
+        operation={{
+          type: 'AMBASSADOR_APPLICATION',
+          title: locale === 'ar' ? 'طلب الانضمام لشبكة السفراء المعتمدين (58 ولاية)' : 'Candidature Ambassadeur (58 Wilayas)',
+        }}
+      />
     </div>
   );
 };

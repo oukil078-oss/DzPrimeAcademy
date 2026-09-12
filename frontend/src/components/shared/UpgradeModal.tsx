@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Check, Sparkles, X, ShieldCheck, Loader2 } from 'lucide-react';
+import { Crown, Check, Sparkles, X, ShieldCheck, Loader2, MessageCircle, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthStore } from '@/lib/store';
 import { useAuthModal } from '@/lib/authModalContext';
+import { ContactActionModal } from './ContactActionModal';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -21,13 +22,28 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [contactModalOpen, setContactModalOpen] = useState(false);
 
-  const handleActivate = async () => {
+  const handleOpenContactPayment = () => {
     if (!currentUser) {
       onClose();
       openAuth('login');
       return;
     }
+    setContactModalOpen(true);
+  };
+
+  const handleActivateWithCode = async () => {
+    if (!currentUser) {
+      onClose();
+      openAuth('login');
+      return;
+    }
+    if (!activationCode.trim()) {
+      handleOpenContactPayment();
+      return;
+    }
+
     setLoading(true);
     setErrorMsg('');
     const res = await upgradeToGolden();
@@ -45,7 +61,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
         onClose();
       }, 2000);
     } else {
-      setErrorMsg(res?.error || (locale === 'ar' ? 'فشل تفعيل العضوية' : 'Échec de la mise à niveau'));
+      setErrorMsg(res?.error || (locale === 'ar' ? 'فشل تفعيل العضوية بهذا الكود' : 'Échec de la mise à niveau'));
     }
   };
 
@@ -116,48 +132,70 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
             ))}
           </div>
 
-          {/* Activation Code / Instant Sim */}
+          {/* Primary Action: Direct Payment & Contact via WhatsApp / Telegram */}
           <div className="space-y-3">
-            <input
-              type="text"
-              placeholder={locale === 'ar' ? 'كود التفعيل (مثال: DZPRIME2026)' : 'Code d\'activation (ex: DZPRIME2026)'}
-              value={activationCode}
-              onChange={(e) => setActivationCode(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/40 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 font-mono text-center"
-            />
-
-            {errorMsg && (
-              <p className="text-xs text-rose-500 font-bold text-center font-arabic bg-rose-500/10 py-2 px-3 rounded-xl border border-rose-500/20">
-                {errorMsg}
-              </p>
-            )}
-
             <button
-              onClick={handleActivate}
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs font-arabic flex items-center justify-center gap-2 shadow-gold-glow hover:shadow-gold-glow-lg transition-all active:scale-[0.98] disabled:opacity-60"
+              onClick={handleOpenContactPayment}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-gold-500 via-gold-400 to-gold-600 hover:from-gold-400 hover:to-gold-500 text-navy-950 font-black text-xs font-arabic flex items-center justify-center gap-2 shadow-gold-glow hover:shadow-gold-glow-lg transition-all active:scale-[0.98]"
             >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : isSuccess ? (
-                <>
-                  <ShieldCheck className="w-4 h-4 text-navy-950" />
-                  <span>✓ {t('common.success')}</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>{t('bot.upgradeBtn')}</span>
-                </>
-              )}
+              <Sparkles className="w-4 h-4" />
+              <span>{locale === 'ar' ? 'الدفع والتفعيل الفوري (واتساب / تيليغرام)' : 'Payer & Activer (WhatsApp / Telegram)'}</span>
             </button>
+
+            {/* Optional Activation Code */}
+            <div className="pt-2 border-t border-slate-200 dark:border-white/10 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder={locale === 'ar' ? 'أو أدخل كود التفعيل إن وجد (DZPRIME2026)' : 'Ou code promo / activation'}
+                  value={activationCode}
+                  onChange={(e) => setActivationCode(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-850 border border-slate-300 dark:border-gold-500/40 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-gold-500 font-mono text-center"
+                />
+                {activationCode && (
+                  <button
+                    onClick={handleActivateWithCode}
+                    disabled={loading}
+                    className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-white/10 hover:bg-gold-500 text-slate-900 dark:text-white hover:text-navy-950 font-bold text-xs"
+                  >
+                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (locale === 'ar' ? 'تطبيق' : 'Valider')}
+                  </button>
+                )}
+              </div>
+
+              {errorMsg && (
+                <p className="text-xs text-rose-500 font-bold text-center font-arabic bg-rose-500/10 py-2 px-3 rounded-xl border border-rose-500/20">
+                  {errorMsg}
+                </p>
+              )}
+            </div>
           </div>
 
           <p className="text-[10px] text-slate-400 dark:text-gray-500 text-center mt-3 font-arabic">
-            🔒 Dahabia / CIB • Instant Serverless Activation
+            🔒 BaridiMob • Edahabia • CCP • Instant Support Activation
           </p>
         </motion.div>
       </div>
+
+      {contactModalOpen && (
+        <ContactActionModal
+          isOpen={contactModalOpen}
+          onClose={() => setContactModalOpen(false)}
+          operation={{
+            type: 'VIP_MEMBERSHIP_UPGRADE',
+            title: locale === 'ar' ? 'ترقية العضوية الذهبية VIP' : 'Adhésion Gold VIP',
+            amountDzd: 5900,
+            details: 'DZ Prime Academy 2026 Annual Pass',
+            user: currentUser ? {
+              name: currentUser.name,
+              email: currentUser.email,
+              phone: currentUser.phone || undefined,
+              wilayaName: currentUser.wilayaName || undefined,
+            } : undefined,
+          }}
+        />
+      )}
     </AnimatePresence>
   );
 };
+

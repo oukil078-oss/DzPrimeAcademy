@@ -26,6 +26,7 @@ import {
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthModal } from '@/lib/authModalContext';
 import { MagneticButton } from './MagneticButton';
+import { LandingPageConfig } from '@/lib/landingConfig';
 
 const HERO_COPY = {
   ar: {
@@ -100,7 +101,29 @@ export const LandingHero: React.FC = () => {
   const { openAuth } = useAuthModal();
   const heroRef = useRef<HTMLDivElement>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
-  const c = HERO_COPY[locale] || HERO_COPY.ar;
+  const [dynamicConfig, setDynamicConfig] = useState<LandingPageConfig | null>(null);
+
+  useEffect(() => {
+    fetch('/api/settings/landing')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.config) {
+          setDynamicConfig(data.config);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const baseCopy = HERO_COPY[locale] || HERO_COPY.ar;
+  const c = {
+    ...baseCopy,
+    badge: (locale === 'ar' ? dynamicConfig?.hero?.badgeAr : dynamicConfig?.hero?.badgeFr) || baseCopy.badge,
+    titleLead: (locale === 'ar' ? dynamicConfig?.hero?.titleLeadAr : dynamicConfig?.hero?.titleLeadFr) || baseCopy.titleLead,
+    titleHighlight: (locale === 'ar' ? dynamicConfig?.hero?.titleHighlightAr : dynamicConfig?.hero?.titleHighlightFr) || baseCopy.titleHighlight,
+    titleEnd: (locale === 'ar' ? dynamicConfig?.hero?.titleEndAr : dynamicConfig?.hero?.titleEndFr) || baseCopy.titleEnd,
+    sub: (locale === 'ar' ? dynamicConfig?.hero?.subAr : dynamicConfig?.hero?.subFr) || baseCopy.sub,
+    ctaPrimary: (locale === 'ar' ? dynamicConfig?.hero?.ctaPrimaryAr : dynamicConfig?.hero?.ctaPrimaryFr) || baseCopy.ctaPrimary,
+  };
 
   useEffect(() => {
     if (!heroRef.current) return;

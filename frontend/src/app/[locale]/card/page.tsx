@@ -7,7 +7,8 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { INSTITUTIONS, WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 import { User } from '@/types';
-import { CreditCard, Sparkles, Check, Loader2 } from 'lucide-react';
+import { CreditCard, Sparkles, Check, Loader2, ShieldCheck } from 'lucide-react';
+import { ContactActionModal } from '@/components/shared/ContactActionModal';
 
 export default function CardStudioPage() {
   const { currentUser, setCurrentUser, updateProfile } = useAuthStore();
@@ -32,6 +33,7 @@ export default function CardStudioPage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,14 +167,50 @@ export default function CardStudioPage() {
         </div>
 
         {/* Right Preview */}
-        <div className="lg:col-span-7 flex flex-col items-center">
+        <div className="lg:col-span-7 flex flex-col items-center gap-4 w-full">
           {currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'ADMIN' || currentUser.role === 'MODERATOR' || Boolean(currentUser.adminRole)) ? (
             <AdminMembershipCard user={currentUser} allowExport={true} />
           ) : (
             <MembershipCard user={currentUser || undefined} allowExport={true} />
           )}
+
+          {(!currentUser || (currentUser.role !== 'STUDENT_PAID' && currentUser.role !== 'OWNER' && currentUser.role !== 'ADMIN')) && (
+            <div className="w-full max-w-md p-4 rounded-3xl bg-[#090E1E] border border-gold-500/30 text-center space-y-2">
+              <span className="text-[11px] text-gray-400 font-arabic block">
+                {locale === 'ar'
+                  ? 'هل تريد ترقية بطاقتك إلى عضوية VIP المشفرة وفتح كافة الدروس والامتحانات؟'
+                  : 'Voulez-vous activer votre carte VIP et débloquer tous les contenus ?'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowContactModal(true)}
+                className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-lime-400 via-emerald-400 to-green-500 hover:from-lime-300 hover:to-emerald-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>{locale === 'ar' ? 'فعّل بطاقتك الرقمية (VIP) عبر واتساب وتلغرام' : 'Activer ma Carte Numérique VIP'}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      <ContactActionModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        operation={{
+          type: 'VIP_MEMBERSHIP_UPGRADE',
+          title: locale === 'ar' ? 'تفعيل بطاقة العضوية الرقمية المشفرة (VIP)' : 'Activation de Carte Numérique VIP',
+          details: 'طلب ترقية وتفعيل بطاقة العضوية الرقمية عبر تلغرام وواتساب',
+          user: currentUser
+            ? {
+                name: currentUser.name,
+                email: currentUser.email,
+                phone: currentUser.phone,
+                wilayaName: currentUser.wilayaName,
+              }
+            : undefined,
+        }}
+      />
     </div>
   );
 }

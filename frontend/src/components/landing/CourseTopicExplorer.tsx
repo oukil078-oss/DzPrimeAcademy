@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAuthModal } from '@/lib/authModalContext';
 import { formatDZD } from '@/lib/format';
+import { LandingPageConfig } from '@/lib/landingConfig';
 
 interface CourseItem {
   id: string;
@@ -128,6 +129,27 @@ export const CourseTopicExplorer: React.FC = () => {
   const { locale, isRtl } = useTranslation();
   const { openAuth } = useAuthModal();
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'BAC' | 'UNIVERSITY_LMD' | 'MEDICAL'>('ALL');
+  const [dynamicConfig, setDynamicConfig] = useState<LandingPageConfig | null>(null);
+  const [realStats, setRealStats] = useState<{
+    examsCount: number;
+    studentsCount: number;
+    wilayasCount: number;
+    satisfactionRate: number;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/settings/landing')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.config) {
+          setDynamicConfig(data.config);
+        }
+        if (data?.realStats) {
+          setRealStats(data.realStats);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const categories = [
     { id: 'ALL', labelAr: 'جميع التخصصات', labelFr: 'Toutes les filières', icon: Sparkles },
@@ -136,10 +158,15 @@ export const CourseTopicExplorer: React.FC = () => {
     { id: 'MEDICAL', labelAr: 'العلوم الطبية والصيدلة', labelFr: 'Médecine & Santé', icon: ShieldCheck },
   ];
 
+  const currentCourses =
+    dynamicConfig?.featuredCoursesSection?.courses && dynamicConfig.featuredCoursesSection.courses.length > 0
+      ? dynamicConfig.featuredCoursesSection.courses
+      : FEATURED_COURSES;
+
   const filteredCourses =
     selectedCategory === 'ALL'
-      ? FEATURED_COURSES
-      : FEATURED_COURSES.filter((c) => c.category === selectedCategory);
+      ? currentCourses
+      : currentCourses.filter((c) => c.category === selectedCategory);
 
   return (
     <section id="courses-explorer" className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-12 sm:space-y-16 font-arabic scroll-mt-24" data-testid="course-topic-explorer">
@@ -149,11 +176,15 @@ export const CourseTopicExplorer: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-gold-500 animate-pulse" />
             <span className="text-xs font-black uppercase tracking-widest text-gold-600 dark:text-gold-400">
-              {locale === 'ar' ? 'المسارات والمقاييس المعتمدة' : 'Modules & Filières'}
+              {locale === 'ar'
+                ? dynamicConfig?.featuredCoursesSection?.subtitleAr || 'المسارات والمقاييس المعتمدة'
+                : dynamicConfig?.featuredCoursesSection?.subtitleFr || 'Modules & Filières'}
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {locale === 'ar' ? 'استكشف أشهر الدورات والمقاييس' : 'Explorez nos modules populaires'}
+            {locale === 'ar'
+              ? dynamicConfig?.featuredCoursesSection?.titleAr || 'استكشف أشهر الدورات والمقاييس'
+              : dynamicConfig?.featuredCoursesSection?.titleFr || 'Explorez nos modules populaires'}
           </h2>
         </div>
 
@@ -397,20 +428,52 @@ export const CourseTopicExplorer: React.FC = () => {
       {/* ================= 4. TRUST & METRICS RIBBON ================= */}
       <div className="rounded-3xl bg-slate-100 dark:bg-[#080D1D] border border-slate-200 dark:border-gold-500/25 p-6 sm:p-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         <div className="space-y-1">
-          <div className="text-2xl sm:text-3xl font-black text-gold-600 dark:text-gold-300 font-mono">12,000+</div>
-          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">{locale === 'ar' ? 'موضوع امتحان محلول' : 'Annales Corrigées'}</div>
+          <div className="text-2xl sm:text-3xl font-black text-gold-600 dark:text-gold-300 font-mono">
+            {dynamicConfig?.stats?.mode === 'AUTO' && realStats
+              ? `${realStats.examsCount.toLocaleString()}+`
+              : dynamicConfig?.stats?.examsValue || '12,000+'}
+          </div>
+          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">
+            {locale === 'ar'
+              ? dynamicConfig?.stats?.examsLabelAr || 'موضوع امتحان محلول'
+              : dynamicConfig?.stats?.examsLabelFr || 'Annales Corrigées'}
+          </div>
         </div>
         <div className="space-y-1">
-          <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">50,000+</div>
-          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">{locale === 'ar' ? 'طالب نشط بالمنصة' : 'Étudiants Actifs'}</div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+            {dynamicConfig?.stats?.mode === 'AUTO' && realStats
+              ? `${realStats.studentsCount.toLocaleString()}+`
+              : dynamicConfig?.stats?.studentsValue || '50,000+'}
+          </div>
+          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">
+            {locale === 'ar'
+              ? dynamicConfig?.stats?.studentsLabelAr || 'طالب نشط بالمنصة'
+              : dynamicConfig?.stats?.studentsLabelFr || 'Étudiants Actifs'}
+          </div>
         </div>
         <div className="space-y-1">
-          <div className="text-2xl sm:text-3xl font-black text-sky-600 dark:text-sky-400 font-mono">58</div>
-          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">{locale === 'ar' ? 'ولاية مغطاة بالسفراء' : 'Wilayas Couvertes'}</div>
+          <div className="text-2xl sm:text-3xl font-black text-sky-600 dark:text-sky-400 font-mono">
+            {dynamicConfig?.stats?.mode === 'AUTO' && realStats
+              ? `${realStats.wilayasCount}`
+              : dynamicConfig?.stats?.wilayasValue || '58'}
+          </div>
+          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">
+            {locale === 'ar'
+              ? dynamicConfig?.stats?.wilayasLabelAr || 'ولاية مغطاة بالسفراء'
+              : dynamicConfig?.stats?.wilayasLabelFr || 'Wilayas Couvertes'}
+          </div>
         </div>
         <div className="space-y-1">
-          <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 font-mono">99.8%</div>
-          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">{locale === 'ar' ? 'نسبة رضا الطلبة' : 'Taux de Satisfaction'}</div>
+          <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 font-mono">
+            {dynamicConfig?.stats?.mode === 'AUTO' && realStats
+              ? `${realStats.satisfactionRate}%`
+              : dynamicConfig?.stats?.satisfactionValue || '99.8%'}
+          </div>
+          <div className="text-xs text-slate-600 dark:text-gray-400 font-semibold">
+            {locale === 'ar'
+              ? dynamicConfig?.stats?.satisfactionLabelAr || 'نسبة رضا الطلبة'
+              : dynamicConfig?.stats?.satisfactionLabelFr || 'Taux de Satisfaction'}
+          </div>
         </div>
       </div>
     </section>

@@ -18,6 +18,7 @@ import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { WILAYAS, getLocalizedWilayaName } from '@/lib/initial-data';
 import { getDashboardPath } from '@/lib/rbac';
+import { ContactActionModal } from '@/components/shared/ContactActionModal';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -35,10 +36,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [wilayaCode, setWilayaCode] = useState<number>(16);
+  const [wilayaCode, setWilayaCode] = useState(16);
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [activationModalOpen, setActivationModalOpen] = useState(false);
+  const [registeredUserData, setRegisteredUserData] = useState<{ name: string; email: string; phone: string; wilayaName?: string } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -111,8 +115,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
     });
     setLoading(false);
     if (result.success) {
-      onClose();
-      if (result.user) router.push(getDashboardPath(result.user.role, locale));
+      setRegisteredUserData({
+        name,
+        email,
+        phone,
+        wilayaName: wilaya ? getLocalizedWilayaName(wilaya, locale) : undefined,
+      });
+      setActivationModalOpen(true);
     } else {
       setErrorMsg(result.error || (locale === 'ar' ? 'فشل إنشاء الحساب' : "Échec de l'inscription"));
     }
@@ -420,6 +429,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
           )}
         </motion.div>
       </div>
+
+      {activationModalOpen && registeredUserData && (
+        <ContactActionModal
+          isOpen={activationModalOpen}
+          onClose={() => {
+            setActivationModalOpen(false);
+            onClose();
+            router.push(getDashboardPath('STUDENT_FREE', locale));
+          }}
+          operation={{
+            type: 'ACCOUNT_ACTIVATION',
+            title: locale === 'ar' ? 'تفعيل حساب جديد' : 'Activation de nouveau compte',
+            user: registeredUserData,
+          }}
+        />
+      )}
     </AnimatePresence>
   );
 };

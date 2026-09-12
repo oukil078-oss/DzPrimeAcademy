@@ -104,7 +104,7 @@ export const CardExportTemplate: React.FC<CardExportTemplateProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 shrink-0" />
-            <span>dzprime.academy</span>
+            <span>dzprimeacademy.live</span>
           </div>
         </div>
 

@@ -56,6 +56,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
   const [edahabiaEnabled, setEdahabiaEnabled] = useState(true);
   const [ccpReceiptsEnabled, setCcpReceiptsEnabled] = useState(true);
   const [autoVerifyCards, setAutoVerifyCards] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState('https://wa.me/qr/5473INCXN3HJI1');
+  const [telegramUsername, setTelegramUsername] = useState('dzprime_academy');
+  const [linkedinUrl, setLinkedinUrl] = useState('https://www.linkedin.com/company/dzprimeacademy');
   const [systemSaving, setSystemSaving] = useState(false);
   const [systemSuccess, setSystemSuccess] = useState('');
   const [systemError, setSystemError] = useState('');
@@ -92,6 +95,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
           if (data.edahabiaEnabled !== undefined) setEdahabiaEnabled(data.edahabiaEnabled);
           if (data.ccpReceiptsEnabled !== undefined) setCcpReceiptsEnabled(data.ccpReceiptsEnabled);
           if (data.autoVerifyCards !== undefined) setAutoVerifyCards(data.autoVerifyCards);
+          if (data.whatsappNumber) setWhatsappNumber(data.whatsappNumber);
+          if (data.telegramUsername) setTelegramUsername(data.telegramUsername);
+          if (data.linkedinUrl) setLinkedinUrl(data.linkedinUrl);
         }
       })
       .catch(() => {});
@@ -137,6 +143,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
           edahabiaEnabled,
           ccpReceiptsEnabled,
           autoVerifyCards,
+          whatsappNumber,
+          telegramUsername,
+          linkedinUrl,
         }),
       });
 
@@ -411,6 +420,52 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
                   </div>
                   <span className="text-[10px] font-mono font-bold">{edahabiaEnabled ? 'ON' : 'OFF'}</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Contact & Support Channels for Activations & Payments */}
+            <div className="space-y-2.5 pt-2 border-t border-white/10">
+              <label className="block text-lime-400 font-bold text-xs">
+                {locale === 'ar' ? '📱 قنوات التواصل والدفع المباشر (تظهر للطلبة)' : 'Canaux Support & Paiements'}
+              </label>
+
+              <div>
+                <label className="block text-gray-300 text-[11px] mb-1">
+                  {locale === 'ar' ? 'رقم واتساب الإدارة (WhatsApp)' : 'Numéro WhatsApp'}
+                </label>
+                <input
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  placeholder="https://wa.me/qr/5473INCXN3HJI1"
+                  dir="ltr"
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-lime-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-300 text-[11px] mb-1">
+                  {locale === 'ar' ? 'معرّف تيليغرام الإدارة (Telegram)' : 'Nom d\'utilisateur Telegram'}
+                </label>
+                <input
+                  value={telegramUsername}
+                  onChange={(e) => setTelegramUsername(e.target.value)}
+                  placeholder="dzprime_academy"
+                  dir="ltr"
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-lime-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-300 text-[11px] mb-1">
+                  {locale === 'ar' ? 'رابط حساب لينكد إن (LinkedIn لدعم تفعيل الحسابات)' : 'Lien profil LinkedIn'}
+                </label>
+                <input
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="https://www.linkedin.com/company/dzprimeacademy"
+                  dir="ltr"
+                  className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white font-mono text-xs focus:outline-none focus:border-lime-400"
+                />
               </div>
             </div>
 

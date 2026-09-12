@@ -92,14 +92,14 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
     issueDate: '2024/2025',
     expiryDate: '2026/09/30',
     isVerified: user?.isVerified ?? true,
-    qrPayload: `https://dzprime.academy/verify/${user?.studentCardId || 'DZ-GLD-16-7842'}`,
-    phone: user?.phone || '+213 661 23 45 67',
-    email: user?.email || 'info@dzprime.academy',
+    qrPayload: `https://dzprimeacademy.live/verify/${user?.studentCardId || 'DZ-GLD-16-7842'}`,
+    phone: user?.phone || '+213 555 93 54 20',
+    email: user?.email || 'contact@dzprimeacademy.live',
   };
 
   // Generate dynamic QR Code for the card back (points to public profile)
   useEffect(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://dzprime.academy';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://dzprimeacademy.live';
     const profileUrl = `${origin}/${locale}/profile/${card.cardId}`;
     
     QRCode.toDataURL(profileUrl, {
@@ -267,7 +267,7 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
                 </div>
                 <div className="flex items-center gap-1">
                   <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-navy-950 shrink-0" />
-                  <span className="truncate">dzprime.academy</span>
+                  <span className="truncate">dzprimeacademy.live</span>
                 </div>
               </div>
 

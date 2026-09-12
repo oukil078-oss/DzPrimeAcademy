@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { hashPassword, signToken, setAuthCookie } from '@/lib/auth';
+import { sendActivationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { name, email, password, phone, wilayaCode, wilayaName } = body;
+  const { name, email, password, phone, wilayaCode, wilayaName, locale = 'ar' } = body;
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: 'الاسم والبريد الإلكتروني وكلمة المرور مطلوبة' }, { status: 400 });
@@ -42,8 +44,51 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Generate 24-hour Account Activation Token
+  const activationTokenHex = crypto.randomBytes(32).toString('hex');
+  await prisma.accountActivationToken.create({
+    data: {
+      token: activationTokenHex,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+    },
+  });
+
+  // Dispatch activation email (Resend / Gmail SMTP / Dev console preview)
+  try {
+    await sendActivationEmail({
+      to: normalizedEmail,
+      name: user.name,
+      token: activationTokenHex,
+      locale,
+    });
+  } catch (emailErr) {
+    console.error('Failed to send activation email:', emailErr);
+  }
+
+  // Create Pending Operation record for the Admin dashboard
+  try {
+    await prisma.pendingOperation.create({
+      data: {
+        userId: user.id,
+        userName: user.name,
+        userEmail: user.email,
+        userPhone: user.phone,
+        userWilaya: user.wilayaName || (user.wilayaCode ? `ولاية ${user.wilayaCode}` : null),
+        type: 'ACCOUNT_ACTIVATION',
+        status: 'PENDING',
+        title: locale === 'ar' ? 'طلب تفعيل حساب جديد' : 'Activation de nouveau compte',
+        details: `ID: ${studentCardId}`,
+        amountDzd: 0,
+      },
+    });
+  } catch (opErr) {
+    console.error('Failed to record pending operation for registration:', opErr);
+  }
+
   const token = signToken(user.id);
-  const response = NextResponse.json({ user }, { status: 201 });
+  const response = NextResponse.json({ user, requiresActivation: true }, { status: 201 });
   setAuthCookie(response, token);
   return response;
 }
+

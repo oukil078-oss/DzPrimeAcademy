@@ -411,5 +411,63 @@ model PlatformSettings {
   edahabiaEnabled          Boolean  @default(true)
   ccpReceiptsEnabled       Boolean  @default(true)
   autoVerifyCards          Boolean  @default(false)
+  whatsappNumber           String?  @default("https://wa.me/qr/5473INCXN3HJI1")
+  telegramUsername         String?  @default("dzprime_academy")
+  ambassadorTelegram       String?  @default("MrK_ADMIN00")
+  linkedinUrl              String?  @default("https://www.linkedin.com/company/dzprimeacademy")
+  landingConfig            Json?
   updatedAt                DateTime @updatedAt
 }
+
+enum OperationType {
+  ACCOUNT_ACTIVATION
+  VIP_MEMBERSHIP_UPGRADE
+  BUNDLE_PURCHASE
+  COURSE_ENROLLMENT
+  AMBASSADOR_APPLICATION
+  MANUAL_SUPPORT
+}
+
+enum OperationChannel {
+  WHATSAPP
+  TELEGRAM
+  LINKEDIN
+  EMAIL_DIRECT
+}
+
+enum OperationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PendingOperation {
+  id              String           @id @default(cuid())
+  userId          String?
+  userName        String
+  userEmail       String
+  userPhone       String?
+  userWilaya      String?
+  type            OperationType    @default(ACCOUNT_ACTIVATION)
+  channel         OperationChannel?
+  status          OperationStatus  @default(PENDING)
+  title           String
+  details         String?
+  amountDzd       Int              @default(0)
+  targetId        String?
+  adminNotes      String?
+  approvedByAdmin String?
+  approvedAt      DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model AccountActivationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
