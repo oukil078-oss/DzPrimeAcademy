@@ -38,6 +38,8 @@ export const AdminOperationsTab: React.FC<AdminOperationsTabProps> = ({ locale }
   const [total, setTotal] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [totalPendingAmountDzd, setTotalPendingAmountDzd] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
+  const [totalApprovedAmountDzd, setTotalApprovedAmountDzd] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -66,6 +68,8 @@ export const AdminOperationsTab: React.FC<AdminOperationsTabProps> = ({ locale }
         setTotal(data.total || 0);
         setPendingCount(data.pendingCount || 0);
         setTotalPendingAmountDzd(data.totalPendingAmountDzd || 0);
+        setApprovedCount(data.approvedCount || 0);
+        setTotalApprovedAmountDzd(data.totalApprovedAmountDzd || 0);
       }
     } catch (err) {
       console.error('Failed to load operations:', err);
@@ -225,24 +229,34 @@ export const AdminOperationsTab: React.FC<AdminOperationsTabProps> = ({ locale }
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#090E1E] border border-amber-500/30 space-y-1 relative overflow-hidden">
+        {/* Card 1: Approved & Confirmed Revenue (Real Money Collected) */}
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#0A1A1C] to-[#070D18] border border-emerald-500/40 space-y-1 relative overflow-hidden shadow-lg shadow-emerald-500/10">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-amber-300 font-bold">
-              {isAr ? 'الطلبات المعلقة للتحقق' : 'En attente de validation'}
+            <span className="text-xs text-emerald-300 font-bold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{isAr ? 'المداخيل المحصّلة (المؤكدة)' : 'Revenus Encaissés (Validés)'}</span>
             </span>
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/30">
+              {approvedCount} {isAr ? 'مقبولة' : 'validées'}
+            </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-white font-mono">{pendingCount}</div>
+          <div className="text-xl sm:text-3xl font-black text-emerald-400 font-mono">
+            {formatDZD(totalApprovedAmountDzd, locale)}
+          </div>
           <p className="text-[10px] text-gray-400">
-            {isAr ? 'تتطلب موافقة المسؤول لتفعيل الميزات' : 'Nécessitent validation admin'}
+            {isAr ? 'مدفوعات حقيقية تم اعتمادها بالمنصة' : 'Paiements réels confirmés'}
           </p>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#090E1E] border border-emerald-500/30 space-y-1">
-          <span className="text-xs text-emerald-300 font-bold">
-            {isAr ? 'إجمالي المبالغ المنتظرة' : 'Volume financier en attente'}
-          </span>
-          <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono">
+        {/* Card 2: Pending Volume */}
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#090E1E] border border-amber-500/30 space-y-1 relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-amber-300 font-bold">
+              {isAr ? 'المبالغ قيد الانتظار' : 'Volume financier en attente'}
+            </span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-amber-400 font-mono">
             {formatDZD(totalPendingAmountDzd, locale)}
           </div>
           <p className="text-[10px] text-gray-400">
@@ -250,33 +264,41 @@ export const AdminOperationsTab: React.FC<AdminOperationsTabProps> = ({ locale }
           </p>
         </div>
 
+        {/* Card 3: Pending Count */}
         <div className="p-4 sm:p-5 rounded-3xl bg-[#090E1E] border border-white/10 space-y-1">
-          <span className="text-xs text-gray-300 font-bold">
-            {isAr ? 'إجمالي سجل العمليات' : 'Total des requêtes'}
-          </span>
-          <div className="text-2xl sm:text-3xl font-black text-white font-mono">{total}</div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-300 font-bold">
+              {isAr ? 'الطلبات المعلقة' : 'En attente'}
+            </span>
+            <span className="text-[10px] text-gray-400 font-mono font-bold">
+              {pendingCount > 0 ? (isAr ? 'تحتاج إجراء' : 'Action requise') : (isAr ? 'مكتمل' : 'À jour')}
+            </span>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-white font-mono">{pendingCount}</div>
           <p className="text-[10px] text-gray-400">
-            {isAr ? 'جميع الحالات المسجلة بالمنصة' : 'Toutes requêtes confondues'}
+            {isAr ? 'تتطلب موافقة المسؤول لتفعيل الميزات' : 'Nécessitent validation admin'}
           </p>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#090E1E] border border-white/10 flex items-center justify-between">
+        {/* Card 4: Total & Live Sync */}
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#090E1E] border border-white/10 flex items-center justify-between p-4 sm:p-5">
           <div>
             <span className="text-xs text-gray-300 font-bold">
-              {isAr ? 'التحديث التلقائي' : 'Auto-Sync Live'}
+              {isAr ? 'إجمالي سجل العمليات' : 'Total des requêtes'}
             </span>
-            <div className="text-xs font-bold text-lime-400 mt-1 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-lime-400 animate-ping" />
-              <span>{isAr ? 'نشط (كل 15 ثانية)' : 'Actif (15s)'}</span>
+            <div className="text-2xl sm:text-3xl font-black text-white font-mono mt-0.5">{total}</div>
+            <div className="text-[10px] font-bold text-lime-400 mt-1 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-ping" />
+              <span>{isAr ? 'تحديث تلقائي حي' : 'Sync Live'}</span>
             </div>
           </div>
           <button
             onClick={() => loadOperations()}
             disabled={loading}
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 transition-all"
+            className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white transition-all shadow-sm"
             title={isAr ? 'تحديث فوري' : 'Actualiser'}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-lime-400' : ''}`} />
           </button>
         </div>
       </div>

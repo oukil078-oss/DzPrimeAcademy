@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   TrendingUp,
   Wallet,
@@ -21,6 +21,7 @@ import {
   BookOpen,
   Sliders,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AnimatedCounter } from '@/components/dashboard/AnimatedCounter';
@@ -35,63 +36,41 @@ export const FinancialOverviewTab: React.FC<FinancialOverviewTabProps> = ({ loca
   const [showBalance, setShowBalance] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'MONTH' | 'ANNUAL'>('MONTH');
   const [activeTooltipMonth, setActiveTooltipMonth] = useState<string | null>('Mar');
+  const [loading, setLoading] = useState(true);
 
-  const totalBalance = 8450000;
-  const monthlyIncome = 5420000;
-  const netMargin = Math.max(0, monthlyIncome - payrollLiability);
+  const [totalBalance, setTotalBalance] = useState(8450000);
+  const [monthlyIncome, setMonthlyIncome] = useState(5420000);
+  const [livePayrollLiability, setLivePayrollLiability] = useState(payrollLiability || 1791000);
+  const [netMargin, setNetMargin] = useState(3629000);
+  const [transactions, setTransactions] = useState<any[]>([]);
 
-  const transactions = [
-    {
-      id: 'tx-1',
-      nameAr: 'صرف مستحقات أستاذ: د. يوسف منصوري',
-      nameFr: 'Virement Enseignant: Dr. Youssef Mansouri',
-      category: 'TEACHER_PAYOUT',
-      method: 'CCP / Algérie Poste',
-      amount: -120000,
-      date: '28 Fév 2026',
-      status: 'COMPLETE',
-    },
-    {
-      id: 'tx-2',
-      nameAr: 'تفعيل بطاقة جامعية رقمية (VIP Gold)',
-      nameFr: 'Activation Carte Digitale (VIP Gold)',
-      category: 'CARD_PURCHASE',
-      method: 'Edahabia / CIB',
-      amount: 2500,
-      date: '28 Fév 2026',
-      status: 'COMPLETE',
-    },
-    {
-      id: 'tx-3',
-      nameAr: 'اشتراك حزمة البكالوريا الذهبية',
-      nameFr: 'Abonnement Pack BAC Excellence',
-      category: 'BUNDLE_SUB',
-      method: 'BaridiMob',
-      amount: 4500,
-      date: '27 Fév 2026',
-      status: 'COMPLETE',
-    },
-    {
-      id: 'tx-4',
-      nameAr: 'عمولة سفير ولاية وهران (Wilaya 31)',
-      nameFr: 'Commission Ambassadeur (Wilaya 31)',
-      category: 'AMBASSADOR_COMMISSION',
-      method: 'CCP Transfer',
-      amount: -35000,
-      date: '26 Fév 2026',
-      status: 'COMPLETE',
-    },
-    {
-      id: 'tx-5',
-      nameAr: 'حجز مقياس الخوارزميات L1 Info',
-      nameFr: 'Achat Module Algorithmique L1',
-      category: 'COURSE_PURCHASE',
-      method: 'CIB / Edahabia',
-      amount: 3800,
-      date: '25 Fév 2026',
-      status: 'COMPLETE',
-    },
-  ];
+  const loadFinancials = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/financial');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setTotalBalance(data.totalBalance);
+          setMonthlyIncome(data.monthlyIncome);
+          setLivePayrollLiability(data.payrollLiability);
+          setNetMargin(data.netMargin);
+          if (Array.isArray(data.transactions)) {
+            setTransactions(data.transactions);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load live financials:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadFinancials();
+    const interval = setInterval(loadFinancials, 15000);
+    return () => clearInterval(interval);
+  }, [loadFinancials]);
 
   return (
     <div className="space-y-6 font-arabic" data-testid="financial-overview-tab">
@@ -401,7 +380,7 @@ export const FinancialOverviewTab: React.FC<FinancialOverviewTabProps> = ({ loca
           <div className="p-4 rounded-2xl bg-black/40 border border-white/5 text-center space-y-2">
             <span className="text-xs text-slate-400 font-mono block">Payroll Reserve Goal</span>
             <div className="text-2xl font-black text-gold-400 font-mono">
-              {formatDZD(payrollLiability)}
+              {formatDZD(livePayrollLiability)}
             </div>
             <span className="text-[10px] text-slate-500 font-mono block">/ 2,500,000 DZD Target</span>
             <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden mt-2">
@@ -433,9 +412,19 @@ export const FinancialOverviewTab: React.FC<FinancialOverviewTabProps> = ({ loca
               {locale === 'ar' ? 'تحديث فوري لمدفوعات الطلبة، تفعيل البطاقات، وصرف مستحقات الأساتذة.' : 'Live platform ledger of subscriptions, payouts, and card verifications.'}
             </p>
           </div>
-          <span className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gold-400 self-start sm:self-auto">
-            LIVE TRANSACTIONS
-          </span>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-gold-400">
+              LIVE TRANSACTIONS
+            </span>
+            <button
+              onClick={() => loadFinancials()}
+              disabled={loading}
+              className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-all"
+              title={locale === 'ar' ? 'تحديث فوري' : 'Actualiser'}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-gold-400' : ''}`} />
+            </button>
+          </div>
         </div>
 
         <div className="space-y-2.5">

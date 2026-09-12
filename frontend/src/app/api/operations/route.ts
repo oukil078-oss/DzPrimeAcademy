@@ -101,7 +101,14 @@ export async function GET(request: NextRequest) {
     ];
   }
 
-  const [operations, total, pendingCount, pendingAmountResult] = await Promise.all([
+  const [
+    operations,
+    total,
+    pendingCount,
+    pendingAmountResult,
+    approvedCount,
+    approvedAmountResult,
+  ] = await Promise.all([
     prisma.pendingOperation.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -115,6 +122,13 @@ export async function GET(request: NextRequest) {
       where: { status: 'PENDING' },
       _sum: { amountDzd: true },
     }),
+    prisma.pendingOperation.count({
+      where: { status: 'APPROVED' },
+    }),
+    prisma.pendingOperation.aggregate({
+      where: { status: 'APPROVED' },
+      _sum: { amountDzd: true },
+    }),
   ]);
 
   return NextResponse.json({
@@ -122,5 +136,7 @@ export async function GET(request: NextRequest) {
     total,
     pendingCount,
     totalPendingAmountDzd: pendingAmountResult._sum.amountDzd || 0,
+    approvedCount,
+    totalApprovedAmountDzd: approvedAmountResult._sum.amountDzd || 0,
   });
 }
