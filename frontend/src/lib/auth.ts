@@ -99,7 +99,11 @@ export async function getUserFromRequest(request: NextRequest) {
     const payload = verifyJwt(bearerToken);
     if (payload?.sub) {
       const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: SAFE_USER_SELECT });
-      if (user) return user;
+      if (user) {
+        const isStaff = user.role === 'ADMIN' || user.role === 'OWNER';
+        if (!user.isVerified && !isStaff) return null;
+        return user;
+      }
     }
   }
 
@@ -109,7 +113,11 @@ export async function getUserFromRequest(request: NextRequest) {
     const payload = verifyJwt(jwtToken);
     if (payload?.sub) {
       const user = await prisma.user.findUnique({ where: { id: payload.sub }, select: SAFE_USER_SELECT });
-      if (user) return user;
+      if (user) {
+        const isStaff = user.role === 'ADMIN' || user.role === 'OWNER';
+        if (!user.isVerified && !isStaff) return null;
+        return user;
+      }
     }
   }
 
@@ -119,7 +127,11 @@ export async function getUserFromRequest(request: NextRequest) {
     const session = await prisma.session.findUnique({ where: { sessionToken } });
     if (session && session.expiresAt > new Date()) {
       const user = await prisma.user.findUnique({ where: { id: session.userId }, select: SAFE_USER_SELECT });
-      if (user) return user;
+      if (user) {
+        const isStaff = user.role === 'ADMIN' || user.role === 'OWNER';
+        if (!user.isVerified && !isStaff) return null;
+        return user;
+      }
     }
   }
 

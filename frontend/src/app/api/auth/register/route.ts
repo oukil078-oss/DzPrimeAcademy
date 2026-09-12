@@ -86,9 +86,18 @@ export async function POST(request: NextRequest) {
     console.error('Failed to record pending operation for registration:', opErr);
   }
 
-  const token = signToken(user.id);
-  const response = NextResponse.json({ user, requiresActivation: true }, { status: 201 });
-  setAuthCookie(response, token);
-  return response;
+  // Student account is created in unverified state (isVerified: false).
+  // Do NOT issue an auth cookie: the student cannot sign in until they verify their email or get confirmed by admins.
+  return NextResponse.json(
+    {
+      user,
+      requiresActivation: true,
+      message:
+        locale === 'ar'
+          ? 'تم إنشاء حسابك بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب قبل تسجيل الدخول.'
+          : 'Compte créé avec succès ! Veuillez vérifier votre email pour activer votre compte avant de vous connecter.',
+    },
+    { status: 201 }
+  );
 }
 

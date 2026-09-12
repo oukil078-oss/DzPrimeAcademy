@@ -41,6 +41,23 @@ export async function POST(request: NextRequest) {
 
     await clearFailedAttempts(normalizedEmail);
 
+    // Block unverified students / non-staff users from logging in
+    const isStaff = user.role === 'ADMIN' || user.role === 'OWNER';
+    if (!user.isVerified && !isStaff) {
+      return NextResponse.json(
+        {
+          error: 'حسابك غير مفعّل بعد. يرجى تأكيد بريدك الإلكتروني عبر الرابط المرسل إليك أو انتظار موافقة الإدارة قبل تسجيل الدخول.',
+          code: 'ACCOUNT_NOT_VERIFIED',
+          requiresVerification: true,
+          email: user.email,
+          name: user.name,
+          phone: user.phone || undefined,
+          wilayaName: user.wilayaName || undefined,
+        },
+        { status: 403 }
+      );
+    }
+
     const { passwordHash, ...safeUser } = user;
     const token = signToken(user.id);
     const response = NextResponse.json({ user: safeUser });

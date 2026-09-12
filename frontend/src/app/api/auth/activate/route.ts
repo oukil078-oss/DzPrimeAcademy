@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/db';
+import { signToken, setAuthCookie } from '@/lib/auth';
 import { sendActivationEmail } from '@/lib/email';
 
 export async function GET(request: NextRequest) {
@@ -69,11 +70,14 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({
+  const authToken = signToken(user.id);
+  const response = NextResponse.json({
     success: true,
     message: 'تم تفعيل حسابك بنجاح! يمكنك الآن الاستفادة من جميع الميزات.',
     user,
   });
+  setAuthCookie(response, authToken);
+  return response;
 }
 
 // POST: Resend activation email

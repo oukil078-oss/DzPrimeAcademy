@@ -13,6 +13,9 @@ import {
   Phone,
   Loader2,
   AlertCircle,
+  RefreshCw,
+  MessageCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -39,16 +42,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   const [wilayaCode, setWilayaCode] = useState(16);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [loginNotice, setLoginNotice] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
   const [activationModalOpen, setActivationModalOpen] = useState(false);
   const [registeredUserData, setRegisteredUserData] = useState<{ name: string; email: string; phone: string; wilayaName?: string } | null>(null);
 
+  // Unverified account state on login attempt
+  const [unverifiedAccount, setUnverifiedAccount] = useState<{
+    email: string;
+    name?: string;
+    phone?: string;
+    wilayaName?: string;
+  } | null>(null);
+  const [resendingActivation, setResendingActivation] = useState(false);
+  const [resendActivationSuccess, setResendActivationSuccess] = useState('');
+  const [resendActivationError, setResendActivationError] = useState('');
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab(defaultTab);
       setErrorMsg('');
+      setLoginNotice('');
       setForgotSuccess('');
+      setUnverifiedAccount(null);
+      setResendActivationSuccess('');
+      setResendActivationError('');
     }
   }, [isOpen, defaultTab]);
 
@@ -85,6 +104,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setLoginNotice('');
+    setUnverifiedAccount(null);
+    setResendActivationSuccess('');
+    setResendActivationError('');
     setLoading(true);
     const result = await login(email, password);
     setLoading(false);
@@ -92,13 +115,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
       onClose();
       if (result.user) router.push(getDashboardPath(result.user.role, locale));
     } else {
+      if (result.requiresVerification) {
+        setUnverifiedAccount(result.unverifiedUser || { email });
+      }
       setErrorMsg(result.error || (locale === 'ar' ? 'فشل تسجيل الدخول' : 'Échec de connexion'));
+    }
+  };
+
+  const handleResendActivation = async () => {
+    const targetEmail = unverifiedAccount?.email || email;
+    if (!targetEmail) return;
+    setResendingActivation(true);
+    setResendActivationSuccess('');
+    setResendActivationError('');
+    try {
+      const res = await fetch('/api/auth/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, locale }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setResendActivationSuccess(
+          locale === 'ar'
+            ? '✓ تم إرسال رابط تفعيل جديد بنجاح! تفقد صندوق الوارد أو مجلد الرسائل غير المرغوب فيها (Spam).'
+            : '✓ Un nouveau lien d\'activation a été envoyé ! Vérifiez votre boîte de réception et vos spams.'
+        );
+      } else {
+        setResendActivationError(data.error || (locale === 'ar' ? 'تعذر إرسال الرابط' : 'Échec de l\'envoi'));
+      }
+    } catch {
+      setResendActivationError(locale === 'ar' ? 'خطأ في الاتصال بالخادم' : 'Erreur de connexion');
+    } finally {
+      setResendingActivation(false);
     }
   };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setLoginNotice('');
     if (password.length < 6) {
       setErrorMsg(locale === 'ar' ? 'كلمة المرور يجب أن تكون 6 خانات على الأقل' : 'Le mot de passe doit contenir au moins 6 caractères');
       return;
@@ -180,7 +236,73 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
             </button>
           </div>
 
-          {errorMsg && (
+          {loginNotice && (
+            <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-semibold mb-4 leading-relaxed">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-amber-500 dark:text-amber-400" />
+              <span>{loginNotice}</span>
+            </div>
+          )}
+
+          {unverifiedAccount && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs space-y-3 mb-4">
+              <div className="flex items-start gap-2 text-amber-400 font-bold">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="space-y-1 text-right rtl:text-right ltr:text-left">
+                  <p className="font-black text-slate-900 dark:text-amber-200 text-xs">
+                    {locale === 'ar' ? 'حسابك بانتظار التفعيل' : 'Compte en attente d\'activation'}
+                  </p>
+                  <p className="text-[11px] text-slate-700 dark:text-gray-300 font-normal leading-relaxed">
+                    {locale === 'ar'
+                      ? 'لا يمكنك تسجيل الدخول حتى تؤكد بريدك الإلكتروني عبر الرابط المرسل إليك، أو تتم موافقة الإدارة على حسابك.'
+                      : 'Vous ne pouvez pas vous connecter tant que votre email n\'est pas vérifié ou validé par un administrateur.'}
+                  </p>
+                </div>
+              </div>
+
+              {resendActivationSuccess && (
+                <div className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">
+                  {resendActivationSuccess}
+                </div>
+              )}
+
+              {resendActivationError && (
+                <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[11px] font-bold">
+                  {resendActivationError}
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleResendActivation}
+                  disabled={resendingActivation}
+                  className="flex-1 py-2 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all disabled:opacity-60"
+                >
+                  {resendingActivation ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  <span>{locale === 'ar' ? 'إعادة إرسال رابط التفعيل' : 'Renvoyer le lien'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegisteredUserData({
+                      name: unverifiedAccount.name || '',
+                      email: unverifiedAccount.email,
+                      phone: unverifiedAccount.phone || '',
+                      wilayaName: unverifiedAccount.wilayaName,
+                    });
+                    setActivationModalOpen(true);
+                  }}
+                  className="flex-1 py-2 px-3 rounded-xl bg-lime-400/20 hover:bg-lime-400/30 text-lime-700 dark:text-lime-300 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>{locale === 'ar' ? 'طلب اعتماد من الإدارة' : 'Contacter l\'admin'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {errorMsg && !unverifiedAccount && (
             <div data-testid="auth-error-message" className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold mb-4">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
@@ -435,8 +557,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, defaultTa
           isOpen={activationModalOpen}
           onClose={() => {
             setActivationModalOpen(false);
-            onClose();
-            router.push(getDashboardPath('STUDENT_FREE', locale));
+            setActiveTab('login');
+            setLoginNotice(
+              locale === 'ar'
+                ? 'تم تسجيل طلبك بنجاح! يرجى تأكيد بريدك الإلكتروني عبر الرابط المرسل إليك، أو انتظار موافقة الإدارة لتتمكن من تسجيل الدخول.'
+                : 'Votre demande a été enregistrée avec succès ! Veuillez vérifier votre email ou attendre la validation par l\'administration pour vous connecter.'
+            );
           }}
           operation={{
             type: 'ACCOUNT_ACTIVATION',

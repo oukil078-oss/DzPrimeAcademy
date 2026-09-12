@@ -85,7 +85,19 @@ export function useAuthStore() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        return { success: false, error: data.error || 'فشل تسجيل الدخول' };
+        return {
+          success: false,
+          error: data.error || 'فشل تسجيل الدخول',
+          requiresVerification: Boolean(data.requiresVerification),
+          unverifiedUser: data.requiresVerification
+            ? {
+                email: data.email || email,
+                name: data.name || '',
+                phone: data.phone,
+                wilayaName: data.wilayaName,
+              }
+            : undefined,
+        };
       }
       setUser(data.user);
       return { success: true, user: data.user as User };
@@ -106,6 +118,10 @@ export function useAuthStore() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           return { success: false, error: data.error || 'فشل إنشاء الحساب' };
+        }
+        // If account requires activation / email verification, do not set current user
+        if (data.requiresActivation || (data.user && !data.user.isVerified)) {
+          return { success: true, requiresActivation: true, user: data.user as User };
         }
         setUser(data.user);
         return { success: true, user: data.user as User };
