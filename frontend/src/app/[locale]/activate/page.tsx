@@ -20,6 +20,7 @@ function ActivationContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const [userName, setUserName] = useState('');
+  const isActivatingRef = React.useRef(false);
 
   useEffect(() => {
     if (!token) {
@@ -27,6 +28,9 @@ function ActivationContent() {
       setMessage(isAr ? 'رمز التفعيل مفقود أو الرابط غير مكتمل' : 'Lien d\'activation invalide ou incomplet');
       return;
     }
+
+    if (isActivatingRef.current) return;
+    isActivatingRef.current = true;
 
     fetch(`/api/auth/activate?token=${encodeURIComponent(token)}`)
       .then((res) => res.json())
@@ -152,6 +156,13 @@ function ActivationContent() {
             </p>
 
             <div className="space-y-2">
+              <button
+                onClick={() => router.push(`/${locale}?auth=login`)}
+                className="w-full py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-400/20"
+              >
+                {isAr ? 'تسجيل الدخول إلى حسابي' : 'Se connecter à mon compte'}
+              </button>
+
               <button
                 onClick={() => router.push(`/${locale}`)}
                 className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs"

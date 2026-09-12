@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from './AppSidebar';
 import { Navbar } from './Navbar';
@@ -42,6 +42,18 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({ children }) => {
   const { isRtl, locale } = useTranslation();
   const { currentUser, isLoaded } = useAuthStore();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const auth = params.get('auth');
+      if (auth === 'login' || auth === 'register') {
+        setAuthModal({ open: true, tab: auth });
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [pathname]);
 
   const segments = (pathname || '').split('/').filter(Boolean);
   const routeSegment = segments[1] || '';

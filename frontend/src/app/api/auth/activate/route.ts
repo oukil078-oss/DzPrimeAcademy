@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('token');
 
   if (!token) {
-    return NextResponse.json({ error: 'رمز التفعيل مفقود' }, { status: 400 });
+    return NextResponse.json({ error: 'رمز التفعيل مفقود أو غير مكتمل' }, { status: 400 });
   }
 
   const record = await prisma.accountActivationToken.findUnique({
@@ -18,34 +18,62 @@ export async function GET(request: NextRequest) {
 
   if (!record) {
     return NextResponse.json(
-      { error: 'رابط التفعيل غير صالح أو غير موجود' },
+      { error: 'رابط التفعيل غير صالح أو غير موجود. يرجى طلب رابط جديد أو تسجيل الدخول.' },
       { status: 404 }
     );
   }
 
-  if (record.used) {
+  // Find associated user
+  const user = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isVerified: true,
+    },
+  });
+
+  if (!user) {
     return NextResponse.json(
-      { error: 'تم استخدام رابط التفعيل هذا مسبقاً، حسابك مفعل بالفعل' },
-      { status: 400 }
+      { error: 'تعذر العثور على الحساب المرتبط بهذا الرابط، قد يكون الحساب قد أُعيد إنشاؤه. يرجى تسجيل الدخول أو التواصل مع الدعم.' },
+      { status: 404 }
     );
   }
 
+  // 1. If user is ALREADY verified:
+  // This is a 100% SUCCESS state! Never show an error when the account is already active!
+  if (user.isVerified) {
+    const authToken = signToken(user.id);
+    const response = NextResponse.json({
+      success: true,
+      alreadyVerified: true,
+      message: 'حسابك مفعل وجاهز بالفعل! تم تسجيل دخولك بنجاح.',
+      user,
+    });
+    setAuthCookie(response, authToken);
+    return response;
+  }
+
+  // 2. If token expired (> 24 hours)
   if (record.expiresAt < new Date()) {
     return NextResponse.json(
-      { error: 'انتهت صلاحية رابط التفعيل (24 ساعة). يرجى طلب رابط جديد' },
+      { error: 'انتهت صلاحية رابط التفعيل (24 ساعة). يمكنك طلب رابط تفعيل جديد بسهولة من صفحة الدخول.' },
       { status: 410 }
     );
   }
 
-  // Mark token used
-  await prisma.accountActivationToken.update({
-    where: { id: record.id },
+  // 3. User is not yet verified and token is valid: ACTIVATE USER NOW!
+  // Mark current token and all other tokens for this user as used
+  await prisma.accountActivationToken.updateMany({
+    where: { userId: user.id },
     data: { used: true },
   });
 
-  // Activate User
-  const user = await prisma.user.update({
-    where: { id: record.userId },
+  // Activate User in DB
+  const updatedUser = await prisma.user.update({
+    where: { id: user.id },
     data: { isVerified: true },
     select: {
       id: true,
@@ -59,7 +87,7 @@ export async function GET(request: NextRequest) {
   // Mark any pending account activation operation as APPROVED
   await prisma.pendingOperation.updateMany({
     where: {
-      userId: user.id,
+      userId: updatedUser.id,
       type: 'ACCOUNT_ACTIVATION',
       status: 'PENDING',
     },
@@ -70,11 +98,11 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const authToken = signToken(user.id);
+  const authToken = signToken(updatedUser.id);
   const response = NextResponse.json({
     success: true,
     message: 'تم تفعيل حسابك بنجاح! يمكنك الآن الاستفادة من جميع الميزات.',
-    user,
+    user: updatedUser,
   });
   setAuthCookie(response, authToken);
   return response;
