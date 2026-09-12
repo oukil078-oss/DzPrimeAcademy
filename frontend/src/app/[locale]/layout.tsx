@@ -135,6 +135,7 @@ export default async function LocalizedLayout({
           'https://t.me/dzprime_academy',
           'https://wa.me/qr/5473INCXN3HJI1',
           'https://www.linkedin.com/company/dzprimeacademy',
+          'https://www.instagram.com/mr.k_dz.prime',
         ],
         contactPoint: {
           '@type': 'ContactPoint',

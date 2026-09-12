@@ -43,7 +43,7 @@ export const Footer: React.FC = () => {
 
   const socialLinks = [
     { name: 'Telegram', icon: Send, href: 'https://t.me/dzprime_academy', color: 'hover:text-sky-500' },
-    { name: 'Instagram', icon: Instagram, href: 'https://instagram.com/dzprimeacademy', color: 'hover:text-pink-500' },
+    { name: 'Instagram', icon: Instagram, href: 'https://www.instagram.com/mr.k_dz.prime?stkn=c2ptNW5hYmRtMWh6', color: 'hover:text-pink-500' },
     { name: 'Facebook', icon: Facebook, href: 'https://facebook.com/dzprimeacademy', color: 'hover:text-blue-600' },
     { name: 'TikTok', icon: Video, href: 'https://tiktok.com/@dzprimeacademy', color: 'hover:text-purple-500' },
     { name: 'YouTube', icon: Youtube, href: 'https://youtube.com/@dzprimeacademy', color: 'hover:text-red-500' },
