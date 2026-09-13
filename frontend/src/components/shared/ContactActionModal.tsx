@@ -7,7 +7,6 @@ import {
   Mail,
   Send,
   MessageCircle,
-  Linkedin,
   CheckCircle2,
   Sparkles,
   Crown,
@@ -63,14 +62,13 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
     whatsappNumber: 'https://wa.me/qr/5473INCXN3HJI1',
     telegramUsername: 'dzprime_academy',
     ambassadorTelegram: 'MrK_ADMIN00',
-    linkedinUrl: 'https://www.linkedin.com/company/dzprimeacademy',
   });
 
   const [resending, setResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState('');
   const [resendError, setResendError] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [contactedChannel, setContactedChannel] = useState<'WHATSAPP' | 'TELEGRAM' | 'LINKEDIN' | null>(null);
+  const [contactedChannel, setContactedChannel] = useState<'WHATSAPP' | 'TELEGRAM' | null>(null);
 
   // Fetch admin configured channels
   useEffect(() => {
@@ -83,7 +81,6 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
               whatsappNumber: data.whatsappNumber || 'https://wa.me/qr/5473INCXN3HJI1',
               telegramUsername: data.telegramUsername ? data.telegramUsername.replace('@', '') : 'dzprime_academy',
               ambassadorTelegram: data.ambassadorTelegram ? data.ambassadorTelegram.replace('@', '').replace('t.me/', '') : 'MrK_ADMIN00',
-              linkedinUrl: data.linkedinUrl || 'https://www.linkedin.com/company/dzprimeacademy',
             });
           }
         })
@@ -130,7 +127,7 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
       : `Bonjour DZ Prime Academy,\nJe souhaite finaliser le paiement et l'activation pour: ${opTitle}\nMontant: ${amount}\nNom: ${name}\nEmail: ${email}\nTél: ${phone}`;
   };
 
-  const handleContact = async (channel: 'WHATSAPP' | 'TELEGRAM' | 'LINKEDIN') => {
+  const handleContact = async (channel: 'WHATSAPP' | 'TELEGRAM') => {
     setContactedChannel(channel);
 
     // Record the operation in the database so admin gets live notification
@@ -188,8 +185,6 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
         const cleanUser = raw.replace('@', '');
         window.open(`https://t.me/${cleanUser}?text=${text}`, '_blank');
       }
-    } else if (channel === 'LINKEDIN') {
-      window.open(contactSettings.linkedinUrl, '_blank');
     }
   };
 
@@ -515,7 +510,7 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>
                 {isAr
-                  ? `تم تسجيل طلبك لدى الإدارة وتوجيهك إلى ${contactedChannel === 'WHATSAPP' ? 'واتساب' : contactedChannel === 'TELEGRAM' ? 'تيليغرام' : 'لينكد إن'} — سيتم تفعيل حسابك فور استلام رسالتك!`
+                  ? `تم تسجيل طلبك لدى الإدارة وتوجيهك إلى ${contactedChannel === 'WHATSAPP' ? 'واتساب' : 'تيليغرام'} — سيتم تفعيل حسابك فور استلام رسالتك!`
                   : `Votre demande est enregistrée auprès de l'administration — activation dès réception de votre message !`}
               </span>
             </motion.div>

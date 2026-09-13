@@ -24,6 +24,7 @@ import {
   User,
   UserCheck,
   Building2,
+  Share2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/store';
@@ -237,6 +238,36 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
             <span>PostgreSQL Synchronized</span>
           </span>
         </div>
+      </div>
+
+      {/* Quick Link Card to Dedicated Footer Management */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-amber-500/10 via-gold-500/10 to-yellow-500/10 border border-gold-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-gold-500/20 border border-gold-500/30 text-gold-400 flex items-center justify-center shrink-0">
+            <Share2 className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-black text-white">
+              {locale === 'ar'
+                ? 'إدارة تذييل الموقع والروابط الاجتماعية (Footer Management)'
+                : 'Gestion du Pied de Page & Réseaux Sociaux'}
+            </h4>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {locale === 'ar'
+                ? 'تحكم كامل في إضافة وحذف وتعديل منصات التواصل (فيسبوك، واتساب، تيليغرام، تيك توك، يوتيوب، لينكد إن...) وبيانات التذييل.'
+                : 'Contrôlez vos réseaux sociaux (Facebook, TikTok, WhatsApp, etc.), coordonnées et liens de navigation.'}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            window.location.hash = '#footer';
+          }}
+          className="px-4 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-gold-500/20 active:scale-95 transition-all whitespace-nowrap self-stretch sm:self-auto justify-center"
+        >
+          <span>{locale === 'ar' ? 'فتح لوحة إدارة التذييل ←' : 'Ouvrir le panneau Footer →'}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

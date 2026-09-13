@@ -15,6 +15,7 @@ import {
   Bell,
   ClipboardCheck,
   Globe,
+  Share2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -31,6 +32,7 @@ import { AdminSettingsTab } from '@/components/admin/AdminSettingsTab';
 import { StaffTab } from '@/components/admin/StaffTab';
 import { AdminOperationsTab } from '@/components/admin/AdminOperationsTab';
 import { LandingManagementTab } from '@/components/admin/LandingManagementTab';
+import { FooterManagementTab } from '@/components/admin/FooterManagementTab';
 
 type AdminTab =
   | 'operations'
@@ -44,6 +46,7 @@ type AdminTab =
   | 'bundles'
   | 'card'
   | 'landing'
+  | 'footer'
   | 'settings';
 
 export default function AdminCommandCenterPage() {
@@ -86,6 +89,7 @@ export default function AdminCommandCenterPage() {
           'bundles',
           'card',
           'landing',
+          'footer',
           'settings',
         ].includes(hash)
       ) {
@@ -115,6 +119,7 @@ export default function AdminCommandCenterPage() {
     { id: 'bundles', icon: Package, labelAr: 'العروض والتخفيضات (Offers & Promos)', labelFr: 'Offres & Promos' },
     { id: 'card', icon: CreditCard, labelAr: 'بطاقة الإدارة', labelFr: 'Carte Administration' },
     { id: 'landing', icon: Globe, labelAr: 'إدارة الواجهة الرئيسية (Landing Page)', labelFr: 'Gestion Landing Page' },
+    { id: 'footer', icon: Share2, labelAr: 'إدارة تذييل الموقع (Footer)', labelFr: 'Gestion Pied de Page' },
     { id: 'settings', icon: Sliders, labelAr: 'إعدادات النظام', labelFr: 'Paramètres Système' },
   ];
 
@@ -265,6 +270,7 @@ export default function AdminCommandCenterPage() {
             {activeTab === 'bundles' && <BundlesTab locale={locale} />}
             {activeTab === 'card' && <AdminCardTab locale={locale} />}
             {activeTab === 'landing' && <LandingManagementTab locale={locale} />}
+            {activeTab === 'footer' && <FooterManagementTab locale={locale} />}
             {activeTab === 'settings' && <AdminSettingsTab locale={locale} />}
           </motion.div>
         </AnimatePresence>
