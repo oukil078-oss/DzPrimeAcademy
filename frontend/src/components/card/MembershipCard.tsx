@@ -10,6 +10,7 @@ import { MembershipCardData, User } from '@/types';
 import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { CardExportTemplate, CARD_EXPORT_WIDTH, CARD_EXPORT_HEIGHT } from './CardExportTemplate';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useAuthStore } from '@/lib/store';
 
 import { AdminMembershipCard } from './AdminMembershipCard';
 
@@ -41,6 +42,7 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
   allowExport = true,
 }) => {
   const { t, locale } = useTranslation();
+  const { currentUser } = useAuthStore();
   const [isFlipped, setIsFlipped] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
@@ -49,6 +51,20 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
   const backCardRef = useRef<HTMLDivElement>(null);
   const exportFrontRef = useRef<HTMLDivElement>(null);
   const exportBackRef = useRef<HTMLDivElement>(null);
+
+  // Card owner and admin access check for anti-forgery protection
+  const isCardOwner = Boolean(
+    currentUser && (
+      (user?.id && currentUser.id === user.id) ||
+      (user?.studentCardId && currentUser.studentCardId === user.studentCardId) ||
+      (customCardData?.cardId && currentUser.studentCardId === customCardData.cardId) ||
+      (user?.email && currentUser.email === user.email)
+    )
+  );
+  const isAdmin = Boolean(
+    currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'OWNER')
+  );
+  const canExport = Boolean(allowExport && (isCardOwner || isAdmin));
 
   // Synthesize card data from user or props
   const card: MembershipCardData = customCardData || {
@@ -343,7 +359,7 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
           <span>{isFlipped ? t('card.front') : t('card.back')}</span>
         </button>
 
-        {allowExport && (
+        {canExport && (
           <button
             onClick={exportCardAsPng}
             disabled={isExporting}
@@ -355,7 +371,7 @@ const StandardMembershipCard: React.FC<MembershipCardProps> = ({
           </button>
         )}
 
-        {allowExport && (
+        {canExport && (
           <button
             onClick={exportCardAsPdf}
             disabled={isExportingPdf}

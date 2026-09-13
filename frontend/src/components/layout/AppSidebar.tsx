@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -54,6 +54,18 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
   const { currentUser } = useAuthStore();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [vipPrice, setVipPrice] = useState(10000);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.vipPriceDzd) {
+          setVipPrice(Number(data.vipPriceDzd));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const role = currentUser?.role as string | undefined;
   const isAdminRole = role === 'OWNER' || role === 'SUPER_ADMIN' || role === 'GENERAL_ADMIN' || role === 'ADMIN' || role === 'MODERATOR' || role === 'COMMERCIAL_DIRECTOR';
@@ -204,7 +216,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
                 <div className="flex items-center justify-between text-[11px] font-black text-amber-300 pt-1.5 border-t border-gold-500/20">
                   <span>{locale === 'ar' ? '⚡ ترقية حسابي الآن' : '⚡ Activer le VIP'}</span>
                   <span className="font-mono text-white text-[10px] bg-white/10 px-2 py-0.5 rounded-full">
-                    3,500 DZD
+                    {vipPrice.toLocaleString()} DZD
                   </span>
                 </div>
               </button>
@@ -316,7 +328,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ isMobileOpen = false, on
           operation={{
             type: 'VIP_MEMBERSHIP_UPGRADE',
             title: locale === 'ar' ? 'ترقية العضوية الذهبية VIP' : 'Adhésion VIP Gold',
-            amountDzd: 3500,
+            amountDzd: vipPrice,
             details: 'DZ Prime Academy 2026 VIP Access',
             user: {
               name: currentUser.name,

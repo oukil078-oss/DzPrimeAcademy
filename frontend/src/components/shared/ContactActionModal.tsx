@@ -346,7 +346,7 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
                 </div>
               )}
 
-              {/* Direct Support Section (WhatsApp + LinkedIn ONLY) */}
+              {/* Direct Support Section (WhatsApp + Telegram ONLY) */}
               <div className="pt-2 border-t border-slate-200 dark:border-white/10">
                 <p className="text-xs font-bold text-slate-700 dark:text-gray-300 mb-2.5">
                   {isAr
@@ -365,14 +365,14 @@ export const ContactActionModal: React.FC<ContactActionModalProps> = ({
                     <span>{isAr ? 'تواصل عبر واتساب (WhatsApp)' : 'Contacter par WhatsApp'}</span>
                   </button>
 
-                  {/* LinkedIn Button */}
+                  {/* Telegram Button */}
                   <button
-                    data-testid="contact-modal-linkedin-btn"
-                    onClick={() => handleContact('LINKEDIN')}
-                    className="p-3.5 rounded-2xl bg-[#0077B5] hover:bg-[#006097] text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#0077B5]/20 active:scale-95 transition-all"
+                    data-testid="contact-modal-telegram-btn"
+                    onClick={() => handleContact('TELEGRAM')}
+                    className="p-3.5 rounded-2xl bg-[#229ED9] hover:bg-[#1e8bc0] text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-[#229ED9]/20 active:scale-95 transition-all"
                   >
-                    <Linkedin className="w-4 h-4 fill-white" />
-                    <span>{isAr ? 'تواصل عبر لينكد إن (LinkedIn)' : 'Contacter sur LinkedIn'}</span>
+                    <Send className="w-4 h-4 fill-white" />
+                    <span>{isAr ? 'تواصل عبر تيليغرام (Telegram)' : 'Contacter sur Telegram'}</span>
                   </button>
                 </div>
               </div>

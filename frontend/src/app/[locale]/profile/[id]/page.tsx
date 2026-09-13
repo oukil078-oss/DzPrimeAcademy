@@ -181,6 +181,14 @@ export default function PublicProfilePage({
   const isStudent = user.role === 'STUDENT_FREE' || user.role === 'STUDENT_PAID';
   const isAdminOrStaff = user.role === 'OWNER' || user.role === 'ADMIN' || user.role === 'MODERATOR' || Boolean(user.adminRole);
 
+  const isCardOwner = Boolean(
+    currentUser && (currentUser.id === user.id || currentUser.studentCardId === user.studentCardId)
+  );
+  const isAdmin = Boolean(
+    currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'OWNER')
+  );
+  const canExportCard = isCardOwner || isAdmin;
+
   const isZakarya =
     user.email === 'zakaryaoukil2003@gmail.com' ||
     user.studentCardId === 'DZ-OWN-16-0001' ||
@@ -440,7 +448,7 @@ export default function PublicProfilePage({
                 <Award className="w-4 h-4" />
                 <span>{locale === 'ar' ? 'بطاقة الاعتماد الرقمية' : 'Carte d\'Identité Numérique'}</span>
               </h3>
-              <MembershipCard user={user} allowExport={true} />
+              <MembershipCard user={user} allowExport={canExportCard} />
             </div>
           </div>
 

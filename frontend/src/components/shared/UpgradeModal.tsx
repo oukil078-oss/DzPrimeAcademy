@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Crown, Check, Sparkles, X, ShieldCheck, Loader2, MessageCircle, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -23,6 +23,16 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [vipPrice, setVipPrice] = useState(10000);
+
+  useEffect(() => {
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.vipPriceDzd) setVipPrice(Number(data.vipPriceDzd));
+      })
+      .catch(() => {});
+  }, []);
 
   const handleOpenContactPayment = () => {
     if (!currentUser) {
@@ -46,7 +56,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
 
     setLoading(true);
     setErrorMsg('');
-    const res = await upgradeToGolden();
+    const res = await upgradeToGolden(activationCode.trim());
     setLoading(false);
     if (res?.success) {
       setIsSuccess(true);
@@ -184,7 +194,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
           operation={{
             type: 'VIP_MEMBERSHIP_UPGRADE',
             title: locale === 'ar' ? 'ترقية العضوية الذهبية VIP' : 'Adhésion Gold VIP',
-            amountDzd: 5900,
+            amountDzd: vipPrice,
             details: 'DZ Prime Academy 2026 Annual Pass',
             user: currentUser ? {
               name: currentUser.name,

@@ -416,6 +416,7 @@ model PlatformSettings {
   ambassadorTelegram       String?  @default("MrK_ADMIN00")
   linkedinUrl              String?  @default("https://www.linkedin.com/company/dzprimeacademy")
   landingConfig            Json?
+  vipPriceDzd              Int      @default(10000)
   updatedAt                DateTime @updatedAt
 }
 

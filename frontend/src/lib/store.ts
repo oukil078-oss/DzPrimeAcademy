@@ -144,9 +144,14 @@ export function useAuthStore() {
     }
   }, []);
 
-  const upgradeToGolden = useCallback(async (): Promise<{ success: boolean; user?: any; error?: string }> => {
+  const upgradeToGolden = useCallback(async (code?: string): Promise<{ success: boolean; user?: any; error?: string }> => {
     try {
-      const res = await fetch('/api/account/upgrade', { method: 'POST', credentials: 'include' });
+      const res = await fetch('/api/account/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code: code || undefined }),
+      });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.user) {
         setUser(data.user);

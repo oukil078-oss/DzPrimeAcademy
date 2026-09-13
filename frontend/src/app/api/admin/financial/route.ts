@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
       activeSubscriptions,
       teachers,
       pendingPayouts,
+      settings,
     ] = await Promise.all([
       prisma.pendingOperation.findMany({
         where: { status: 'APPROVED', amountDzd: { gt: 0 } },
@@ -39,12 +40,17 @@ export async function GET(request: NextRequest) {
       prisma.facultyPayout.findMany({
         where: { status: 'PENDING' },
       }),
+      prisma.platformSettings.findUnique({
+        where: { id: 'singleton' },
+      }),
     ]);
+
+    const vipPrice = settings?.vipPriceDzd || 10000;
 
     // 2. Sum real revenue numbers
     const approvedOpsTotal = approvedOps.reduce((sum, op) => sum + (op.amountDzd || 0), 0);
     const bundlePurchasesTotal = bundlePurchases.reduce((sum, b) => sum + (b.amountDzd || 0), 0);
-    const subscriptionsTotal = activeSubscriptions.length * 3500; // VIP card subscription value
+    const subscriptionsTotal = activeSubscriptions.length * vipPrice; // VIP card subscription value
 
     // Base capital + verified transactions
     const realVerifiedRevenue = approvedOpsTotal + bundlePurchasesTotal + subscriptionsTotal;

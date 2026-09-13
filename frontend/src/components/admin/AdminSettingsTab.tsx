@@ -59,6 +59,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
   const [whatsappNumber, setWhatsappNumber] = useState('https://wa.me/qr/5473INCXN3HJI1');
   const [telegramUsername, setTelegramUsername] = useState('dzprime_academy');
   const [linkedinUrl, setLinkedinUrl] = useState('https://www.linkedin.com/company/dzprimeacademy');
+  const [vipPriceDzd, setVipPriceDzd] = useState(10000);
   const [systemSaving, setSystemSaving] = useState(false);
   const [systemSuccess, setSystemSuccess] = useState('');
   const [systemError, setSystemError] = useState('');
@@ -98,6 +99,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
           if (data.whatsappNumber) setWhatsappNumber(data.whatsappNumber);
           if (data.telegramUsername) setTelegramUsername(data.telegramUsername);
           if (data.linkedinUrl) setLinkedinUrl(data.linkedinUrl);
+          if (data.vipPriceDzd !== undefined) setVipPriceDzd(data.vipPriceDzd);
         }
       })
       .catch(() => {});
@@ -146,6 +148,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
           whatsappNumber,
           telegramUsername,
           linkedinUrl,
+          vipPriceDzd: Number(vipPriceDzd) || 10000,
         }),
       });
 
@@ -431,7 +434,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
 
               <div>
                 <label className="block text-gray-300 text-[11px] mb-1">
-                  {locale === 'ar' ? 'رقم واتساب الإدارة (WhatsApp)' : 'Numéro WhatsApp'}
+                  {locale === 'ar' ? 'رقم واتساب الإدارة والدعم (WhatsApp)' : 'Numéro WhatsApp (Support)'}
                 </label>
                 <input
                   value={whatsappNumber}
@@ -444,7 +447,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
 
               <div>
                 <label className="block text-gray-300 text-[11px] mb-1">
-                  {locale === 'ar' ? 'معرّف تيليغرام الإدارة (Telegram)' : 'Nom d\'utilisateur Telegram'}
+                  {locale === 'ar' ? 'معرّف تيليغرام الإدارة والدعم (Telegram)' : 'Nom d\'utilisateur Telegram (Support)'}
                 </label>
                 <input
                   value={telegramUsername}
@@ -457,7 +460,25 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ locale }) =>
 
               <div>
                 <label className="block text-gray-300 text-[11px] mb-1">
-                  {locale === 'ar' ? 'رابط حساب لينكد إن (LinkedIn لدعم تفعيل الحسابات)' : 'Lien profil LinkedIn'}
+                  {locale === 'ar' ? 'سعر العضوية الذهبية VIP (دج) — يظهر بالشريط الجانبي وصفحات الترقية' : 'Prix Adhésion VIP Gold (DZD)'}
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    value={vipPriceDzd}
+                    onChange={(e) => setVipPriceDzd(Number(e.target.value))}
+                    placeholder="10000"
+                    dir="ltr"
+                    className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-400 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-300 text-[11px] mb-1">
+                  {locale === 'ar' ? 'رابط حساب لينكد إن الرسمي (LinkedIn)' : 'Lien profil LinkedIn'}
                 </label>
                 <input
                   value={linkedinUrl}

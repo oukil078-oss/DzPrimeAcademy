@@ -33,6 +33,7 @@ export async function PUT(request: NextRequest) {
       ambassadorTelegram: body.ambassadorTelegram !== undefined ? String(body.ambassadorTelegram) : undefined,
       linkedinUrl: body.linkedinUrl !== undefined ? String(body.linkedinUrl) : undefined,
       landingConfig: body.landingConfig !== undefined ? body.landingConfig : undefined,
+      vipPriceDzd: body.vipPriceDzd !== undefined ? Number(body.vipPriceDzd) : undefined,
     },
     create: {
       id: 'singleton',
@@ -47,6 +48,7 @@ export async function PUT(request: NextRequest) {
       ambassadorTelegram: body.ambassadorTelegram || 'MrK_ADMIN00',
       linkedinUrl: body.linkedinUrl || 'https://www.linkedin.com/company/dzprimeacademy',
       landingConfig: body.landingConfig || {},
+      vipPriceDzd: body.vipPriceDzd !== undefined ? Number(body.vipPriceDzd) : 10000,
     },
   });
 

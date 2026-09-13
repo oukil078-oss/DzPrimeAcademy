@@ -10,6 +10,7 @@ import { Download, FileDown, RotateCw, ExternalLink, ShieldCheck, User as UserIc
 import { MembershipCardData, User } from '@/types';
 import { DzPrimeLogo } from '../shared/DzPrimeLogo';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useAuthStore } from '@/lib/store';
 
 interface AdminMembershipCardProps {
   user?: User | null;
@@ -31,6 +32,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
   const backCardRef = useRef<HTMLDivElement>(null);
   const exportFrontRef = useRef<HTMLDivElement>(null);
   const exportBackRef = useRef<HTMLDivElement>(null);
+  const { currentUser } = useAuthStore();
 
   const rawRole = user?.role || customCardData?.role || 'ADMIN';
   const isZakarya =
@@ -87,11 +89,24 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
     issueDate: '2024/2025',
     expiryDate: '2026/09/30',
     isVerified: user?.isVerified ?? true,
-    qrPayload: `https://dzprimeacademy.live/${locale}/profile/${user?.studentCardId || 'DZ-OWN-16-0001'}`,
+    qrPayload: `https://dzprimeacademy.live/verify/${user?.studentCardId || 'DZ-OWN-16-0001'}`,
     phone: user?.phone || '+213 668 71 87 84',
     email: user?.email || 'zakaryaoukil2003@gmail.com',
     bio: user?.bio,
   };
+
+  const isCardOwner = Boolean(
+    currentUser && (
+      (user?.id && currentUser.id === user.id) ||
+      (user?.email && currentUser.email === user.email) ||
+      (customCardData?.cardId && (currentUser.studentCardId === customCardData.cardId || currentUser.id === customCardData.cardId)) ||
+      (card?.cardId && (currentUser.studentCardId === card.cardId || currentUser.id === card.cardId))
+    )
+  );
+  const isAdmin = Boolean(
+    currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'OWNER')
+  );
+  const canExport = Boolean(allowExport && (isCardOwner || isAdmin));
 
   // Generate QR Code pointing directly to the public profile
   useEffect(() => {
@@ -468,7 +483,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
           <span>{isFlipped ? t('card.front') : t('card.back')}</span>
         </button>
 
-        {allowExport && (
+        {canExport && (
           <button
             onClick={exportCardAsPng}
             disabled={isExporting}
@@ -479,7 +494,7 @@ export const AdminMembershipCard: React.FC<AdminMembershipCardProps> = ({
           </button>
         )}
 
-        {allowExport && (
+        {canExport && (
           <button
             onClick={exportCardAsPdf}
             disabled={isExportingPdf}

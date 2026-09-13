@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { ensureSeeded } from '@/lib/seed';
+import { getUserFromRequest } from '@/lib/auth';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensureSeeded();
@@ -12,6 +13,8 @@ export async function GET(
   if (!id) {
     return NextResponse.json({ error: 'المعرف مطلوب' }, { status: 400 });
   }
+
+  const requester = await getUserFromRequest(request);
 
   // Find user by ID or studentCardId (case-insensitive)
   const user = await prisma.user.findFirst({
@@ -55,6 +58,18 @@ export async function GET(
   if (!user) {
     return NextResponse.json({ error: 'المستخدم غير موجود' }, { status: 404 });
   }
+
+  // Privacy Protection: Only the profile/card owner or staff can see private contact details (email, phone) for students
+  const isOwner = !!requester && (requester.id === user.id || (!!requester.studentCardId && requester.studentCardId === user.studentCardId));
+  const isAdmin = !!requester && (requester.role === 'ADMIN' || requester.role === 'OWNER');
+  const canViewSensitiveInfo = isOwner || isAdmin;
+
+  const isStudent = user.role === 'STUDENT_FREE' || user.role === 'STUDENT_PAID';
+  const sanitizedUser = {
+    ...user,
+    email: canViewSensitiveInfo || !isStudent ? user.email : undefined,
+    phone: canViewSensitiveInfo || !isStudent ? user.phone : undefined,
+  };
 
   let teacherProfile = null;
   let courses: any[] = [];
@@ -106,7 +121,7 @@ export async function GET(
   }
 
   return NextResponse.json({
-    user,
+    user: sanitizedUser,
     teacherProfile,
     courses,
     sessions,
